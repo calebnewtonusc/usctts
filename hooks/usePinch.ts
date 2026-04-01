@@ -1,5 +1,3 @@
-"use client";
-
 export interface PinchResult {
   state: "idle" | "pinching" | "holding" | "dragging" | "released";
   changed: boolean;

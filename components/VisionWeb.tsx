@@ -8,6 +8,7 @@ import {
   Settings,
   Bug,
   Plus,
+  X,
   Zap,
   BookOpen,
   LayoutGrid,
@@ -215,8 +216,8 @@ export default function VisionWeb() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [calProgress, setCalProgress] = useState(0);
   const [panels, setPanels] = useState<PanelDef[]>([]);
-  const [navVisible, setNavVisible] = useState(false);
   const [dwellMs, setDwellMs] = useState(1200);
+  const dwellFiredRef = useRef(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const pinchLeft = useRef(new PinchDetector());
@@ -237,17 +238,7 @@ export default function VisionWeb() {
     _feDwellMs = dwellMs;
   }, [dwellMs]);
 
-  // Scroll-aware navbar
-  useEffect(() => {
-    const handle = () => {
-      const y = window.scrollY;
-      const nearBottom =
-        y + window.innerHeight >= document.documentElement.scrollHeight - 200;
-      setNavVisible(y > 80 && !nearBottom);
-    };
-    window.addEventListener("scroll", handle, { passive: true });
-    return () => window.removeEventListener("scroll", handle);
-  }, []);
+  // (no scroll-aware navbar — this is a fixed full-screen app)
 
   // Init camera
   const startCamera = useCallback(async () => {
@@ -314,6 +305,18 @@ export default function VisionWeb() {
           setGazePos({ x: data.x, y: data.y });
           const r = feUpdate(data.x, data.y, now);
           setDwellProgress(r.dwellProgress);
+          // Fire dwell click when progress completes
+          if (r.dwellProgress >= 1 && r.target && !dwellFiredRef.current) {
+            dwellFiredRef.current = true;
+            (r.target as HTMLElement).click();
+            // Reset dwell start so it doesn't fire again immediately
+            _feDwellStart = now;
+            setTimeout(() => {
+              dwellFiredRef.current = false;
+            }, 800);
+          } else if (r.dwellProgress < 0.9) {
+            dwellFiredRef.current = false;
+          }
         })
         .begin();
       wg.showVideo(false);
@@ -387,8 +390,20 @@ export default function VisionWeb() {
               const side =
                 results.handednesses?.[i]?.[0]?.categoryName?.toLowerCase() ??
                 "right";
-              if (side === "left") pinchLeft.current.update(lm, now);
-              else pinchRight.current.update(lm, now);
+              const detector =
+                side === "left" ? pinchLeft.current : pinchRight.current;
+              const result = detector.update(lm, now);
+              // Wire pinch "released" state to a click at the pinch center
+              if (
+                result.changed &&
+                result.state === "released" &&
+                result.center
+              ) {
+                const sx = (1 - result.center.x) * window.innerWidth;
+                const sy = result.center.y * window.innerHeight;
+                const el = document.elementFromPoint(sx, sy);
+                if (el) (el as HTMLElement).click();
+              }
             });
           } else {
             pinchLeft.current.update(null, now);
@@ -530,12 +545,12 @@ export default function VisionWeb() {
         className="absolute -top-[9999px] -left-[9999px] w-px h-px"
       />
 
-      {/* Scroll-aware nav */}
+      {/* Nav — always visible during app stage */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-zinc-950/80 border-b border-zinc-800/50 px-6 py-3 flex items-center justify-between"
         style={{
-          transform: navVisible ? "translateY(0)" : "translateY(-100%)",
-          opacity: navVisible ? 1 : 0,
+          transform: stage === "app" ? "translateY(0)" : "translateY(-100%)",
+          opacity: stage === "app" ? 1 : 0,
           transition: "transform 0.3s ease, opacity 0.3s ease",
         }}
       >
@@ -779,9 +794,9 @@ export default function VisionWeb() {
                 <span className="font-semibold text-sm">Settings</span>
                 <button
                   onClick={() => setSettingsOpen(false)}
-                  className="w-7 h-7 rounded-lg bg-white/[0.07] hover:bg-white/[0.15] text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer text-xs"
+                  className="w-7 h-7 rounded-lg bg-white/[0.07] hover:bg-white/[0.15] text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
                 >
-                  x
+                  <X size={13} />
                 </button>
               </div>
               <div className="space-y-4 text-xs text-zinc-400">
