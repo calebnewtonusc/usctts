@@ -283,3 +283,66 @@ video[id^="webgazer"] {
     transform: rotate(360deg);
   }
 }
+
+/* ── Section-specific scroll animations ─────────────────────────────────── */
+
+/* Slide in from left — Mission content, checklist items */
+.tts-from-left {
+  opacity: 0;
+  transform: translateX(-44px);
+  transition:
+    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tts-from-left.tts-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Slide in from right — Mission image, email card */
+.tts-from-right {
+  opacity: 0;
+  transform: translateX(44px);
+  transition:
+    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tts-from-right.tts-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Spring scale — Consulting track card, founder cards */
+.tts-scale {
+  opacity: 0;
+  transform: scale(0.88);
+  transition:
+    opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tts-scale.tts-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Curtain wipe up — mission image reveal */
+.tts-curtain {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tts-curtain.tts-visible {
+  clip-path: inset(0 0 0% 0);
+}
+
+/* Perspective tilt — join email card 3D unroll */
+.tts-perspective {
+  opacity: 0;
+  transform: perspective(700px) rotateX(10deg) translateY(24px);
+  transition:
+    opacity 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.72s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tts-perspective.tts-visible {
+  opacity: 1;
+  transform: perspective(700px) rotateX(0deg) translateY(0);
+}

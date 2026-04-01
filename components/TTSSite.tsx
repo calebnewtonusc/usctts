@@ -10,7 +10,7 @@ import {
   Check,
   Hammer,
   Briefcase,
-  Orbit,
+  TrendingUp,
   ExternalLink,
   Mail,
 } from "lucide-react";
@@ -83,9 +83,9 @@ const TRACKS = [
   },
   {
     num: "03",
-    icon: Orbit,
+    icon: TrendingUp,
     accent: "#818cf8",
-    title: "Orbit",
+    title: "Grow",
     sub: "Career & Network",
     tagline: "Use AI to get ahead in your own field.",
     items: [
@@ -189,7 +189,6 @@ export default function TTSSite() {
       const scrollY = window.scrollY;
       const docH = document.documentElement.scrollHeight;
       const winH = window.innerHeight;
-      setNavVisible(scrollY > 80 && scrollY + winH < docH - 200);
       if (progressBarRef.current) {
         progressBarRef.current.style.transform = `scaleX(${Math.min(scrollY / (docH - winH), 1)})`;
       }
@@ -197,7 +196,12 @@ export default function TTSSite() {
         const sect = heroSectionRef.current;
         const scrolled = scrollY - sect.offsetTop;
         const maxScroll = sect.offsetHeight - winH;
-        setHeroProgress(Math.max(0, Math.min(1, scrolled / maxScroll)));
+        const prog = Math.max(0, Math.min(1, scrolled / maxScroll));
+        setHeroProgress(prog);
+        // Nav only appears after Ship. has fully landed (prog > 0.62) or past the hero entirely
+        const pastShip =
+          prog > 0.62 || scrollY > sect.offsetTop + sect.offsetHeight;
+        setNavVisible(pastShip && scrollY + winH < docH - 200);
       }
     };
     window.addEventListener("scroll", handle, { passive: true });
@@ -213,7 +217,9 @@ export default function TTSSite() {
       { threshold: 0.08 },
     );
     document
-      .querySelectorAll(".tts-fade, .tts-slide")
+      .querySelectorAll(
+        ".tts-fade, .tts-slide, .tts-from-left, .tts-from-right, .tts-scale, .tts-curtain, .tts-perspective",
+      )
       .forEach((el) => obs.observe(el));
     return () => obs.disconnect();
   }, []);
@@ -742,7 +748,7 @@ export default function TTSSite() {
                 zIndex: 1,
               }}
             >
-              {/* Badge — visible from the start */}
+              {/* Badge — appears after Ship., hides when full content block shows */}
               <div
                 style={{
                   display: "inline-flex",
@@ -753,8 +759,15 @@ export default function TTSSite() {
                   background: "rgba(204,0,0,0.08)",
                   border: "1px solid rgba(204,0,0,0.2)",
                   marginBottom: 40,
-                  opacity: heroContentShown ? 0 : 1,
-                  transition: "opacity 0.5s ease",
+                  opacity: word3Shown && !heroContentShown ? 1 : 0,
+                  transform:
+                    word3Shown && !heroContentShown
+                      ? "translateY(0)"
+                      : "translateY(8px)",
+                  transition:
+                    "opacity 0.5s ease, transform 0.5s cubic-bezier(0.16,1,0.3,1)",
+                  pointerEvents:
+                    word3Shown && !heroContentShown ? "auto" : "none",
                 }}
               >
                 <div
@@ -983,34 +996,6 @@ export default function TTSSite() {
                   ))}
                 </div>
               </div>
-
-              {/* Scroll nudge — visible while words are still animating in */}
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 28,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 6,
-                  opacity: heroContentShown ? 0 : 0.3,
-                  transition: "opacity 0.4s ease",
-                }}
-              >
-                <div style={{ width: 1, height: 28, background: "#fff" }} />
-                <span
-                  style={{
-                    fontSize: 9,
-                    color: "#fff",
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Scroll
-                </span>
-              </div>
             </div>
           </div>
         </section>
@@ -1033,7 +1018,7 @@ export default function TTSSite() {
             <div>
               {/* No generic label here. Let the content lead. */}
               <h2
-                className="tts-slide"
+                className="tts-from-left"
                 style={{
                   fontSize: "clamp(28px, 3.5vw, 46px)",
                   fontWeight: 900,
@@ -1115,7 +1100,7 @@ export default function TTSSite() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div
-                className="tts-fade"
+                className="tts-curtain"
                 style={{
                   position: "relative",
                   borderRadius: 16,
@@ -1160,7 +1145,7 @@ export default function TTSSite() {
                 ].map(([v, l]) => (
                   <div
                     key={l}
-                    className="tts-fade tts-card"
+                    className="tts-scale tts-card"
                     style={{
                       background: "#141418",
                       borderRadius: 10,
@@ -1193,7 +1178,7 @@ export default function TTSSite() {
           style={{ background: "#09090b", padding: "120px 40px" }}
         >
           <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ marginBottom: 64 }}>
+            <div style={{ marginBottom: 72 }}>
               <h2
                 className="tts-slide"
                 style={{
@@ -1218,8 +1203,14 @@ export default function TTSSite() {
               </p>
             </div>
 
-            {/* Editorial track rows */}
-            <div style={{ display: "flex", flexDirection: "column" }}>
+            {/* 3-column track cards */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: 20,
+              }}
+            >
               {TRACKS.map(
                 (
                   {
@@ -1233,51 +1224,55 @@ export default function TTSSite() {
                     for: forText,
                   },
                   i,
-                ) => (
-                  <div
-                    key={num}
-                    className="tts-fade tts-card"
-                    style={{
-                      padding: "48px 0",
-                      borderTop: "1px solid rgba(255,255,255,0.06)",
-                      display: "grid",
-                      gridTemplateColumns: "72px 260px 1fr 220px",
-                      gap: 48,
-                      alignItems: "start",
-                      transitionDelay: `${i * 0.08}s`,
-                    }}
-                  >
-                    {/* Large track number */}
+                ) => {
+                  const animClass =
+                    i === 0
+                      ? "tts-from-left"
+                      : i === 1
+                        ? "tts-scale"
+                        : "tts-from-right";
+                  return (
                     <div
+                      key={num}
+                      className={`${animClass} tts-card`}
                       style={{
-                        fontSize: 52,
-                        fontWeight: 900,
-                        color: accent,
-                        opacity: 0.18,
-                        letterSpacing: "-0.04em",
-                        lineHeight: 1,
-                        paddingTop: 2,
-                        userSelect: "none",
+                        background: "#111113",
+                        borderRadius: 16,
+                        border: "1px solid rgba(255,255,255,0.07)",
+                        borderTop: `3px solid ${accent}`,
+                        padding: "32px 28px",
+                        display: "flex",
+                        flexDirection: "column",
+                        transitionDelay: `${i * 0.1}s`,
                       }}
                     >
-                      {num}
-                    </div>
-
-                    {/* Title block */}
-                    <div>
+                      {/* Header row: num + icon */}
                       <div
                         style={{
                           display: "flex",
-                          alignItems: "center",
-                          gap: 10,
-                          marginBottom: 14,
+                          alignItems: "flex-start",
+                          justifyContent: "space-between",
+                          marginBottom: 28,
                         }}
                       >
                         <div
                           style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 10,
+                            fontSize: 64,
+                            fontWeight: 900,
+                            color: accent,
+                            opacity: 0.15,
+                            letterSpacing: "-0.05em",
+                            lineHeight: 1,
+                            userSelect: "none",
+                          }}
+                        >
+                          {num}
+                        </div>
+                        <div
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 11,
                             background: `${accent}15`,
                             border: `1px solid ${accent}30`,
                             display: "flex",
@@ -1286,111 +1281,129 @@ export default function TTSSite() {
                             flexShrink: 0,
                           }}
                         >
-                          <Icon size={16} color={accent} />
+                          <Icon size={18} color={accent} />
                         </div>
-                        <div>
-                          <div
-                            style={{
-                              fontSize: 10,
-                              fontWeight: 600,
-                              color: accent,
-                              letterSpacing: "0.08em",
-                              textTransform: "uppercase",
-                              opacity: 0.8,
-                            }}
-                          >
-                            {sub}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 20,
-                              fontWeight: 800,
-                              color: "#fff",
-                              letterSpacing: "-0.02em",
-                              lineHeight: 1.2,
-                            }}
-                          >
-                            {title}
-                          </div>
-                        </div>
+                      </div>
+
+                      {/* Track name */}
+                      <div
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: accent,
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          marginBottom: 6,
+                          opacity: 0.85,
+                        }}
+                      >
+                        {sub}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 26,
+                          fontWeight: 800,
+                          color: "#fff",
+                          letterSpacing: "-0.03em",
+                          lineHeight: 1.1,
+                          marginBottom: 12,
+                        }}
+                      >
+                        {title}
                       </div>
                       <div
                         style={{
                           fontSize: 14,
                           color: "#a1a1aa",
-                          lineHeight: 1.6,
+                          lineHeight: 1.65,
+                          marginBottom: 28,
                         }}
                       >
                         {tagline}
                       </div>
-                    </div>
 
-                    {/* Items */}
-                    <ul
-                      style={{
-                        listStyle: "none",
-                        margin: 0,
-                        padding: 0,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 10,
-                      }}
-                    >
-                      {items.map((item) => (
-                        <li
-                          key={item}
+                      {/* Separator */}
+                      <div
+                        style={{
+                          height: 1,
+                          background: "rgba(255,255,255,0.06)",
+                          marginBottom: 20,
+                        }}
+                      />
+
+                      {/* Items */}
+                      <ul
+                        style={{
+                          listStyle: "none",
+                          margin: 0,
+                          padding: 0,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 11,
+                          flex: 1,
+                        }}
+                      >
+                        {items.map((item) => (
+                          <li
+                            key={item}
+                            style={{
+                              display: "flex",
+                              alignItems: "flex-start",
+                              gap: 10,
+                              fontSize: 13,
+                              color: "#c4c4c8",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: 5,
+                                height: 5,
+                                borderRadius: "50%",
+                                background: accent,
+                                flexShrink: 0,
+                                marginTop: 5,
+                                opacity: 0.75,
+                              }}
+                            />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+
+                      {/* For */}
+                      <div
+                        style={{
+                          marginTop: 24,
+                          paddingTop: 20,
+                          borderTop: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
+                        <div
                           style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: 10,
-                            fontSize: 13,
-                            color: "#c4c4c8",
+                            fontSize: 10,
+                            fontWeight: 600,
+                            color: "#71717a",
+                            letterSpacing: "0.08em",
+                            textTransform: "uppercase",
+                            marginBottom: 7,
                           }}
                         >
-                          <div
-                            style={{
-                              width: 4,
-                              height: 4,
-                              borderRadius: "50%",
-                              background: accent,
-                              flexShrink: 0,
-                              marginTop: 6,
-                              opacity: 0.7,
-                            }}
-                          />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-
-                    {/* For */}
-                    <div style={{ paddingTop: 4 }}>
-                      <div
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 600,
-                          color: "#52525b",
-                          letterSpacing: "0.08em",
-                          textTransform: "uppercase",
-                          marginBottom: 8,
-                        }}
-                      >
-                        For
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 13,
-                          color: "#a1a1aa",
-                          lineHeight: 1.65,
-                        }}
-                      >
-                        {forText}
+                          Best for
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: "#a1a1aa",
+                            lineHeight: 1.65,
+                          }}
+                        >
+                          {forText}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ),
+                  );
+                },
               )}
-              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
             </div>
           </div>
         </section>
@@ -1435,8 +1448,8 @@ export default function TTSSite() {
               {FOUNDERS.map((f, i) => (
                 <div
                   key={f.id}
-                  className="tts-fade"
-                  style={{ transitionDelay: `${i * 0.1}s` }}
+                  className={i === 0 ? "tts-from-left" : "tts-from-right"}
+                  style={{ transitionDelay: `${i * 0.12}s` }}
                 >
                   <div
                     style={{
@@ -1772,7 +1785,7 @@ export default function TTSSite() {
 
               {/* Right: email capture */}
               <div
-                className="tts-fade"
+                className="tts-perspective"
                 style={{ paddingTop: 8, transitionDelay: "0.15s" }}
               >
                 <div
