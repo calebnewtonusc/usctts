@@ -54,6 +54,8 @@ export default function TTSSite() {
     target: string | null;
     progress: number;
   }>({ target: null, progress: 0 });
+  const [email, setEmail] = useState("");
+  const [emailSubmitted, setEmailSubmitted] = useState(false);
   const gazeStartedRef = useRef(false);
   const dwellFiredRef = useRef(false);
   const gazeDotRef = useRef<HTMLDivElement>(null);
@@ -370,48 +372,60 @@ export default function TTSSite() {
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {/* Eye Nav — icon only so Apply owns the last position (Serial Position Effect) */}
               {!gazeActive ? (
                 <button
                   onClick={startGaze}
+                  aria-label="Enable eye tracking navigation"
+                  title="Eye tracking navigation"
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 6,
-                    padding: "6px 12px",
+                    justifyContent: "center",
+                    width: 36,
+                    height: 36,
                     borderRadius: 8,
-                    fontSize: 12,
-                    fontWeight: 500,
                     color: "#CC0000",
                     background: "rgba(204,0,0,0.1)",
                     border: "1px solid rgba(204,0,0,0.25)",
                     cursor: "pointer",
                     transition: "all 0.15s",
+                    flexShrink: 0,
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "rgba(204,0,0,0.2)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "rgba(204,0,0,0.1)";
                   }}
                 >
-                  <Eye size={12} /> Eye Nav
+                  <Eye size={15} />
                 </button>
               ) : (
                 <div
+                  aria-label="Eye tracking active"
+                  title="Eye tracking active"
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 6,
-                    padding: "6px 12px",
+                    justifyContent: "center",
+                    width: 36,
+                    height: 36,
                     borderRadius: 8,
-                    fontSize: 12,
-                    fontWeight: 500,
                     color: "#FFCC00",
                     background: "rgba(255,204,0,0.08)",
                     border: "1px solid rgba(255,204,0,0.2)",
                   }}
                 >
-                  <Eye size={12} /> Live
+                  <Eye size={15} />
                 </div>
               )}
               <button
                 onClick={() => scrollTo("join")}
                 style={{
-                  padding: "8px 18px",
+                  padding: "8px 20px",
                   borderRadius: 10,
                   fontSize: 13,
                   fontWeight: 600,
@@ -420,16 +434,21 @@ export default function TTSSite() {
                   border: "none",
                   cursor: "pointer",
                   boxShadow: "0 4px 20px rgba(204,0,0,0.35)",
-                  transition: "background 0.15s",
+                  transition: "all 0.15s",
+                  minWidth: 72,
                 }}
-                onMouseEnter={(e) =>
-                  ((e.currentTarget as HTMLButtonElement).style.background =
-                    "#aa0000")
-                }
-                onMouseLeave={(e) =>
-                  ((e.currentTarget as HTMLButtonElement).style.background =
-                    "#CC0000")
-                }
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "#aa0000";
+                  (e.currentTarget as HTMLButtonElement).style.transform =
+                    "translateY(-1px)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "#CC0000";
+                  (e.currentTarget as HTMLButtonElement).style.transform =
+                    "translateY(0)";
+                }}
               >
                 Apply
               </button>
@@ -789,17 +808,13 @@ export default function TTSSite() {
                     borderRadius: 20,
                     border: "1px solid #1f1f23",
                     padding: "32px 28px",
-                    transition: "border-color 0.2s, transform 0.2s",
+                    transition: "transform 0.2s",
                   }}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor =
-                      accent;
                     (e.currentTarget as HTMLDivElement).style.transform =
-                      "translateY(-2px)";
+                      "translateY(-3px)";
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor =
-                      "#1f1f23";
                     (e.currentTarget as HTMLDivElement).style.transform =
                       "translateY(0)";
                   }}
@@ -961,15 +976,15 @@ export default function TTSSite() {
                     gridTemplateColumns: "120px 1fr 1fr",
                     gap: 40,
                     alignItems: "center",
-                    transition: "border-color 0.2s",
+                    transition: "transform 0.2s",
                   }}
                   onMouseEnter={(e) =>
-                    ((e.currentTarget as HTMLDivElement).style.borderColor =
-                      accent)
+                    ((e.currentTarget as HTMLDivElement).style.transform =
+                      "translateY(-3px)")
                   }
                   onMouseLeave={(e) =>
-                    ((e.currentTarget as HTMLDivElement).style.borderColor =
-                      "#1f1f23")
+                    ((e.currentTarget as HTMLDivElement).style.transform =
+                      "translateY(0)")
                   }
                 >
                   <div>
@@ -1142,7 +1157,16 @@ export default function TTSSite() {
                     borderRadius: 20,
                     border: "1px solid #1f1f23",
                     padding: "32px 28px",
+                    transition: "transform 0.2s",
                   }}
+                  onMouseEnter={(e) =>
+                    ((e.currentTarget as HTMLDivElement).style.transform =
+                      "translateY(-3px)")
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.currentTarget as HTMLDivElement).style.transform =
+                      "translateY(0)")
+                  }
                 >
                   <div
                     style={{
@@ -1376,15 +1400,15 @@ export default function TTSSite() {
                     borderRadius: 20,
                     border: "1px solid #1f1f23",
                     padding: "36px 32px",
-                    transition: "border-color 0.2s",
+                    transition: "transform 0.2s",
                   }}
                   onMouseEnter={(e) =>
-                    ((e.currentTarget as HTMLDivElement).style.borderColor =
-                      accent)
+                    ((e.currentTarget as HTMLDivElement).style.transform =
+                      "translateY(-3px)")
                   }
                   onMouseLeave={(e) =>
-                    ((e.currentTarget as HTMLDivElement).style.borderColor =
-                      "#1f1f23")
+                    ((e.currentTarget as HTMLDivElement).style.transform =
+                      "translateY(0)")
                   }
                 >
                   <div
@@ -1474,7 +1498,7 @@ export default function TTSSite() {
           id="join"
           style={{ background: "#0d0d10", padding: "120px 24px" }}
         >
-          <div style={{ maxWidth: 560, margin: "0 auto", textAlign: "center" }}>
+          <div style={{ maxWidth: 600, margin: "0 auto", textAlign: "center" }}>
             <div
               className="tts-fade"
               style={{
@@ -1531,6 +1555,70 @@ export default function TTSSite() {
               ego. If you&apos;re stuck, ask. If you learn something, share it.
             </p>
 
+            {/* Goal-Gradient: show the 3-step path so users see how close they are */}
+            <div
+              className="tts-fade"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 0,
+                marginBottom: 40,
+              }}
+            >
+              {[
+                { num: "01", label: "Join Discord" },
+                { num: "02", label: "Show up Week 3" },
+                { num: "03", label: "Pick your track" },
+              ].map(({ num, label }, i) => (
+                <div
+                  key={num}
+                  style={{ display: "flex", alignItems: "center" }}
+                >
+                  <div style={{ textAlign: "center" }}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: "50%",
+                        background: i === 0 ? "#CC0000" : "#1f1f23",
+                        border: `1px solid ${i === 0 ? "#CC0000" : "#2a2a2e"}`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        margin: "0 auto 8px",
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: i === 0 ? "#fff" : "#3f3f46",
+                      }}
+                    >
+                      {num}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: i === 0 ? "#a1a1aa" : "#3f3f46",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {label}
+                    </div>
+                  </div>
+                  {i < 2 && (
+                    <div
+                      style={{
+                        width: 48,
+                        height: 1,
+                        background: "#1f1f23",
+                        marginBottom: 24,
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
             <div
               className="tts-fade"
               style={{
@@ -1558,7 +1646,7 @@ export default function TTSSite() {
                   cursor: "pointer",
                   boxShadow: "0 4px 24px rgba(204,0,0,0.35)",
                   transition: "all 0.15s",
-                  marginBottom: 24,
+                  marginBottom: 16,
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLButtonElement).style.background =
@@ -1575,6 +1663,95 @@ export default function TTSSite() {
               >
                 <Globe size={16} /> Join Discord
               </button>
+
+              {/* Zeigarnik: email capture for users not ready to commit */}
+              <div
+                style={{
+                  borderTop: "1px solid #1f1f23",
+                  paddingTop: 16,
+                  marginBottom: 24,
+                }}
+              >
+                {!emailSubmitted ? (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (email.trim()) setEmailSubmitted(true);
+                    }}
+                    style={{ display: "flex", gap: 8 }}
+                  >
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Not ready yet? Leave your email"
+                      required
+                      style={{
+                        flex: 1,
+                        padding: "10px 14px",
+                        borderRadius: 10,
+                        background: "#0d0d10",
+                        border: "1px solid #2a2a2e",
+                        color: "#fff",
+                        fontSize: 13,
+                        outline: "none",
+                      }}
+                      onFocus={(e) => {
+                        (
+                          e.currentTarget as HTMLInputElement
+                        ).style.borderColor = "rgba(204,0,0,0.5)";
+                      }}
+                      onBlur={(e) => {
+                        (
+                          e.currentTarget as HTMLInputElement
+                        ).style.borderColor = "#2a2a2e";
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      style={{
+                        padding: "10px 16px",
+                        borderRadius: 10,
+                        background: "rgba(204,0,0,0.12)",
+                        border: "1px solid rgba(204,0,0,0.25)",
+                        color: "#CC0000",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                        transition: "all 0.15s",
+                      }}
+                      onMouseEnter={(e) => {
+                        (
+                          e.currentTarget as HTMLButtonElement
+                        ).style.background = "rgba(204,0,0,0.2)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (
+                          e.currentTarget as HTMLButtonElement
+                        ).style.background = "rgba(204,0,0,0.12)";
+                      }}
+                    >
+                      Notify me
+                    </button>
+                  </form>
+                ) : (
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      borderRadius: 10,
+                      background: "rgba(255,204,0,0.06)",
+                      border: "1px solid rgba(255,204,0,0.15)",
+                      color: "#FFCC00",
+                      fontSize: 13,
+                      textAlign: "center",
+                    }}
+                  >
+                    You&apos;re on the list. See you Week 3.
+                  </div>
+                )}
+              </div>
+
               <div
                 style={{
                   display: "grid",
@@ -1595,7 +1772,7 @@ export default function TTSSite() {
                       {val}
                     </div>
                     <div
-                      style={{ fontSize: 11, color: "#3f3f46", marginTop: 3 }}
+                      style={{ fontSize: 11, color: "#52525b", marginTop: 3 }}
                     >
                       {label}
                     </div>
@@ -1630,7 +1807,7 @@ export default function TTSSite() {
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                color: "#3f3f46",
+                color: "#52525b",
                 fontSize: 13,
               }}
             >
@@ -1653,7 +1830,7 @@ export default function TTSSite() {
             <div
               style={{
                 fontSize: 11,
-                color: "#27272a",
+                color: "#52525b",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
               }}
