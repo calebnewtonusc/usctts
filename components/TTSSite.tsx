@@ -5,46 +5,21 @@ import Script from "next/script";
 import {
   Eye,
   Zap,
-  Users,
-  ChevronDown,
   ArrowRight,
+  ChevronDown,
   Code2,
   Briefcase,
+  Users,
   Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 
-// ── USC brand colors ───────────────────────────────────────────────────────
-const C = "#CC0000"; // Cardinal bright
-const CDIM = "rgba(204,0,0,0.12)";
-const CBORDER = "rgba(204,0,0,0.28)";
-const G = "#FFCC00"; // Gold
-const GDIM = "rgba(255,204,0,0.12)";
-const GBORDER = "rgba(255,204,0,0.28)";
-
-// ── WebGazer type (v2 API — begin() is on the instance, not chained) ───────
-interface WebGazer {
-  setGazeListener: (
-    fn: (data: { x: number; y: number } | null) => void,
-  ) => WebGazer;
-  begin: () => Promise<WebGazer>;
-  end: () => void;
-  showVideo: (v: boolean) => WebGazer;
-  showFaceOverlay: (v: boolean) => WebGazer;
-  showFaceFeedbackBox: (v: boolean) => WebGazer;
-  showPredictionPoints: (v: boolean) => WebGazer;
-}
-
-// ── Gaze nav engine (module-level to avoid closure issues) ─────────────────
+// ── Gaze nav engine (module-level) ─────────────────────────────────────────
 const DWELL_MS = 1000;
 let _navTarget: string | null = null;
 let _navStart = 0;
 
-function gazeNavUpdate(
-  x: number,
-  y: number,
-  now: number,
-): { target: string | null; progress: number } {
+function gazeNavUpdate(x: number, y: number, now: number) {
   const els = Array.from(
     document.querySelectorAll<HTMLElement>("[data-gaze-nav]"),
   );
@@ -65,54 +40,47 @@ function gazeNavUpdate(
     _navTarget = hit;
     _navStart = now;
   }
-  const progress = _navTarget ? Math.min((now - _navStart) / DWELL_MS, 1) : 0;
-  return { target: _navTarget, progress };
+  return {
+    target: _navTarget,
+    progress: _navTarget ? Math.min((now - _navStart) / DWELL_MS, 1) : 0,
+  };
 }
 
-const circumference = 2 * Math.PI * 10;
+const ARC = 2 * Math.PI * 10;
 
-// ── Main component ─────────────────────────────────────────────────────────
 export default function TTSSite() {
   const [gazeActive, setGazeActive] = useState(false);
-  const [gazeNavState, setGazeNavState] = useState<{
+  const [gazeNav, setGazeNav] = useState<{
     target: string | null;
     progress: number;
   }>({ target: null, progress: 0 });
-
-  const webgazerReadyRef = useRef(false);
   const gazeStartedRef = useRef(false);
   const dwellFiredRef = useRef(false);
-  const gazeCursorRef = useRef<HTMLDivElement>(null);
+  const gazeDotRef = useRef<HTMLDivElement>(null);
   const cursorDotRef = useRef<HTMLDivElement>(null);
   const cursorRingRef = useRef<HTMLDivElement>(null);
-  const mousePosRef = useRef({ x: 0, y: 0 });
-  const ringPosRef = useRef({ x: 0, y: 0 });
+  const mouseRef = useRef({ x: -100, y: -100 });
+  const ringRef = useRef({ x: -100, y: -100 });
   const rafRef = useRef(0);
 
-  // Custom cursor (nalana-style)
+  // Custom cursor
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      mousePosRef.current = { x: e.clientX, y: e.clientY };
+      mouseRef.current = { x: e.clientX, y: e.clientY };
       if (cursorDotRef.current) {
-        cursorDotRef.current.style.left = e.clientX + "px";
-        cursorDotRef.current.style.top = e.clientY + "px";
+        cursorDotRef.current.style.transform = `translate(${e.clientX - 4}px, ${e.clientY - 4}px)`;
       }
     };
     document.addEventListener("mousemove", onMove);
-
-    const animate = () => {
-      ringPosRef.current.x +=
-        (mousePosRef.current.x - ringPosRef.current.x) * 0.14;
-      ringPosRef.current.y +=
-        (mousePosRef.current.y - ringPosRef.current.y) * 0.14;
+    const tick = () => {
+      ringRef.current.x += (mouseRef.current.x - ringRef.current.x) * 0.13;
+      ringRef.current.y += (mouseRef.current.y - ringRef.current.y) * 0.13;
       if (cursorRingRef.current) {
-        cursorRingRef.current.style.left = ringPosRef.current.x + "px";
-        cursorRingRef.current.style.top = ringPosRef.current.y + "px";
+        cursorRingRef.current.style.transform = `translate(${ringRef.current.x - 16}px, ${ringRef.current.y - 16}px)`;
       }
-      rafRef.current = requestAnimationFrame(animate);
+      rafRef.current = requestAnimationFrame(tick);
     };
-    rafRef.current = requestAnimationFrame(animate);
-
+    rafRef.current = requestAnimationFrame(tick);
     return () => {
       document.removeEventListener("mousemove", onMove);
       cancelAnimationFrame(rafRef.current);
@@ -126,7 +94,7 @@ export default function TTSSite() {
         entries.forEach((e) => {
           if (e.isIntersecting) e.target.classList.add("tts-visible");
         }),
-      { threshold: 0.1 },
+      { threshold: 0.08 },
     );
     document.querySelectorAll(".tts-fade").forEach((el) => obs.observe(el));
     return () => obs.disconnect();
@@ -138,76 +106,73 @@ export default function TTSSite() {
 
   const startGaze = useCallback(async () => {
     if (gazeStartedRef.current) return;
-
-    // Wait for WebGazer to be available on window (up to 8s)
     let waited = 0;
-    while (waited < 8000) {
-      if ((window as Window & { webgazer?: WebGazer }).webgazer) break;
-      await new Promise((r) => setTimeout(r, 150));
-      waited += 150;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    while (!(window as any).webgazer && waited < 8000) {
+      await new Promise((r) => setTimeout(r, 200));
+      waited += 200;
     }
-
-    const wg = (window as Window & { webgazer?: WebGazer }).webgazer;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const wg = (window as any).webgazer;
     if (!wg) {
-      toast.error("WebGazer not loaded. Check your connection and reload.", {
-        id: "gaze",
-      });
+      toast.error("WebGazer failed to load. Try refreshing.", { id: "gaze" });
       return;
     }
-
     try {
       gazeStartedRef.current = true;
-      toast.loading("Requesting camera…", { id: "gaze", duration: 12000 });
+      toast.loading("Starting camera…", { id: "gaze", duration: 15000 });
 
-      // v2 API: setGazeListener returns the instance; call begin() separately
-      wg.setGazeListener((data) => {
-        if (!data) return;
-        const now = performance.now();
+      // Disable localStorage to avoid cross-session init errors
+      if (wg.params) wg.params.saveDataAcrossSessions = false;
 
-        if (gazeCursorRef.current) {
-          gazeCursorRef.current.style.left = data.x - 12 + "px";
-          gazeCursorRef.current.style.top = data.y - 12 + "px";
-          gazeCursorRef.current.style.opacity = "1";
-        }
-
-        const nav = gazeNavUpdate(data.x, data.y, now);
-        setGazeNavState(nav);
-
-        if (nav.progress >= 1 && nav.target && !dwellFiredRef.current) {
-          dwellFiredRef.current = true;
-          scrollTo(nav.target);
-          _navTarget = null;
-          _navStart = 0;
-          setTimeout(() => {
+      // Chained API matches the Brown CDN version of WebGazer
+      await wg
+        .setGazeListener((data: { x: number; y: number } | null) => {
+          if (!data) return;
+          const now = performance.now();
+          if (gazeDotRef.current) {
+            gazeDotRef.current.style.transform = `translate(${data.x - 12}px, ${data.y - 12}px)`;
+            gazeDotRef.current.style.opacity = "1";
+          }
+          const nav = gazeNavUpdate(data.x, data.y, now);
+          setGazeNav(nav);
+          if (nav.progress >= 1 && nav.target && !dwellFiredRef.current) {
+            dwellFiredRef.current = true;
+            scrollTo(nav.target);
+            _navTarget = null;
+            _navStart = 0;
+            setTimeout(() => {
+              dwellFiredRef.current = false;
+            }, 1400);
+          } else if (nav.progress < 0.8) {
             dwellFiredRef.current = false;
-          }, 1200);
-        } else if (nav.progress < 0.8) {
-          dwellFiredRef.current = false;
-        }
-      });
-
-      await wg.begin();
+          }
+        })
+        .begin();
 
       wg.showVideo(false);
       wg.showFaceOverlay(false);
       wg.showFaceFeedbackBox(false);
       wg.showPredictionPoints(false);
-      webgazerReadyRef.current = true;
       setGazeActive(true);
-      toast.success("Eye tracking active — look at a nav link for 1 second", {
-        id: "gaze",
-        duration: 5000,
-      });
+      toast.success(
+        "Eye tracking on — look at a nav link for 1 sec to navigate",
+        { id: "gaze", duration: 5000 },
+      );
     } catch (err) {
-      console.error("[WebGazer] init error:", err);
+      console.error("[WebGazer]", err);
       gazeStartedRef.current = false;
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Unknown error starting eye tracking.";
+      const msg = err instanceof Error ? err.message : String(err);
       toast.error(`Eye tracking failed: ${msg}`, { id: "gaze" });
     }
   }, [scrollTo]);
+
+  const NAV_LINKS = [
+    { label: "About", id: "about" },
+    { label: "Tracks", id: "tracks" },
+    { label: "How It Works", id: "how-it-works" },
+    { label: "Leadership", id: "leadership" },
+  ] as const;
 
   return (
     <>
@@ -216,128 +181,184 @@ export default function TTSSite() {
         strategy="afterInteractive"
       />
 
-      {/* Custom cursor — cardinal dot */}
+      {/* Cursor dot */}
       <div
         ref={cursorDotRef}
         aria-hidden="true"
         style={{
           position: "fixed",
+          top: 0,
+          left: 0,
           width: 8,
           height: 8,
-          background: C,
+          background: "#CC0000",
           borderRadius: "50%",
           pointerEvents: "none",
           zIndex: 9999,
-          transform: "translate(-50%,-50%)",
+          willChange: "transform",
         }}
       />
+      {/* Cursor ring */}
       <div
         ref={cursorRingRef}
         aria-hidden="true"
         style={{
           position: "fixed",
+          top: 0,
+          left: 0,
           width: 32,
           height: 32,
-          border: `1.5px solid ${CBORDER}`,
+          border: "1.5px solid rgba(204,0,0,0.3)",
           borderRadius: "50%",
           pointerEvents: "none",
           zIndex: 9998,
-          transform: "translate(-50%,-50%)",
+          willChange: "transform",
         }}
       />
-
-      {/* Gaze cursor — gold ring */}
+      {/* Gaze indicator */}
       <div
-        ref={gazeCursorRef}
+        ref={gazeDotRef}
         aria-hidden="true"
         style={{
           position: "fixed",
+          top: 0,
+          left: 0,
           width: 24,
           height: 24,
           borderRadius: "50%",
-          border: `2px solid ${G}`,
-          background: GDIM,
+          border: "2px solid #FFCC00",
+          background: "rgba(255,204,0,0.08)",
           pointerEvents: "none",
           zIndex: 9001,
           opacity: 0,
           transition: "opacity 0.2s",
+          willChange: "transform",
         }}
       />
 
-      <div style={{ cursor: "none" }}>
-        {/* ── NAV ─────────────────────────────────────────────────────── */}
+      <div
+        style={{ cursor: "none", background: "#09090b", minHeight: "100vh" }}
+      >
+        {/* ── NAV ── */}
         <nav
-          className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06]"
           style={{
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
-            background: "rgba(9,9,11,0.88)",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 50,
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            background: "rgba(9,9,11,0.9)",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
           }}
         >
-          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-            {/* Logo */}
+          <div
+            style={{
+              maxWidth: 1280,
+              margin: "0 auto",
+              padding: "0 24px",
+              height: 60,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="flex items-center gap-2.5 cursor-pointer"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                cursor: "pointer",
+                background: "none",
+                border: "none",
+              }}
             >
               <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: CDIM, border: `1px solid ${CBORDER}` }}
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  background: "rgba(204,0,0,0.15)",
+                  border: "1px solid rgba(204,0,0,0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                <Zap size={13} style={{ color: C }} />
+                <Zap size={13} color="#CC0000" />
               </div>
-              <span className="font-bold text-white text-sm tracking-tight">
+              <span
+                style={{
+                  fontWeight: 700,
+                  color: "#fff",
+                  fontSize: 14,
+                  letterSpacing: "-0.01em",
+                }}
+              >
                 TTS
               </span>
             </button>
 
-            {/* Nav links */}
-            <div className="hidden md:flex items-center gap-1">
-              {(
-                [
-                  { label: "About", id: "about" },
-                  { label: "Tracks", id: "tracks" },
-                  { label: "How It Works", id: "how-it-works" },
-                  { label: "Leadership", id: "leadership" },
-                ] as const
-              ).map(({ label, id }) => {
-                const isTarget = gazeNavState.target === id;
-                const progress = isTarget ? gazeNavState.progress : 0;
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              {NAV_LINKS.map(({ label, id }) => {
+                const isTarget = gazeNav.target === id;
                 return (
                   <button
                     key={id}
                     data-gaze-nav={id}
                     onClick={() => scrollTo(id)}
-                    className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-zinc-400 hover:text-white transition-colors duration-150 cursor-pointer"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "6px 14px",
+                      borderRadius: 10,
+                      fontSize: 13,
+                      color: "#a1a1aa",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "color 0.15s",
+                    }}
+                    onMouseEnter={(e) =>
+                      ((e.currentTarget as HTMLButtonElement).style.color =
+                        "#fff")
+                    }
+                    onMouseLeave={(e) =>
+                      ((e.currentTarget as HTMLButtonElement).style.color =
+                        "#a1a1aa")
+                    }
                   >
                     {gazeActive && (
                       <svg
-                        width="16"
-                        height="16"
+                        width="14"
+                        height="14"
                         viewBox="0 0 24 24"
-                        className="-rotate-90 flex-shrink-0"
                         style={{
+                          transform: "rotate(-90deg)",
                           opacity: isTarget ? 1 : 0,
                           transition: "opacity 0.2s",
+                          flexShrink: 0,
                         }}
-                        aria-hidden="true"
                       >
                         <circle
                           cx="12"
                           cy="12"
                           r="10"
                           fill="none"
-                          stroke="rgba(255,204,0,0.2)"
-                          strokeWidth="2"
+                          stroke="rgba(255,204,0,0.15)"
+                          strokeWidth="2.5"
                         />
                         <circle
                           cx="12"
                           cy="12"
                           r="10"
                           fill="none"
-                          stroke={G}
-                          strokeWidth="2"
-                          strokeDasharray={`${progress * circumference} ${circumference}`}
+                          stroke="#FFCC00"
+                          strokeWidth="2.5"
+                          strokeDasharray={`${gazeNav.progress * ARC} ${ARC}`}
                           strokeLinecap="round"
                         />
                       </svg>
@@ -348,46 +369,66 @@ export default function TTSSite() {
               })}
             </div>
 
-            {/* CTA */}
-            <div className="flex items-center gap-3">
-              {!gazeActive && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {!gazeActive ? (
                 <button
                   onClick={startGaze}
-                  className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer"
                   style={{
-                    background: CDIM,
-                    border: `1px solid ${CBORDER}`,
-                    color: C,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 12px",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#CC0000",
+                    background: "rgba(204,0,0,0.1)",
+                    border: "1px solid rgba(204,0,0,0.25)",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
                   }}
                 >
                   <Eye size={12} /> Eye Nav
                 </button>
-              )}
-              {gazeActive && (
+              ) : (
                 <div
-                  className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
                   style={{
-                    background: GDIM,
-                    border: `1px solid ${GBORDER}`,
-                    color: G,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 12px",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#FFCC00",
+                    background: "rgba(255,204,0,0.08)",
+                    border: "1px solid rgba(255,204,0,0.2)",
                   }}
                 >
-                  <Eye size={12} /> Eye Active
+                  <Eye size={12} /> Live
                 </div>
               )}
               <button
                 onClick={() => scrollTo("join")}
-                className="px-4 py-2 rounded-xl text-white text-sm font-semibold transition-all duration-150 cursor-pointer"
                 style={{
-                  background: C,
-                  boxShadow: `0 4px 20px rgba(204,0,0,0.3)`,
+                  padding: "8px 18px",
+                  borderRadius: 10,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#fff",
+                  background: "#CC0000",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 20px rgba(204,0,0,0.35)",
+                  transition: "background 0.15s",
                 }}
                 onMouseEnter={(e) =>
                   ((e.currentTarget as HTMLButtonElement).style.background =
-                    "#AA0000")
+                    "#aa0000")
                 }
                 onMouseLeave={(e) =>
-                  ((e.currentTarget as HTMLButtonElement).style.background = C)
+                  ((e.currentTarget as HTMLButtonElement).style.background =
+                    "#CC0000")
                 }
               >
                 Apply
@@ -396,172 +437,419 @@ export default function TTSSite() {
           </div>
         </nav>
 
-        {/* ── HERO ─────────────────────────────────────────────────────── */}
+        {/* ── HERO ── */}
         <section
-          className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
           style={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
+            overflow: "hidden",
+            paddingTop: 60,
             background: "#09090b",
-            backgroundImage:
-              `radial-gradient(ellipse 80% 50% at 50% -10%, rgba(204,0,0,0.15), transparent),` +
-              `radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)`,
-            backgroundSize: "100% 100%, 32px 32px",
           }}
         >
-          <div className="text-center max-w-5xl mx-auto px-6">
+          {/* Red glow */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: -200,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 800,
+              height: 600,
+              borderRadius: "50%",
+              background:
+                "radial-gradient(ellipse, rgba(204,0,0,0.18) 0%, transparent 70%)",
+              pointerEvents: "none",
+            }}
+          />
+          {/* Dot grid */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              backgroundImage:
+                "radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px)",
+              backgroundSize: "32px 32px",
+            }}
+          />
+
+          <div
+            style={{
+              textAlign: "center",
+              maxWidth: 900,
+              margin: "0 auto",
+              padding: "0 24px",
+              position: "relative",
+            }}
+          >
             <div
-              className="tts-fade inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-10"
+              className="tts-fade"
               style={{
-                background: CDIM,
-                border: `1px solid ${CBORDER}`,
-                color: C,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "6px 14px",
+                borderRadius: 100,
+                background: "rgba(204,0,0,0.1)",
+                border: "1px solid rgba(204,0,0,0.25)",
+                color: "#CC0000",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                marginBottom: 40,
               }}
             >
               USC Builder Club · Spring 2026
             </div>
 
-            <h1 className="tts-fade text-6xl md:text-8xl lg:text-9xl font-black tracking-tight leading-none mb-8">
-              <span className="text-white">Trojan</span>
+            <h1
+              className="tts-fade"
+              style={{
+                fontSize: "clamp(56px, 10vw, 120px)",
+                fontWeight: 900,
+                letterSpacing: "-0.04em",
+                lineHeight: 0.92,
+                margin: "0 0 32px",
+                color: "#fff",
+              }}
+            >
+              Build.
               <br />
               <span
                 style={{
-                  background: `linear-gradient(135deg, ${C} 0%, ${G} 100%)`,
+                  background:
+                    "linear-gradient(135deg, #CC0000 0%, #FF4444 40%, #FFCC00 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}
               >
-                Technology
+                Solve.
               </span>
               <br />
-              <span className="text-white">Solutions</span>
+              Ship.
             </h1>
 
-            <p className="tts-fade text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-12 leading-relaxed">
-              USC&apos;s builder club for people who want to ship real products,
-              solve real client problems, and learn by actually doing.
+            <p
+              className="tts-fade"
+              style={{
+                fontSize: 18,
+                color: "#71717a",
+                maxWidth: 560,
+                margin: "0 auto 48px",
+                lineHeight: 1.7,
+              }}
+            >
+              Trojan Technology Solutions is USC&apos;s hands-on tech club. No
+              prerequisites. No gatekeeping. Just people who want to ship real
+              things.
             </p>
 
-            <div className="tts-fade flex items-center justify-center gap-4 flex-wrap">
+            <div
+              className="tts-fade"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
               <button
                 onClick={() => scrollTo("join")}
-                className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl text-white font-semibold text-base transition-all duration-150 cursor-pointer"
                 style={{
-                  background: C,
-                  boxShadow: `0 8px 32px rgba(204,0,0,0.35)`,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "14px 28px",
+                  borderRadius: 14,
+                  background: "#CC0000",
+                  color: "#fff",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 8px 32px rgba(204,0,0,0.4)",
+                  transition: "all 0.15s",
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLButtonElement).style.background =
-                    "#AA0000";
+                    "#aa0000";
+                  (e.currentTarget as HTMLButtonElement).style.transform =
+                    "translateY(-1px)";
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = C;
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "#CC0000";
+                  (e.currentTarget as HTMLButtonElement).style.transform =
+                    "translateY(0)";
                 }}
               >
-                Apply Now <ArrowRight size={17} />
+                Apply Now <ArrowRight size={16} />
               </button>
               <button
                 onClick={() => scrollTo("about")}
-                className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl border border-white/10 bg-white/[0.05] hover:bg-white/[0.09] text-zinc-300 font-medium text-base transition-all duration-150 cursor-pointer"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "14px 28px",
+                  borderRadius: 14,
+                  background: "rgba(255,255,255,0.06)",
+                  color: "#a1a1aa",
+                  fontSize: 15,
+                  fontWeight: 500,
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "rgba(255,255,255,0.1)";
+                  (e.currentTarget as HTMLButtonElement).style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "rgba(255,255,255,0.06)";
+                  (e.currentTarget as HTMLButtonElement).style.color =
+                    "#a1a1aa";
+                }}
               >
-                Learn More <ChevronDown size={17} />
+                Learn More <ChevronDown size={16} />
               </button>
             </div>
 
-            {/* Stats bar */}
-            <div className="tts-fade mt-20 grid grid-cols-3 gap-6 max-w-lg mx-auto">
+            {/* Stats */}
+            <div
+              className="tts-fade"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 48,
+                marginTop: 80,
+              }}
+            >
               {[
-                ["40–60", "Members this semester"],
-                ["30+", "Shipped products"],
-                ["3+", "Real clients"],
+                ["40–60", "Members"],
+                ["3", "Tracks"],
+                ["Real clients", "Day 1"],
               ].map(([num, label]) => (
-                <div key={label} className="text-center">
+                <div key={label} style={{ textAlign: "center" }}>
                   <div
-                    className="text-2xl font-black mb-1"
-                    style={{ color: G }}
+                    style={{
+                      fontSize: 28,
+                      fontWeight: 900,
+                      color: "#FFCC00",
+                      letterSpacing: "-0.02em",
+                    }}
                   >
                     {num}
                   </div>
-                  <div className="text-xs text-zinc-600">{label}</div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "#52525b",
+                      marginTop: 4,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                    }}
+                  >
+                    {label}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-zinc-600">
-            <ChevronDown size={18} className="animate-bounce" />
+          <div
+            style={{
+              position: "absolute",
+              bottom: 32,
+              left: "50%",
+              transform: "translateX(-50%)",
+              color: "#3f3f46",
+            }}
+          >
+            <ChevronDown size={20} className="animate-bounce" />
           </div>
         </section>
 
-        {/* ── WHAT WE ARE ──────────────────────────────────────────────── */}
+        {/* ── ABOUT ── */}
         <section
           id="about"
-          className="py-32 px-6"
-          style={{ background: "#09090b" }}
+          style={{ background: "#0d0d10", padding: "120px 24px" }}
         >
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-20">
-              <p
-                className="tts-fade text-xs font-semibold uppercase tracking-widest mb-4"
-                style={{ color: C }}
+          <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+            {/* Manifesto row */}
+            <div className="tts-fade" style={{ marginBottom: 80 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                  marginBottom: 24,
+                }}
               >
-                What We Are
-              </p>
-              <h2 className="tts-fade text-4xl md:text-5xl font-bold text-white tracking-tight mb-5">
-                Built different, on purpose
+                <div
+                  style={{
+                    width: 3,
+                    height: 24,
+                    background: "#CC0000",
+                    borderRadius: 2,
+                    marginTop: 4,
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#CC0000",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  What We Are
+                </span>
+              </div>
+              <h2
+                style={{
+                  fontSize: "clamp(36px, 5vw, 64px)",
+                  fontWeight: 900,
+                  color: "#fff",
+                  letterSpacing: "-0.03em",
+                  lineHeight: 1.05,
+                  maxWidth: 800,
+                  margin: "0 0 24px",
+                }}
+              >
+                The club that exists to make you dangerous.
               </h2>
-              <p className="tts-fade text-zinc-500 text-lg max-w-xl mx-auto">
-                Less talk. More shipping. Less theory. More client work. Less
-                clout-chasing. More skill-building.
+              <p
+                style={{
+                  fontSize: 17,
+                  color: "#71717a",
+                  maxWidth: 600,
+                  lineHeight: 1.75,
+                }}
+              >
+                Not another resume-padding org. Not another AI club that
+                doesn&apos;t ship anything. TTS is where you come to actually
+                build — products, client work, and career leverage — in one
+                semester.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* 3 pillars — different layout, visible cards */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 16,
+              }}
+            >
               {[
                 {
                   Icon: Code2,
-                  iconBg: CDIM,
-                  iconBorder: CBORDER,
-                  iconColor: C,
+                  accent: "#CC0000",
+                  accentDim: "rgba(204,0,0,0.1)",
+                  num: "01",
                   title: "Startup Studio",
-                  body: "Ship real products with real users. Not demo projects or class assignments — live products with actual traction built this semester.",
+                  body: "Build apps with AI, deploy live products, find real users — all in one semester. 6-week arcs from idea to shipped.",
                 },
                 {
                   Icon: Briefcase,
-                  iconBg: GDIM,
-                  iconBorder: GBORDER,
-                  iconColor: G,
+                  accent: "#FFCC00",
+                  accentDim: "rgba(255,204,0,0.1)",
+                  num: "02",
                   title: "Consulting Arm",
-                  body: "Solve real problems for real clients using AI-first workflows. Get strategic reps before you graduate. Real scope, real deliverables.",
+                  body: "Solve real client problems with AI-first workflows. Real scope. Real deliverables. Strategic reps before you graduate.",
                 },
                 {
                   Icon: Users,
-                  iconBg: "rgba(255,255,255,0.06)",
-                  iconBorder: "rgba(255,255,255,0.12)",
-                  iconColor: "#e4e4e7",
+                  accent: "#fff",
+                  accentDim: "rgba(255,255,255,0.07)",
+                  num: "03",
                   title: "Builder Community",
-                  body: "High-energy, meets consistently, works in public. Anyone can join — no technical background required, just drive.",
+                  body: "Anyone can join — no technical background required. Engineering, business, pre-med, design — all welcome.",
                 },
-              ].map(({ Icon, iconBg, iconBorder, iconColor, title, body }) => (
+              ].map(({ Icon, accent, accentDim, num, title, body }) => (
                 <div
-                  key={title}
-                  className="tts-fade rounded-2xl p-8 border border-white/[0.07]"
+                  key={num}
+                  className="tts-fade"
                   style={{
-                    background: "rgba(255,255,255,0.035)",
-                    backdropFilter: "blur(12px)",
+                    background: "#111113",
+                    borderRadius: 20,
+                    border: "1px solid #1f1f23",
+                    padding: "32px 28px",
+                    transition: "border-color 0.2s, transform 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.borderColor =
+                      accent;
+                    (e.currentTarget as HTMLDivElement).style.transform =
+                      "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.borderColor =
+                      "#1f1f23";
+                    (e.currentTarget as HTMLDivElement).style.transform =
+                      "translateY(0)";
                   }}
                 >
                   <div
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6"
                     style={{
-                      background: iconBg,
-                      border: `1px solid ${iconBorder}`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: 28,
                     }}
                   >
-                    <Icon size={22} style={{ color: iconColor }} />
+                    <div
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 12,
+                        background: accentDim,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Icon size={20} color={accent} />
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 48,
+                        fontWeight: 900,
+                        color: "rgba(255,255,255,0.04)",
+                        letterSpacing: "-0.04em",
+                      }}
+                    >
+                      {num}
+                    </span>
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-3">
+                  <h3
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 700,
+                      color: "#fff",
+                      marginBottom: 12,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
                     {title}
                   </h3>
-                  <p className="text-sm text-zinc-500 leading-relaxed">
+                  <p
+                    style={{ fontSize: 14, color: "#52525b", lineHeight: 1.7 }}
+                  >
                     {body}
                   </p>
                 </div>
@@ -570,37 +858,65 @@ export default function TTSSite() {
           </div>
         </section>
 
-        {/* ── TRACKS ───────────────────────────────────────────────────── */}
+        {/* ── TRACKS ── */}
         <section
           id="tracks"
-          className="py-32 px-6"
-          style={{ background: `rgba(204,0,0,0.03)` }}
+          style={{ background: "#09090b", padding: "120px 24px" }}
         >
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-20">
-              <p
-                className="tts-fade text-xs font-semibold uppercase tracking-widest mb-4"
-                style={{ color: G }}
+          <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+            <div className="tts-fade" style={{ marginBottom: 80 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 24,
+                }}
               >
-                Pick Your Path
-              </p>
-              <h2 className="tts-fade text-4xl md:text-5xl font-bold text-white tracking-tight mb-5">
+                <div
+                  style={{
+                    width: 3,
+                    height: 24,
+                    background: "#FFCC00",
+                    borderRadius: 2,
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#FFCC00",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Pick Your Path
+                </span>
+              </div>
+              <h2
+                style={{
+                  fontSize: "clamp(32px, 4vw, 56px)",
+                  fontWeight: 900,
+                  color: "#fff",
+                  letterSpacing: "-0.03em",
+                  marginBottom: 16,
+                }}
+              >
                 Three tracks. One community.
               </h2>
-              <p className="tts-fade text-zinc-500 text-lg">
+              <p style={{ fontSize: 16, color: "#52525b" }}>
                 You can switch. Most people end up doing two.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {[
                 {
                   num: "01",
-                  numColor: `rgba(204,0,0,0.2)`,
-                  eyebrowColor: C,
-                  dotBg: C,
-                  subtitle: "Product & Startups",
+                  accent: "#CC0000",
                   title: "Vibe Coding",
+                  sub: "Product & Startups",
                   items: [
                     "Build apps and tools with AI",
                     "Deploy live products this semester",
@@ -610,11 +926,9 @@ export default function TTSSite() {
                 },
                 {
                   num: "02",
-                  numColor: `rgba(255,204,0,0.2)`,
-                  eyebrowColor: G,
-                  dotBg: G,
-                  subtitle: "Client Work & Strategy",
+                  accent: "#FFCC00",
                   title: "Consulting",
+                  sub: "Client Work & Strategy",
                   items: [
                     "Solve real problems for real clients",
                     "AI-first research and analysis",
@@ -624,11 +938,9 @@ export default function TTSSite() {
                 },
                 {
                   num: "03",
-                  numColor: "rgba(255,255,255,0.07)",
-                  eyebrowColor: "#a1a1aa",
-                  dotBg: "#71717a",
-                  subtitle: "Career Acceleration",
+                  accent: "#a1a1aa",
                   title: "Community",
+                  sub: "Career Acceleration",
                   items: [
                     "Apply AI directly to your major",
                     "Build your network intentionally",
@@ -636,254 +948,99 @@ export default function TTSSite() {
                     "Career positioning that actually works",
                   ],
                 },
-              ].map(
-                ({
-                  num,
-                  numColor,
-                  eyebrowColor,
-                  dotBg,
-                  subtitle,
-                  title,
-                  items,
-                }) => (
-                  <div
-                    key={num}
-                    className="tts-fade rounded-2xl p-8 border border-white/[0.07] flex flex-col"
-                    style={{
-                      background: "rgba(255,255,255,0.035)",
-                      backdropFilter: "blur(12px)",
-                    }}
-                  >
+              ].map(({ num, accent, title, sub, items }) => (
+                <div
+                  key={num}
+                  className="tts-fade"
+                  style={{
+                    background: "#111113",
+                    borderRadius: 20,
+                    border: "1px solid #1f1f23",
+                    padding: "36px 36px",
+                    display: "grid",
+                    gridTemplateColumns: "120px 1fr 1fr",
+                    gap: 40,
+                    alignItems: "center",
+                    transition: "border-color 0.2s",
+                  }}
+                  onMouseEnter={(e) =>
+                    ((e.currentTarget as HTMLDivElement).style.borderColor =
+                      accent)
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.currentTarget as HTMLDivElement).style.borderColor =
+                      "#1f1f23")
+                  }
+                >
+                  <div>
                     <div
-                      className="text-6xl font-black mb-4"
-                      style={{ color: numColor }}
+                      style={{
+                        fontSize: 56,
+                        fontWeight: 900,
+                        color: accent,
+                        lineHeight: 1,
+                        letterSpacing: "-0.04em",
+                        opacity: 0.3,
+                      }}
                     >
                       {num}
                     </div>
-                    <p
-                      className="text-xs font-semibold uppercase tracking-widest mb-2"
-                      style={{ color: eyebrowColor }}
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: accent,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        marginBottom: 8,
+                      }}
                     >
-                      {subtitle}
-                    </p>
-                    <h3 className="text-2xl font-bold text-white mb-7">
+                      {sub}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 26,
+                        fontWeight: 800,
+                        color: "#fff",
+                        letterSpacing: "-0.02em",
+                      }}
+                    >
                       {title}
-                    </h3>
-                    <ul className="space-y-3 mt-auto">
-                      {items.map((item) => (
-                        <li
-                          key={item}
-                          className="flex items-start gap-3 text-sm text-zinc-400"
-                        >
-                          <div
-                            className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
-                            style={{ background: dotBg }}
-                          />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
+                    </div>
                   </div>
-                ),
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-        <section
-          id="how-it-works"
-          className="py-32 px-6"
-          style={{ background: "#09090b" }}
-        >
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-20">
-              <p
-                className="tts-fade text-xs font-semibold uppercase tracking-widest mb-4"
-                style={{ color: C }}
-              >
-                Weekly Cadence
-              </p>
-              <h2 className="tts-fade text-4xl md:text-5xl font-bold text-white tracking-tight mb-5">
-                How TTS actually runs
-              </h2>
-              <p className="tts-fade text-zinc-500 text-lg max-w-lg mx-auto">
-                Consistent rhythm. Real output. No fluff meetings.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-16">
-              {[
-                {
-                  accentColor: C,
-                  day: "Tuesday",
-                  label: "General Meeting",
-                  desc: "Full club. Core lesson or live demo, track breakouts, accountability check-in, and next week's goals. Tyler and Caleb both run it. 6–7pm.",
-                },
-                {
-                  accentColor: G,
-                  day: "Tue – Fri",
-                  label: "Workspace Sessions",
-                  desc: "Open co-working. Build your product, work on a client project, get mentorship, or help onboard someone. Always staffed by e-board.",
-                },
-                {
-                  accentColor: "#a1a1aa",
-                  day: "Sunday",
-                  label: "E-board Sync",
-                  desc: "Leadership only. Review wins and problems, plan the week, check the pipeline, assign owners, protect founder health.",
-                },
-              ].map(({ accentColor, day, label, desc }) => (
-                <div
-                  key={day}
-                  className="tts-fade rounded-2xl p-8 border border-white/[0.07]"
-                  style={{
-                    background: "rgba(255,255,255,0.035)",
-                    backdropFilter: "blur(12px)",
-                  }}
-                >
-                  <p
-                    className="text-xs font-semibold uppercase tracking-widest mb-3"
-                    style={{ color: accentColor }}
+                  <ul
+                    style={{
+                      listStyle: "none",
+                      margin: 0,
+                      padding: 0,
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "8px 16px",
+                    }}
                   >
-                    {day}
-                  </p>
-                  <h3 className="text-xl font-bold text-white mb-4">{label}</h3>
-                  <p className="text-sm text-zinc-500 leading-relaxed">
-                    {desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* First meeting preview */}
-            <div
-              className="tts-fade rounded-2xl p-8 md:p-12"
-              style={{
-                background: CDIM,
-                border: `1px solid ${CBORDER}`,
-                backdropFilter: "blur(12px)",
-              }}
-            >
-              <div
-                className="text-xs font-semibold uppercase tracking-widest mb-4"
-                style={{ color: C }}
-              >
-                First Meeting
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-6">
-                What happens Week 1
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  "What TTS actually is and who it's for",
-                  "Why AI changes everything before you graduate",
-                  "Pick your track (you can switch anytime)",
-                  "Live vibe coding demo — ship something in 20 min",
-                  "Join Discord, meet your cohort",
-                  "Leave with a clear next action",
-                ].map((item, i) => (
-                  <div key={item} className="flex items-start gap-3">
-                    <span
-                      className="text-xs font-bold mt-0.5 flex-shrink-0"
-                      style={{ color: G }}
-                    >
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <span className="text-sm text-zinc-300">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── LEADERSHIP ───────────────────────────────────────────────── */}
-        <section
-          id="leadership"
-          className="py-32 px-6"
-          style={{ background: "rgba(204,0,0,0.025)" }}
-        >
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-20">
-              <p
-                className="tts-fade text-xs font-semibold uppercase tracking-widest mb-4"
-                style={{ color: G }}
-              >
-                Founders
-              </p>
-              <h2 className="tts-fade text-4xl md:text-5xl font-bold text-white tracking-tight mb-5">
-                Built by builders
-              </h2>
-              <p className="tts-fade text-zinc-500 text-lg max-w-lg mx-auto">
-                Caleb owns product and tech. Tyler owns consulting and people.
-                Both own the vision.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-16">
-              {[
-                {
-                  bg: CDIM,
-                  border: CBORDER,
-                  textColor: C,
-                  initials: "CN",
-                  name: "Caleb Newton",
-                  role: "Entrepreneurship Lead",
-                  owns: [
-                    "Product curriculum and technical systems",
-                    "Website, GitHub, and tooling",
-                    "Startup-facing relationships",
-                    "Builder culture and live demos",
-                  ],
-                },
-                {
-                  bg: GDIM,
-                  border: GBORDER,
-                  textColor: G,
-                  initials: "TL",
-                  name: "Tyler Larsen",
-                  role: "Consulting Lead",
-                  owns: [
-                    "Consulting curriculum and client pipeline",
-                    "E-board building and people ops",
-                    "Partnerships and cross-club ecosystem",
-                    "Community culture and recruiting flow",
-                  ],
-                },
-              ].map(({ bg, border, textColor, initials, name, role, owns }) => (
-                <div
-                  key={name}
-                  className="tts-fade rounded-2xl p-8 border border-white/[0.07]"
-                  style={{
-                    background: "rgba(255,255,255,0.04)",
-                    backdropFilter: "blur(12px)",
-                  }}
-                >
-                  <div
-                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
-                    style={{ background: bg, border: `1px solid ${border}` }}
-                  >
-                    <span
-                      className="text-xl font-black"
-                      style={{ color: textColor }}
-                    >
-                      {initials}
-                    </span>
-                  </div>
-                  <p
-                    className="text-xs font-semibold uppercase tracking-widest mb-2"
-                    style={{ color: textColor }}
-                  >
-                    {role}
-                  </p>
-                  <h3 className="text-2xl font-bold text-white mb-6">{name}</h3>
-                  <ul className="space-y-2.5">
-                    {owns.map((item) => (
+                    {items.map((item) => (
                       <li
                         key={item}
-                        className="flex items-start gap-3 text-sm text-zinc-400"
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 8,
+                          fontSize: 13,
+                          color: "#71717a",
+                        }}
                       >
-                        <div className="w-1 h-1 rounded-full bg-zinc-600 flex-shrink-0 mt-2" />
+                        <div
+                          style={{
+                            width: 5,
+                            height: 5,
+                            borderRadius: "50%",
+                            background: accent,
+                            flexShrink: 0,
+                            marginTop: 5,
+                          }}
+                        />
                         {item}
                       </li>
                     ))}
@@ -891,57 +1048,469 @@ export default function TTSSite() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
 
-            {/* Shared values */}
+        {/* ── HOW IT WORKS ── */}
+        <section
+          id="how-it-works"
+          style={{ background: "#0d0d10", padding: "120px 24px" }}
+        >
+          <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+            <div className="tts-fade" style={{ marginBottom: 80 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 24,
+                }}
+              >
+                <div
+                  style={{
+                    width: 3,
+                    height: 24,
+                    background: "#CC0000",
+                    borderRadius: 2,
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#CC0000",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Weekly Cadence
+                </span>
+              </div>
+              <h2
+                style={{
+                  fontSize: "clamp(32px, 4vw, 56px)",
+                  fontWeight: 900,
+                  color: "#fff",
+                  letterSpacing: "-0.03em",
+                  marginBottom: 16,
+                }}
+              >
+                How TTS actually runs
+              </h2>
+              <p style={{ fontSize: 16, color: "#52525b" }}>
+                Consistent rhythm. Real output. No fluff.
+              </p>
+            </div>
+
             <div
-              className="tts-fade rounded-2xl p-8 border border-white/[0.07] max-w-3xl mx-auto"
               style={{
-                background: "rgba(255,255,255,0.03)",
-                backdropFilter: "blur(12px)",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                gap: 16,
+                marginBottom: 20,
               }}
             >
-              <p className="text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-5">
-                What We Both Own
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {[
-                  "Overall vision",
-                  "Monday meeting design",
-                  "Major strategic decisions",
-                  "Club culture",
-                  "External representation",
-                  "Demo Day",
-                ].map((item) => (
-                  <span
-                    key={item}
-                    className="px-3 py-1.5 rounded-full text-xs font-medium text-zinc-300 border border-white/[0.08] bg-white/[0.04]"
+              {[
+                {
+                  accent: "#CC0000",
+                  day: "Tuesday",
+                  time: "6–7pm",
+                  label: "General Meeting",
+                  desc: "Full club. Core lesson or live demo, track breakouts, accountability check-in, and goals for the week.",
+                },
+                {
+                  accent: "#FFCC00",
+                  day: "Tue – Fri",
+                  time: "Open",
+                  label: "Workspace Sessions",
+                  desc: "Co-working. Build, get mentorship, or help onboard someone. Always staffed by e-board.",
+                },
+                {
+                  accent: "#52525b",
+                  day: "Sunday",
+                  time: "E-board only",
+                  label: "Leadership Sync",
+                  desc: "Review wins and problems, plan Monday, assign owners, protect founder health.",
+                },
+              ].map(({ accent, day, time, label, desc }) => (
+                <div
+                  key={day}
+                  className="tts-fade"
+                  style={{
+                    background: "#111113",
+                    borderRadius: 20,
+                    border: "1px solid #1f1f23",
+                    padding: "32px 28px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: 20,
+                    }}
                   >
-                    {item}
-                  </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: accent,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {day}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: "#3f3f46",
+                        padding: "3px 8px",
+                        borderRadius: 6,
+                        background: "#1a1a1e",
+                      }}
+                    >
+                      {time}
+                    </span>
+                  </div>
+                  <h3
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 700,
+                      color: "#fff",
+                      marginBottom: 12,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {label}
+                  </h3>
+                  <p
+                    style={{ fontSize: 14, color: "#52525b", lineHeight: 1.7 }}
+                  >
+                    {desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Week 1 callout */}
+            <div
+              className="tts-fade"
+              style={{
+                background: "#111113",
+                borderRadius: 20,
+                border: "1px solid rgba(204,0,0,0.3)",
+                padding: "40px 44px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  marginBottom: 24,
+                }}
+              >
+                <div
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "#CC0000",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#CC0000",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Week 1 Meeting
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                {[
+                  "What TTS is and who it's for",
+                  "Why AI changes everything before you graduate",
+                  "Pick your track — switch anytime",
+                  "Live vibe coding demo: ship something in 20 min",
+                  "Join Discord, meet your cohort",
+                  "Leave with a clear next action",
+                ].map((item, i) => (
+                  <div
+                    key={item}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 12,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: "#FFCC00",
+                        flexShrink: 0,
+                        marginTop: 2,
+                        minWidth: 20,
+                      }}
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 14,
+                        color: "#a1a1aa",
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {item}
+                    </span>
+                  </div>
                 ))}
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── JOIN ─────────────────────────────────────────────────────── */}
+        {/* ── LEADERSHIP ── */}
+        <section
+          id="leadership"
+          style={{ background: "#09090b", padding: "120px 24px" }}
+        >
+          <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+            <div className="tts-fade" style={{ marginBottom: 80 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 24,
+                }}
+              >
+                <div
+                  style={{
+                    width: 3,
+                    height: 24,
+                    background: "#FFCC00",
+                    borderRadius: 2,
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#FFCC00",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Founders
+                </span>
+              </div>
+              <h2
+                style={{
+                  fontSize: "clamp(32px, 4vw, 56px)",
+                  fontWeight: 900,
+                  color: "#fff",
+                  letterSpacing: "-0.03em",
+                }}
+              >
+                Built by builders
+              </h2>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+                gap: 16,
+                maxWidth: 800,
+              }}
+            >
+              {[
+                {
+                  initials: "CN",
+                  accent: "#CC0000",
+                  accentDim: "rgba(204,0,0,0.12)",
+                  name: "Caleb Newton",
+                  role: "Entrepreneurship Lead",
+                  owns: [
+                    "Product curriculum & technical systems",
+                    "Website, GitHub, and tooling",
+                    "Startup-facing relationships",
+                    "Builder culture and live demos",
+                  ],
+                },
+                {
+                  initials: "TL",
+                  accent: "#FFCC00",
+                  accentDim: "rgba(255,204,0,0.1)",
+                  name: "Tyler Larsen",
+                  role: "Consulting Lead",
+                  owns: [
+                    "Consulting curriculum & client pipeline",
+                    "E-board building and people ops",
+                    "Partnerships & cross-club ecosystem",
+                    "Community culture and recruiting",
+                  ],
+                },
+              ].map(({ initials, accent, accentDim, name, role, owns }) => (
+                <div
+                  key={name}
+                  className="tts-fade"
+                  style={{
+                    background: "#111113",
+                    borderRadius: 20,
+                    border: "1px solid #1f1f23",
+                    padding: "36px 32px",
+                    transition: "border-color 0.2s",
+                  }}
+                  onMouseEnter={(e) =>
+                    ((e.currentTarget as HTMLDivElement).style.borderColor =
+                      accent)
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.currentTarget as HTMLDivElement).style.borderColor =
+                      "#1f1f23")
+                  }
+                >
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 16,
+                      background: accentDim,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 24,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 20, fontWeight: 900, color: accent }}
+                    >
+                      {initials}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: accent,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      marginBottom: 6,
+                    }}
+                  >
+                    {role}
+                  </div>
+                  <h3
+                    style={{
+                      fontSize: 22,
+                      fontWeight: 800,
+                      color: "#fff",
+                      letterSpacing: "-0.02em",
+                      marginBottom: 24,
+                    }}
+                  >
+                    {name}
+                  </h3>
+                  <ul
+                    style={{
+                      listStyle: "none",
+                      margin: 0,
+                      padding: 0,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                    }}
+                  >
+                    {owns.map((item) => (
+                      <li
+                        key={item}
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 10,
+                          fontSize: 13,
+                          color: "#52525b",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 4,
+                            height: 4,
+                            borderRadius: "50%",
+                            background: "#3f3f46",
+                            flexShrink: 0,
+                            marginTop: 6,
+                          }}
+                        />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── JOIN ── */}
         <section
           id="join"
-          className="py-32 px-6"
-          style={{ background: "#09090b" }}
+          style={{ background: "#0d0d10", padding: "120px 24px" }}
         >
-          <div className="max-w-2xl mx-auto text-center">
-            <p
-              className="tts-fade text-xs font-semibold uppercase tracking-widest mb-4"
-              style={{ color: C }}
+          <div style={{ maxWidth: 560, margin: "0 auto", textAlign: "center" }}>
+            <div
+              className="tts-fade"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "6px 14px",
+                borderRadius: 100,
+                background: "rgba(204,0,0,0.1)",
+                border: "1px solid rgba(204,0,0,0.25)",
+                color: "#CC0000",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                marginBottom: 32,
+              }}
             >
               Spring 2026
-            </p>
-            <h2 className="tts-fade text-5xl md:text-6xl font-bold text-white tracking-tight mb-6">
-              Ready to actually{" "}
+            </div>
+            <h2
+              className="tts-fade"
+              style={{
+                fontSize: "clamp(40px, 6vw, 72px)",
+                fontWeight: 900,
+                color: "#fff",
+                letterSpacing: "-0.04em",
+                lineHeight: 1,
+                marginBottom: 24,
+              }}
+            >
+              Ready to{" "}
               <span
                 style={{
-                  background: `linear-gradient(135deg, ${C} 0%, ${G} 100%)`,
+                  background:
+                    "linear-gradient(135deg, #CC0000 0%, #FFCC00 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}
@@ -949,73 +1518,146 @@ export default function TTSSite() {
                 build?
               </span>
             </h2>
-            <p className="tts-fade text-zinc-500 text-lg mb-12 leading-relaxed">
+            <p
+              className="tts-fade"
+              style={{
+                fontSize: 16,
+                color: "#52525b",
+                lineHeight: 1.75,
+                marginBottom: 48,
+              }}
+            >
               Show up. Try things before you feel ready. Help each other. No
               ego. If you&apos;re stuck, ask. If you learn something, share it.
             </p>
 
             <div
-              className="tts-fade rounded-2xl p-8 border border-white/[0.08]"
+              className="tts-fade"
               style={{
-                background: "rgba(255,255,255,0.04)",
-                backdropFilter: "blur(12px)",
+                background: "#111113",
+                borderRadius: 24,
+                border: "1px solid #1f1f23",
+                padding: "32px",
               }}
             >
-              <div className="space-y-4">
-                <button
-                  onClick={() =>
-                    window.open("https://discord.gg/tts", "_blank")
-                  }
-                  className="flex items-center justify-center gap-3 w-full py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-150 cursor-pointer"
-                  style={{
-                    background: C,
-                    boxShadow: `0 4px 24px rgba(204,0,0,0.3)`,
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background =
-                      "#AA0000";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = C;
-                  }}
-                >
-                  <Globe size={17} /> Join Discord
-                </button>
-                <div className="grid grid-cols-3 gap-3 text-center pt-2">
-                  {[
-                    ["40–60", "Target members"],
-                    ["3 tracks", "To choose from"],
-                    ["Week 3", "First meeting"],
-                  ].map(([val, label]) => (
-                    <div key={label}>
-                      <div className="text-sm font-bold text-white">{val}</div>
-                      <div className="text-xs text-zinc-600 mt-0.5">
-                        {label}
-                      </div>
+              <button
+                onClick={() => window.open("https://discord.gg/tts", "_blank")}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                  width: "100%",
+                  padding: "16px",
+                  borderRadius: 14,
+                  background: "#CC0000",
+                  color: "#fff",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 24px rgba(204,0,0,0.35)",
+                  transition: "all 0.15s",
+                  marginBottom: 24,
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "#aa0000";
+                  (e.currentTarget as HTMLButtonElement).style.transform =
+                    "translateY(-1px)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "#CC0000";
+                  (e.currentTarget as HTMLButtonElement).style.transform =
+                    "translateY(0)";
+                }}
+              >
+                <Globe size={16} /> Join Discord
+              </button>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: 16,
+                  textAlign: "center",
+                }}
+              >
+                {[
+                  ["40–60", "Target members"],
+                  ["3 tracks", "To choose from"],
+                  ["Week 3", "First meeting"],
+                ].map(([val, label]) => (
+                  <div key={label}>
+                    <div
+                      style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}
+                    >
+                      {val}
                     </div>
-                  ))}
-                </div>
+                    <div
+                      style={{ fontSize: 11, color: "#3f3f46", marginTop: 3 }}
+                    >
+                      {label}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── FOOTER ───────────────────────────────────────────────────── */}
+        {/* ── FOOTER ── */}
         <footer
-          className="border-t border-white/[0.06] py-10 px-6"
-          style={{ background: "#09090b" }}
+          style={{
+            background: "#09090b",
+            borderTop: "1px solid #1a1a1e",
+            padding: "32px 24px",
+          }}
         >
-          <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-2.5 text-zinc-500 text-sm">
+          <div
+            style={{
+              maxWidth: 1280,
+              margin: "0 auto",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 16,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                color: "#3f3f46",
+                fontSize: 13,
+              }}
+            >
               <div
-                className="w-6 h-6 rounded-lg flex items-center justify-center"
-                style={{ background: CDIM, border: `1px solid ${CBORDER}` }}
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 7,
+                  background: "rgba(204,0,0,0.1)",
+                  border: "1px solid rgba(204,0,0,0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                <Zap size={11} style={{ color: C }} />
+                <Zap size={10} color="#CC0000" />
               </div>
               Trojan Technology Solutions · USC
             </div>
-            <div className="text-zinc-700 text-xs tracking-widest uppercase">
+            <div
+              style={{
+                fontSize: 11,
+                color: "#27272a",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+              }}
+            >
               Build. Solve. Ship.
             </div>
           </div>
