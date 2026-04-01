@@ -198,9 +198,9 @@ export default function TTSSite() {
         const maxScroll = sect.offsetHeight - winH;
         const prog = Math.max(0, Math.min(1, scrolled / maxScroll));
         setHeroProgress(prog);
-        // Nav only appears after Ship. has fully landed (prog > 0.62) or past the hero entirely
+        // Nav appears after morph begins (prog > 0.60) or past the hero entirely
         const pastShip =
-          prog > 0.62 || scrollY > sect.offsetTop + sect.offsetHeight;
+          prog > 0.6 || scrollY > sect.offsetTop + sect.offsetHeight;
         setNavVisible(pastShip && scrollY + winH < docH - 200);
       }
     };
@@ -314,9 +314,10 @@ export default function TTSSite() {
   }, [scrollTo]);
 
   // Scroll-driven hero word reveal thresholds
-  const word2Shown = heroProgress > 0.28;
-  const word3Shown = heroProgress > 0.54;
-  const heroContentShown = heroProgress > 0.75;
+  const word2Shown = heroProgress > 0.2;
+  const word3Shown = heroProgress > 0.38;
+  const wordsMorphing = heroProgress > 0.54; // crossfade: Build/Solve/Ship → Trojan/Tech/Solutions
+  const heroContentShown = heroProgress > 0.74;
 
   const NAV_LINKS = [
     { label: "Mission", id: "mission" },
@@ -606,7 +607,7 @@ export default function TTSSite() {
                     justifyContent: "center",
                     cursor: "pointer",
                     transition: "all 0.15s",
-                    color: "#71717a",
+                    color: "#a1a1aa",
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLButtonElement).style.background =
@@ -620,7 +621,7 @@ export default function TTSSite() {
                     (e.currentTarget as HTMLButtonElement).style.background =
                       "rgba(255,255,255,0.05)";
                     (e.currentTarget as HTMLButtonElement).style.color =
-                      "#71717a";
+                      "#a1a1aa";
                     (e.currentTarget as HTMLButtonElement).style.borderColor =
                       "rgba(255,255,255,0.1)";
                   }}
@@ -693,7 +694,7 @@ export default function TTSSite() {
           id="hero"
           ref={heroSectionRef}
           style={{
-            height: "260vh",
+            height: "300vh",
             position: "relative",
           }}
         >
@@ -759,15 +760,14 @@ export default function TTSSite() {
                   background: "rgba(204,0,0,0.08)",
                   border: "1px solid rgba(204,0,0,0.2)",
                   marginBottom: 40,
-                  opacity: word3Shown && !heroContentShown ? 1 : 0,
+                  opacity: word3Shown && !wordsMorphing ? 1 : 0,
                   transform:
-                    word3Shown && !heroContentShown
+                    word3Shown && !wordsMorphing
                       ? "translateY(0)"
                       : "translateY(8px)",
                   transition:
                     "opacity 0.5s ease, transform 0.5s cubic-bezier(0.16,1,0.3,1)",
-                  pointerEvents:
-                    word3Shown && !heroContentShown ? "auto" : "none",
+                  pointerEvents: word3Shown && !wordsMorphing ? "auto" : "none",
                 }}
               >
                 <div
@@ -791,7 +791,7 @@ export default function TTSSite() {
                 </span>
               </div>
 
-              {/* Scroll-driven word reveal */}
+              {/* Scroll-driven word reveal + morph into Trojan Tech Solutions */}
               <h1
                 style={{
                   fontSize: "clamp(72px, 9vw, 112px)",
@@ -802,48 +802,114 @@ export default function TTSSite() {
                   padding: 0,
                 }}
               >
-                {/* Build. — always visible */}
-                <span
-                  style={{
-                    display: "block",
-                    color: "#fff",
-                    opacity: 1,
-                    transform: "translateY(0)",
-                    transition:
-                      "opacity 0.75s cubic-bezier(0.16,1,0.3,1), transform 0.75s cubic-bezier(0.16,1,0.3,1)",
-                  }}
-                >
-                  Build.
+                {/* Slot 1: Build. → Trojan */}
+                <span style={{ display: "block", position: "relative" }}>
+                  <span
+                    style={{
+                      display: "block",
+                      color: "#fff",
+                      opacity: wordsMorphing ? 0 : 1,
+                      transform: wordsMorphing
+                        ? "translateY(0.12em) scale(0.96)"
+                        : "translateY(0) scale(1)",
+                      transition:
+                        "opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1)",
+                    }}
+                  >
+                    Build.
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      display: "block",
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      color: "#fff",
+                      opacity: wordsMorphing ? 1 : 0,
+                      transform: wordsMorphing
+                        ? "translateY(0) scale(1)"
+                        : "translateY(-0.12em) scale(0.96)",
+                      transition:
+                        "opacity 0.55s cubic-bezier(0.16,1,0.3,1) 0.1s, transform 0.55s cubic-bezier(0.16,1,0.3,1) 0.1s",
+                    }}
+                  >
+                    Trojan
+                  </span>
                 </span>
-                {/* Solve. — appears at 28% scroll */}
-                <span
-                  style={{
-                    display: "block",
-                    color: "#fff",
-                    opacity: word2Shown ? 1 : 0,
-                    transform: word2Shown
-                      ? "translateY(0)"
-                      : "translateY(48px)",
-                    transition:
-                      "opacity 0.75s cubic-bezier(0.16,1,0.3,1), transform 0.75s cubic-bezier(0.16,1,0.3,1)",
-                  }}
-                >
-                  Solve.
+
+                {/* Slot 2: Solve. → Tech */}
+                <span style={{ display: "block", position: "relative" }}>
+                  <span
+                    style={{
+                      display: "block",
+                      color: "#fff",
+                      opacity: wordsMorphing ? 0 : word2Shown ? 1 : 0,
+                      transform: wordsMorphing
+                        ? "scale(0.94)"
+                        : word2Shown
+                          ? "translateY(0)"
+                          : "translateY(48px)",
+                      transition:
+                        "opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.75s cubic-bezier(0.16,1,0.3,1)",
+                    }}
+                  >
+                    Solve.
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      display: "block",
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      color: "#FFCC00",
+                      opacity: wordsMorphing ? 1 : 0,
+                      transform: wordsMorphing ? "scale(1)" : "scale(0.94)",
+                      transition:
+                        "opacity 0.55s cubic-bezier(0.16,1,0.3,1) 0.18s, transform 0.55s cubic-bezier(0.16,1,0.3,1) 0.18s",
+                    }}
+                  >
+                    Tech
+                  </span>
                 </span>
-                {/* Ship. — appears at 54% scroll */}
-                <span
-                  style={{
-                    display: "block",
-                    color: "#CC0000",
-                    opacity: word3Shown ? 1 : 0,
-                    transform: word3Shown
-                      ? "translateY(0)"
-                      : "translateY(48px)",
-                    transition:
-                      "opacity 0.75s cubic-bezier(0.16,1,0.3,1), transform 0.75s cubic-bezier(0.16,1,0.3,1)",
-                  }}
-                >
-                  Ship.
+
+                {/* Slot 3: Ship. → Solutions */}
+                <span style={{ display: "block", position: "relative" }}>
+                  <span
+                    style={{
+                      display: "block",
+                      color: "#CC0000",
+                      opacity: wordsMorphing ? 0 : word3Shown ? 1 : 0,
+                      transform: wordsMorphing
+                        ? "translateY(-0.12em) scale(0.96)"
+                        : word3Shown
+                          ? "translateY(0) scale(1)"
+                          : "translateY(48px) scale(1)",
+                      transition:
+                        "opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.75s cubic-bezier(0.16,1,0.3,1)",
+                    }}
+                  >
+                    Ship.
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      display: "block",
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      color: "#CC0000",
+                      opacity: wordsMorphing ? 1 : 0,
+                      transform: wordsMorphing
+                        ? "translateY(0) scale(1)"
+                        : "translateY(0.12em) scale(0.96)",
+                      transition:
+                        "opacity 0.55s cubic-bezier(0.16,1,0.3,1) 0.26s, transform 0.55s cubic-bezier(0.16,1,0.3,1) 0.26s",
+                    }}
+                  >
+                    Solutions
+                  </span>
                 </span>
               </h1>
 
@@ -985,7 +1051,7 @@ export default function TTSSite() {
                       <div
                         style={{
                           fontSize: 11,
-                          color: "#71717a",
+                          color: "#a1a1aa",
                           marginTop: 3,
                           letterSpacing: "0.04em",
                         }}
@@ -1164,7 +1230,7 @@ export default function TTSSite() {
                     >
                       {v}
                     </div>
-                    <div style={{ fontSize: 10, color: "#71717a" }}>{l}</div>
+                    <div style={{ fontSize: 10, color: "#a1a1aa" }}>{l}</div>
                   </div>
                 ))}
               </div>
@@ -1194,7 +1260,7 @@ export default function TTSSite() {
                 className="tts-fade"
                 style={{
                   fontSize: 15,
-                  color: "#71717a",
+                  color: "#a1a1aa",
                   marginTop: 10,
                   transitionDelay: "0.1s",
                 }}
@@ -1382,7 +1448,7 @@ export default function TTSSite() {
                           style={{
                             fontSize: 10,
                             fontWeight: 600,
-                            color: "#71717a",
+                            color: "#a1a1aa",
                             letterSpacing: "0.08em",
                             textTransform: "uppercase",
                             marginBottom: 7,
@@ -1430,7 +1496,7 @@ export default function TTSSite() {
               className="tts-fade"
               style={{
                 fontSize: 15,
-                color: "#71717a",
+                color: "#a1a1aa",
                 marginBottom: 56,
                 transitionDelay: "0.08s",
               }}
@@ -1738,7 +1804,7 @@ export default function TTSSite() {
                       <div
                         style={{
                           fontSize: 11,
-                          color: "#71717a",
+                          color: "#a1a1aa",
                           marginTop: 1,
                         }}
                       >
@@ -1832,7 +1898,7 @@ export default function TTSSite() {
                       <div
                         style={{
                           fontSize: 12,
-                          color: "#71717a",
+                          color: "#a1a1aa",
                           marginTop: 2,
                         }}
                       >
@@ -1996,7 +2062,7 @@ export default function TTSSite() {
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                color: "#71717a",
+                color: "#a1a1aa",
                 fontSize: 12,
               }}
             >
@@ -2016,7 +2082,7 @@ export default function TTSSite() {
               </div>
               Trojan Technology Solutions · USC
             </div>
-            <div style={{ fontSize: 11, color: "#52525b" }}>
+            <div style={{ fontSize: 11, color: "#a1a1aa" }}>
               {new Date().getFullYear()}
             </div>
           </div>
