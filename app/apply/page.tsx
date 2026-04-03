@@ -99,6 +99,11 @@ export default function ApplyPage() {
         padding: "0 20px",
       }}
     >
+      <style>{`
+        @media (max-width: 480px) {
+          .apply-two-col { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       <div
         style={{
           maxWidth: 600,
@@ -156,7 +161,7 @@ export default function ApplyPage() {
                 marginBottom: 12,
               }}
             >
-              You&apos;re in.
+              We got it.
             </h1>
             <p
               style={{
@@ -166,8 +171,17 @@ export default function ApplyPage() {
                 marginBottom: 32,
               }}
             >
-              We got your application. Expect an email from
-              trojantechsolutions@gmail.com within a few days with next steps.
+              We&apos;ll follow up at your email within a few days. In the
+              meantime, follow us on Instagram{" "}
+              <a
+                href="https://instagram.com/trojantechsolutions"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#CC0000", textDecoration: "none" }}
+              >
+                @trojantechsolutions
+              </a>{" "}
+              to see what we&apos;re building.
             </p>
             <Link
               href="/"
@@ -403,6 +417,7 @@ export default function ApplyPage() {
                   Which track are you interested in?
                 </label>
                 <div
+                  className="apply-two-col"
                   style={{
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr",
@@ -415,6 +430,7 @@ export default function ApplyPage() {
                       <button
                         key={id}
                         type="button"
+                        aria-pressed={selected}
                         onClick={() => set("track", id)}
                         style={{
                           padding: "14px 16px",
@@ -457,7 +473,7 @@ export default function ApplyPage() {
                   }}
                 >
                   Why do you want to join TTS?{" "}
-                  <span style={{ color: "#52525b" }}>(min 10 characters)</span>
+                  <span style={{ color: "#71717a" }}>(min 10 characters)</span>
                 </label>
                 <textarea
                   required

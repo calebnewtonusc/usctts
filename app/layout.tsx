@@ -10,9 +10,23 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Trojan Tech Solutions",
+  title: "Trojan Technology Solutions | USC Builder Club",
   description:
-    "USC pro-bono tech consulting club. Small Businesses. Big Impacts.",
+    "USC's AI builder club. Workshops, client work, and speaker nights open to every major. No experience required. No gatekeeping.",
+  openGraph: {
+    title: "Trojan Technology Solutions",
+    description:
+      "USC's AI builder club. Open to every major. No experience required. No gatekeeping.",
+    url: "https://trojantechsolutions.com",
+    siteName: "Trojan Technology Solutions",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Trojan Technology Solutions",
+    description:
+      "USC's AI builder club. Open to every major. No experience required.",
+  },
 };
 
 export default function RootLayout({

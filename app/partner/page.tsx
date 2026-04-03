@@ -381,6 +381,7 @@ export default function PartnerPage() {
                       <button
                         key={id}
                         type="button"
+                        aria-pressed={selected}
                         onClick={() => set("partnerType", id)}
                         style={{
                           padding: "14px 16px",
@@ -423,7 +424,7 @@ export default function PartnerPage() {
                   }}
                 >
                   Tell us more{" "}
-                  <span style={{ color: "#52525b" }}>(min 10 characters)</span>
+                  <span style={{ color: "#71717a" }}>(min 10 characters)</span>
                 </label>
                 <textarea
                   required
