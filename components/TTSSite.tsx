@@ -243,8 +243,7 @@ export default function TTSSite() {
   // Reverse-scroll reveal derived values
   const revealSlide = Math.max(0, (revealProgress - 0.25) / 0.65);
   const panelBY = -100 + revealSlide * 100;
-  const panelAScale = 1 - revealSlide * 0.03;
-  const panelABrightness = 1 - revealSlide * 0.25;
+  const panelAExitY = revealSlide * 100;
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -577,7 +576,7 @@ export default function TTSSite() {
               {/* Content block */}
               <div
                 style={{
-                  marginTop: 48,
+                  marginTop: 12,
                   opacity: heroContentShown ? 1 : 0,
                   transform: heroContentShown
                     ? "translateY(0)"
@@ -1189,9 +1188,8 @@ export default function TTSSite() {
               overflow: "hidden",
             }}
           >
-            {/* Panel A: large statement (behind) */}
+            {/* Panel A: exits downward as Panel B arrives */}
             <div
-              aria-hidden="true"
               style={{
                 position: "absolute",
                 inset: 0,
@@ -1199,11 +1197,11 @@ export default function TTSSite() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                transform: `scale(${panelAScale})`,
-                filter: `brightness(${panelABrightness})`,
+                transform: `translateY(${panelAExitY}%)`,
+                zIndex: 1,
               }}
             >
-              {/* dot grid bg */}
+              {/* dot grid */}
               <div
                 style={{
                   position: "absolute",
@@ -1248,7 +1246,7 @@ export default function TTSSite() {
                     marginBottom: 28,
                   }}
                 >
-                  No prerequisites. No application. No catch.
+                  USC · Any major · Every semester
                 </p>
                 <h2
                   style={{
@@ -1262,24 +1260,24 @@ export default function TTSSite() {
                 >
                   Walk in.
                   <br />
-                  <span style={{ color: "#CC0000" }}>Ship something.</span>
+                  <span style={{ color: "#CC0000" }}>Walk out different.</span>
                 </h2>
                 <p
                   style={{
                     fontSize: 16,
                     color: "#71717a",
                     lineHeight: 1.7,
-                    maxWidth: 480,
+                    maxWidth: 520,
                     margin: "0 auto",
                   }}
                 >
-                  TTS runs every semester at USC. Pick a track. Work on a real
-                  project from week one.
+                  No audition. No prerequisites. No waitlist. Just show up, pick
+                  a track, and start doing real work.
                 </p>
               </div>
             </div>
 
-            {/* Panel B: slides down from above as you scroll */}
+            {/* Panel B: slides in from above — brand new content */}
             <div
               style={{
                 position: "absolute",
@@ -1289,7 +1287,6 @@ export default function TTSSite() {
                 zIndex: 2,
                 display: "flex",
                 alignItems: "center",
-                borderBottom: "1px solid rgba(255,255,255,0.06)",
               }}
             >
               <div
@@ -1298,44 +1295,89 @@ export default function TTSSite() {
                   margin: "0 auto",
                   width: "100%",
                   padding: "0 40px",
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 80,
+                  alignItems: "center",
                 }}
               >
-                <p
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#FFCC00",
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    marginBottom: 16,
-                  }}
-                >
-                  Three ways in
-                </p>
-                <h2
-                  style={{
-                    fontSize: "clamp(28px, 4vw, 56px)",
-                    fontWeight: 900,
-                    color: "#fff",
-                    letterSpacing: "-0.03em",
-                    marginBottom: 44,
-                  }}
-                >
-                  Pick your track.
-                </h2>
+                {/* Left: headline */}
+                <div>
+                  <p
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#10b981",
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      marginBottom: 20,
+                    }}
+                  >
+                    What you walk away with
+                  </p>
+                  <h2
+                    style={{
+                      fontSize: "clamp(32px, 4vw, 60px)",
+                      fontWeight: 900,
+                      color: "#fff",
+                      letterSpacing: "-0.03em",
+                      lineHeight: 1.0,
+                      marginBottom: 24,
+                    }}
+                  >
+                    Real work.
+                    <br />
+                    <span style={{ color: "#10b981" }}>Not just classes.</span>
+                  </h2>
+                  <p
+                    style={{
+                      fontSize: 15,
+                      color: "#71717a",
+                      lineHeight: 1.8,
+                      maxWidth: 400,
+                    }}
+                  >
+                    TTS gives you the reps that internships and grad school
+                    can&apos;t. A shipped product. A real client deck. A network
+                    that actually calls back.
+                  </p>
+                </div>
+
+                {/* Right: outcome tiles */}
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(3, 1fr)",
-                    gap: 16,
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 12,
                   }}
                 >
-                  {TRACKS.map(({ num, title, tagline, accent, icon: Icon }) => (
+                  {[
+                    {
+                      label: "Shipped product",
+                      sub: "Live. With real users.",
+                      accent: "#CC0000",
+                    },
+                    {
+                      label: "Client deck",
+                      sub: "Delivered to a real org.",
+                      accent: "#FFCC00",
+                    },
+                    {
+                      label: "YC network",
+                      sub: "Founders you can call.",
+                      accent: "#10b981",
+                    },
+                    {
+                      label: "Portfolio proof",
+                      sub: "Not just a bullet point.",
+                      accent: "#6366f1",
+                    },
+                  ].map(({ label, sub, accent }) => (
                     <div
-                      key={num}
+                      key={label}
                       style={{
-                        padding: "28px 24px",
-                        borderRadius: 14,
+                        padding: "20px 18px",
+                        borderRadius: 12,
                         background: "rgba(255,255,255,0.03)",
                         border: "1px solid rgba(255,255,255,0.07)",
                         borderTop: `2px solid ${accent}`,
@@ -1343,41 +1385,16 @@ export default function TTSSite() {
                     >
                       <div
                         style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 10,
-                          background: hexToRgba(accent, 0.12),
-                          border: `1px solid ${hexToRgba(accent, 0.35)}`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          marginBottom: 16,
-                        }}
-                      >
-                        <Icon size={16} color={accent} />
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          letterSpacing: "0.1em",
-                          color: accent,
-                          textTransform: "uppercase",
-                          marginBottom: 8,
-                        }}
-                      >
-                        {title}
-                      </div>
-                      <div
-                        style={{
                           fontSize: 14,
-                          fontWeight: 700,
+                          fontWeight: 800,
                           color: "#fff",
-                          lineHeight: 1.4,
-                          marginBottom: 8,
+                          marginBottom: 4,
                         }}
                       >
-                        {tagline}
+                        {label}
+                      </div>
+                      <div style={{ fontSize: 12, color: "#52525b" }}>
+                        {sub}
                       </div>
                     </div>
                   ))}
