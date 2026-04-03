@@ -1,11 +1,6 @@
-import dynamic from "next/dynamic";
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "VisionWeb — Eye & Hand Tracking",
-  description:
-    "Spatial browser interface controlled by your eyes and hands. No headset required.",
-};
+import dynamic from "next/dynamic";
 
 const VisionWeb = dynamic(() => import("@/components/VisionWeb"), {
   ssr: false,
