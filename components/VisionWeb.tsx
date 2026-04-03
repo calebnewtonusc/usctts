@@ -419,12 +419,26 @@ export default function VisionWeb() {
   }, []);
 
   // ── Auto-init camera on mount — no button required ─────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     let cancelled = false;
 
     async function init() {
+      // Confirm effect is firing
+      toast.loading("Starting VisionWeb…", { id: "vw-init" });
+
+      // Guard: mediaDevices unavailable (non-HTTPS or old browser)
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        toast.error("Camera API unavailable. Requires HTTPS.", {
+          id: "vw-init",
+        });
+        setCameraError(true);
+        return;
+      }
+
+      let stream: MediaStream;
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
           video: {
             width: { ideal: 960 },
             height: { ideal: 540 },
@@ -433,48 +447,54 @@ export default function VisionWeb() {
           },
           audio: false,
         });
-        if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
-          return;
-        }
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-        }
-        setReady(true);
-        setPanels([
-          {
-            id: "welcome",
-            title: "Welcome to VisionWeb",
-            x: 60,
-            y: 100,
-            content: "welcome",
-          },
-          {
-            id: "gestures",
-            title: "Gesture Reference",
-            x: 440,
-            y: 100,
-            content: "gestures",
-          },
-          {
-            id: "focus",
-            title: "System Status",
-            x: 820,
-            y: 100,
-            content: "focus",
-          },
-        ]);
-        startGaze();
-        startHands();
-      } catch {
-        if (!cancelled) {
-          setCameraError(true);
-          toast.error(
-            "Camera access denied. VisionWeb requires webcam access.",
-          );
-        }
+      } catch (err) {
+        if (cancelled) return;
+        const msg =
+          err instanceof Error && err.name === "NotAllowedError"
+            ? "Camera permission denied. Allow camera access and reload."
+            : "Could not access camera. Check browser settings.";
+        toast.error(msg, { id: "vw-init" });
+        setCameraError(true);
+        return;
       }
+
+      if (cancelled) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+
+      toast.success("Camera ready", { id: "vw-init" });
+      setReady(true);
+      setPanels([
+        {
+          id: "welcome",
+          title: "Welcome to VisionWeb",
+          x: 60,
+          y: 100,
+          content: "welcome",
+        },
+        {
+          id: "gestures",
+          title: "Gesture Reference",
+          x: 440,
+          y: 100,
+          content: "gestures",
+        },
+        {
+          id: "focus",
+          title: "System Status",
+          x: 820,
+          y: 100,
+          content: "focus",
+        },
+      ]);
+      startGaze();
+      startHands();
     }
 
     init();
@@ -482,7 +502,7 @@ export default function VisionWeb() {
       cancelled = true;
       cancelAnimationFrame(animIdRef.current);
     };
-  }, [startGaze, startHands]);
+  }, []); // [] — run once on mount only
 
   const closePanel = useCallback((id: string) => {
     setPanels((p) => p.filter((panel) => panel.id !== id));
