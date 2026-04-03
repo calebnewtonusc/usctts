@@ -31,15 +31,15 @@ const TRACKS = [
     accent: "#CC0000",
     title: "Building",
     sub: "Product & Startups",
-    tagline: "Ship something real this semester.",
+    tagline: "Come in with an idea. Leave with a live link.",
     featured: false,
     items: [
-      "Build apps and tools with AI",
+      "Build real apps and tools using AI",
       "Deploy live products with real users",
-      "6-week arc from idea to shipped",
+      "Learn by doing, not by watching",
       "No CS background required",
     ],
-    for: "Builders, entrepreneurs, anyone who wants to make something.",
+    for: "Anyone who wants to make something — any major, any year.",
   },
   {
     num: "02",
@@ -47,12 +47,12 @@ const TRACKS = [
     accent: "#FFCC00",
     title: "Consulting",
     sub: "Client Work & Strategy",
-    tagline: "Solve real problems for real organizations.",
+    tagline: "Work on real problems for real organizations.",
     featured: true,
     items: [
       "Live client engagements",
       "AI-first research and analysis",
-      "Actual deliverables and presentations",
+      "Actual deliverables, not slide decks for class",
       "Strategic reps before you graduate",
     ],
     for: "Business, econ, poli-sci, and anyone going into strategy or ops.",
@@ -63,13 +63,13 @@ const TRACKS = [
     accent: "#10b981",
     title: "Growing",
     sub: "Career & Network",
-    tagline: "Use AI to get ahead in your own field.",
+    tagline: "Learn AI tools that apply to your actual field.",
     featured: false,
     items: [
-      "Apply AI directly to your major",
-      "Access YC founders and operators",
-      "Speaker series with working practitioners",
-      "Get ahead before you graduate",
+      "Apply AI directly to your major or career path",
+      "Access YC founders and working operators",
+      "Speaker series with real practitioners",
+      "Get ahead before everyone else catches up",
     ],
     for: "Pre-med, law, finance, architecture, any major.",
   },
@@ -80,7 +80,7 @@ const FOUNDERS = [
     id: "caleb",
     name: "Caleb Newton",
     role: "Co-Founder",
-    focus: "Entrepreneurship & Technology",
+    focus: "USC Innovation · Iovine & Young",
     headshot: "/img/caleb_shot.jpg",
     position: "center 15%",
     link: "https://calebnewton.me/",
@@ -115,27 +115,27 @@ const FOUNDERS = [
 const FAQ_ITEMS = [
   {
     q: "When do we meet?",
-    a: "Weekly sessions each semester. Follow us on Instagram (@trojantechsolutions) for this semester's schedule and location on campus.",
+    a: "Weekly general meetings plus open workspace sessions throughout the week. Follow us on Instagram (@trojantechsolutions) for this semester's schedule and location.",
   },
   {
     q: "Do I need coding experience?",
-    a: "No. Building has beginner-friendly entry points. Consulting and Growing require zero technical background.",
+    a: "No. We teach AI tools that let anyone build and ship, regardless of technical background. Consulting and Growing require zero coding.",
   },
   {
     q: "What's the time commitment?",
-    a: "About 3-5 hours per week including the meeting, depending on which track you choose.",
+    a: "Show up when you can. The weekly meeting is the core. Workspace sessions are optional but encouraged — it's where real momentum happens.",
   },
   {
     q: "Can I join mid-semester?",
-    a: "Yes. There's no cut-off date. Join any week and we'll place you into an active project.",
+    a: "Yes. Walk in any week. There is no application, no waitlist, and no cut-off date.",
   },
   {
     q: "Is there a cost?",
     a: "Never. TTS is completely free. No dues, no fees, no catch.",
   },
   {
-    q: "I'm pre-med, law, or not a CS major. Is this for me?",
-    a: "The Growing track is built for non-technical majors. AI is changing every field — we help you use it in yours.",
+    q: "I'm pre-med, law, finance, or architecture. Is this for me?",
+    a: "Yes. AI is reshaping every field. TTS helps you learn the tools that actually matter for your career, not just for software engineers.",
   },
 ];
 
@@ -595,8 +595,8 @@ export default function TTSSite() {
                     marginBottom: 8,
                   }}
                 >
-                  We build products you can actually ship while you&apos;re
-                  still a student.
+                  A USC builder club where you actually use AI — to ship
+                  products, solve real problems, and get ahead.
                 </p>
                 <p
                   style={{
@@ -605,7 +605,7 @@ export default function TTSSite() {
                     marginBottom: 44,
                   }}
                 >
-                  AI tools. Client work. Three tracks. Any major.
+                  Open to everyone. No experience required. No gatekeeping.
                 </p>
 
                 <div
@@ -707,9 +707,9 @@ export default function TTSSite() {
             }}
           >
             {[
-              { num: "3", label: "tracks to choose" },
-              { num: "6wk", label: "idea to shipped" },
-              { num: "0", label: "prereqs required" },
+              { num: "3", label: "paths to choose" },
+              { num: "USC", label: "any school, any major" },
+              { num: "0", label: "prereqs or gatekeeping" },
               { num: "Free", label: "no dues, ever" },
             ].map(({ num, label }, i) => (
               <div
@@ -777,9 +777,11 @@ export default function TTSSite() {
                   marginBottom: 32,
                 }}
               >
-                Make something real
+                Not another club.
                 <br />
-                <span style={{ color: "#CC0000" }}>before you graduate.</span>
+                <span style={{ color: "#CC0000" }}>
+                  An actual builder community.
+                </span>
               </h2>
               <p
                 className="tts-fade"
@@ -791,9 +793,9 @@ export default function TTSSite() {
                   transitionDelay: "0.08s",
                 }}
               >
-                TTS is USC&apos;s club for students who want actual experience
-                before they graduate. Not another resume line. Work that ships,
-                advises clients, or lands the opportunity.
+                Most clubs talk about using AI. TTS is where you actually use it
+                — to build something, solve a real client problem, or get ahead
+                in whatever field you&apos;re going into.
               </p>
               <p
                 className="tts-fade"
@@ -805,8 +807,9 @@ export default function TTSSite() {
                   transitionDelay: "0.12s",
                 }}
               >
-                The standard here is shipping, consulting, and growing. Not
-                planning to.
+                We host workshops, build sessions, and speaker nights. Show up,
+                learn the tools, and apply them to your own work. That&apos;s
+                the whole model.
               </p>
               <div
                 style={{
@@ -816,10 +819,13 @@ export default function TTSSite() {
                 }}
               >
                 {[
-                  { c: "#CC0000", t: "Ship products that actually work" },
-                  { c: "#FFCC00", t: "Advise clients this semester" },
-                  { c: "#10b981", t: "Open to every major, every year" },
-                  { c: "#CC0000", t: "Intensity with purpose, not burnout" },
+                  { c: "#CC0000", t: "Open to every major — no gatekeeping" },
+                  { c: "#FFCC00", t: "Learn AI tools by actually using them" },
+                  {
+                    c: "#10b981",
+                    t: "Real client work, not practice problems",
+                  },
+                  { c: "#CC0000", t: "Ambitious culture, not burnout culture" },
                 ].map(({ c, t }, i) => (
                   <div
                     key={t}
@@ -897,7 +903,7 @@ export default function TTSSite() {
                   letterSpacing: "-0.03em",
                 }}
               >
-                Pick your track
+                Three ways in
               </h2>
               <p
                 className="tts-fade"
@@ -908,8 +914,8 @@ export default function TTSSite() {
                   transitionDelay: "0.1s",
                 }}
               >
-                Not sure? You can be in multiple tracks at once. Most members
-                are.
+                Pick one or explore all three. Most people drift across tracks
+                depending on what they&apos;re working on.
               </p>
             </div>
 
@@ -1859,9 +1865,9 @@ export default function TTSSite() {
                     transitionDelay: "0.08s",
                   }}
                 >
-                  Walk in any week. Pick a track. Work on a live project from
-                  day one. No application form, no waitlist, no experience
-                  required.
+                  Walk in any week. No application, no waitlist, no interview.
+                  Pick a direction and start building, consulting, or learning
+                  AI tools right away.
                 </p>
 
                 <div
