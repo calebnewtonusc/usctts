@@ -603,16 +603,6 @@ export default function TTSSite() {
                   A USC builder club where you actually use AI: ship products,
                   solve real problems, and get ahead.
                 </p>
-                <p
-                  style={{
-                    fontSize: 14,
-                    color: "#a1a1aa",
-                    marginBottom: 44,
-                  }}
-                >
-                  Open to everyone. No experience required. No gatekeeping.
-                </p>
-
                 <div
                   style={{
                     display: "flex",
@@ -695,65 +685,6 @@ export default function TTSSite() {
           </div>
         </section>
 
-        {/* ── STATS STRIP ── */}
-        <div
-          style={{
-            background: "#09090b",
-            borderBottom: "1px solid rgba(255,255,255,0.05)",
-            padding: "0 40px",
-          }}
-        >
-          <div
-            className="tts-stats-grid"
-            style={{
-              maxWidth: 1200,
-              margin: "0 auto",
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-            }}
-          >
-            {[
-              { num: "3", label: "paths to choose" },
-              { num: "USC", label: "any school, any major" },
-              { num: "0", label: "prereqs or gatekeeping" },
-              { num: "Free", label: "no dues, ever" },
-            ].map(({ num, label }, i) => (
-              <div
-                key={label}
-                className="tts-fade"
-                style={{
-                  padding: "28px 24px",
-                  borderRight:
-                    i < 3 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                  transitionDelay: `${i * 0.06}s`,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "clamp(22px, 2.8vw, 34px)",
-                    fontWeight: 900,
-                    color: "#fff",
-                    letterSpacing: "-0.04em",
-                    lineHeight: 1,
-                  }}
-                >
-                  {num}
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "#71717a",
-                    marginTop: 4,
-                    letterSpacing: "0.02em",
-                  }}
-                >
-                  {label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* ── MISSION ── */}
         <section
           id="mission"
@@ -817,42 +748,6 @@ export default function TTSSite() {
                 learn the tools, and apply them to your own work. That&apos;s
                 the whole model.
               </p>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 14,
-                }}
-              >
-                {[
-                  { c: "#CC0000", t: "Open to every major, no gatekeeping" },
-                  { c: "#FFCC00", t: "Learn AI tools by actually using them" },
-                  {
-                    c: "#10b981",
-                    t: "Real client work, not practice problems",
-                  },
-                  { c: "#CC0000", t: "Ambitious culture, not burnout culture" },
-                ].map(({ c, t }, i) => (
-                  <div
-                    key={t}
-                    className="tts-fade"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 14,
-                      transitionDelay: `${0.18 + i * 0.08}s`,
-                    }}
-                  >
-                    <Check
-                      size={14}
-                      color={c}
-                      strokeWidth={2.5}
-                      style={{ flexShrink: 0 }}
-                    />
-                    <span style={{ fontSize: 15, color: "#d4d4d8" }}>{t}</span>
-                  </div>
-                ))}
-              </div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -1988,42 +1883,6 @@ export default function TTSSite() {
                     </div>
                     <ArrowRight size={16} />
                   </a>
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 12,
-                  }}
-                >
-                  {[
-                    "Free to join, always. No dues or fees.",
-                    "Open to all USC majors and class years",
-                    "No prior experience or applications",
-                    "Live project work from your first week",
-                  ].map((item, i) => (
-                    <div
-                      key={item}
-                      className="tts-fade"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        transitionDelay: `${0.22 + i * 0.09}s`,
-                      }}
-                    >
-                      <Check
-                        size={14}
-                        color="#CC0000"
-                        strokeWidth={2.5}
-                        style={{ flexShrink: 0 }}
-                      />
-                      <span style={{ fontSize: 14, color: "#a1a1aa" }}>
-                        {item}
-                      </span>
-                    </div>
-                  ))}
                 </div>
               </div>
 
