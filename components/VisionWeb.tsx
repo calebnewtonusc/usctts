@@ -249,6 +249,32 @@ export default function VisionWeb() {
   const webgazerReadyRef = useRef(false);
   const gazeStartedRef = useRef(false);
   const handsStartedRef = useRef(false);
+  const gazeSmoothedRef = useRef({ x: -100, y: -100 });
+  const streamRef = useRef<MediaStream | null>(null);
+  const startingRef = useRef(false);
+
+  // Reset module-level focus engine state on mount (survives React StrictMode re-mounts)
+  useEffect(() => {
+    _feCurrent?.classList.remove("gaze-focus");
+    _feCurrent = null;
+    _feCandidate = null;
+    _feCandidateStart = 0;
+    _feDwellStart = 0;
+    return () => {
+      // Full cleanup on unmount
+      cancelAnimationFrame(animIdRef.current);
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      _feCurrent?.classList.remove("gaze-focus");
+      _feCurrent = null;
+      _feCandidate = null;
+      // Tell WebGazer to stop if it started
+      const wg = (window as unknown as Record<string, unknown>).webgazer as
+        | { end?: () => void }
+        | undefined;
+      wg?.end?.();
+    };
+  }, []);
 
   useEffect(() => {
     _feDwellMs = dwellMs;
@@ -258,36 +284,66 @@ export default function VisionWeb() {
   const startGaze = useCallback(async () => {
     if (gazeStartedRef.current) return;
 
+    // Wait up to 10s for WebGazer script to finish loading
     let waited = 0;
-    while (!webgazerReadyRef.current && waited < 8000) {
+    while (
+      !(window as unknown as Record<string, unknown>).webgazer &&
+      waited < 10000
+    ) {
       await new Promise((r) => setTimeout(r, 100));
       waited += 100;
-      if ((window as unknown as Record<string, unknown>).webgazer)
-        webgazerReadyRef.current = true;
     }
 
-    const wg = (window as unknown as { webgazer?: unknown }).webgazer as
+    const wg = (window as unknown as Record<string, unknown>).webgazer as
       | {
           setGazeListener: (
             fn: (d: { x: number; y: number } | null) => void,
           ) => { begin: () => Promise<void> };
+          setVideoElement: (el: HTMLVideoElement) => void;
           showVideo: (v: boolean) => void;
           showFaceOverlay: (v: boolean) => void;
           showFaceFeedbackBox: (v: boolean) => void;
           showPredictionPoints: (v: boolean) => void;
+          setCameraConstraints: (c: Record<string, unknown>) => void;
+          pause: () => void;
+          end: () => void;
         }
       | undefined;
 
-    if (!wg) return;
+    if (!wg) {
+      toast.error("WebGazer failed to load");
+      return;
+    }
 
     try {
       gazeStartedRef.current = true;
+
+      // CRITICAL: Share our existing video stream with WebGazer so it does NOT
+      // call getUserMedia a second time (which would cause "No stream" errors)
+      if (videoRef.current) {
+        wg.setVideoElement(videoRef.current);
+      }
+
+      // Hide all WebGazer visual elements BEFORE begin()
+      wg.showVideo(false);
+      wg.showFaceOverlay(false);
+      wg.showFaceFeedbackBox(false);
+      wg.showPredictionPoints(false);
+
       await wg
         .setGazeListener((data) => {
           if (!data) return;
           const now = performance.now();
-          setGazePos({ x: data.x, y: data.y });
-          const r = feUpdate(data.x, data.y, now);
+          // EMA smoothing — damps jitter without adding visible lag
+          const alpha = 0.25;
+          gazeSmoothedRef.current.x +=
+            alpha * (data.x - gazeSmoothedRef.current.x);
+          gazeSmoothedRef.current.y +=
+            alpha * (data.y - gazeSmoothedRef.current.y);
+          const sx = gazeSmoothedRef.current.x;
+          const sy = gazeSmoothedRef.current.y;
+          setGazePos({ x: sx, y: sy });
+          const r = feUpdate(sx, sy, now);
           setDwellProgress(r.dwellProgress);
           if (r.dwellProgress >= 1 && r.target && !dwellFiredRef.current) {
             dwellFiredRef.current = true;
@@ -301,14 +357,13 @@ export default function VisionWeb() {
           }
         })
         .begin();
-      wg.showVideo(false);
-      wg.showFaceOverlay(false);
-      wg.showFaceFeedbackBox(false);
-      wg.showPredictionPoints(false);
+
       setGazeActive(true);
       toast.success("Eye tracking active");
-    } catch {
+    } catch (err) {
       gazeStartedRef.current = false;
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(`Eye tracking failed: ${msg}`);
     }
   }, []);
 
@@ -325,15 +380,26 @@ export default function VisionWeb() {
       const vision = await FilesetResolver.forVisionTasks(
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm",
       );
-      const rec = await GestureRecognizer.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath:
-            "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
-          delegate: "GPU",
-        },
-        runningMode: "VIDEO",
-        numHands: 2,
-      });
+
+      const modelPath =
+        "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task";
+
+      // Try GPU first — falls back to CPU if WebGL/GPU delegate unavailable
+      let rec: unknown;
+      try {
+        rec = await GestureRecognizer.createFromOptions(vision, {
+          baseOptions: { modelAssetPath: modelPath, delegate: "GPU" },
+          runningMode: "VIDEO",
+          numHands: 2,
+        });
+      } catch {
+        rec = await GestureRecognizer.createFromOptions(vision, {
+          baseOptions: { modelAssetPath: modelPath, delegate: "CPU" },
+          runningMode: "VIDEO",
+          numHands: 2,
+        });
+      }
+
       gestureRecRef.current = rec;
       setHandsActive(true);
       toast.success("Hand tracking active");
@@ -383,7 +449,10 @@ export default function VisionWeb() {
                 const sy = result.center.y * window.innerHeight;
                 const el = document.elementFromPoint(sx, sy);
                 // delta.y < 0 = hand moved up = scroll content down
-                const scrollAmount = -result.delta.y * 700;
+                // Cap velocity to prevent runaway scroll
+                const rawScroll = -result.delta.y * 700;
+                const scrollAmount =
+                  Math.sign(rawScroll) * Math.min(Math.abs(rawScroll), 220);
                 const target = getScrollTarget(el);
                 if (target === window) {
                   window.scrollBy({ top: scrollAmount, behavior: "instant" });
@@ -417,15 +486,21 @@ export default function VisionWeb() {
       }
 
       loop();
-    } catch {
+    } catch (err) {
       handsStartedRef.current = false;
-      toast.error("Hand tracking failed to initialize.");
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(`Hand tracking failed: ${msg}`);
     }
   }, []);
 
   // ── Camera init — getUserMedia MUST be the first call (no state/toast before it) ──
   const handleStart = useCallback(async () => {
+    // Guard against double-calls from rapid tapping
+    if (startingRef.current) return;
+    startingRef.current = true;
+
     if (!navigator?.mediaDevices?.getUserMedia) {
+      startingRef.current = false;
       setStarted(true);
       setCameraError(true);
       setCameraErrorDetail(
@@ -437,18 +512,25 @@ export default function VisionWeb() {
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
+        video: {
+          facingMode: "user",
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+        },
         audio: false,
       });
     } catch (err) {
       const errName = err instanceof Error ? err.name : "UnknownError";
       const errMsg = err instanceof Error ? err.message : String(err);
+      startingRef.current = false;
       setStarted(true);
       setCameraError(true);
       setCameraErrorDetail(`${errName}: ${errMsg}`);
       return;
     }
 
+    // Save stream ref so we can stop tracks on unmount
+    streamRef.current = stream;
     setStarted(true);
 
     if (videoRef.current) {
@@ -764,8 +846,8 @@ export default function VisionWeb() {
         </div>
       )}
 
-      {/* Loading state — while camera is starting */}
-      {!ready && !cameraError && (
+      {/* Loading state — only after user clicked Start, while camera spins up */}
+      {started && !ready && !cameraError && (
         <div className="fixed inset-0 z-[7000] flex items-center justify-center bg-zinc-950">
           <div className="text-center">
             <div className="w-14 h-14 rounded-[18px] bg-indigo-500/10 flex items-center justify-center mx-auto mb-4 animate-pulse">
