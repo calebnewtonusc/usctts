@@ -1,90 +1,96 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
+// Lazy import — only runs on client, never during SSR
+// This prevents any module-level browser API access from crashing the server render
 export default function VisionPage() {
-  const [mounted, setMounted] = useState(false);
-  const router = useRouter();
+  const [Component, setComponent] = useState<React.ComponentType | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
+    import("@/components/VisionWeb")
+      .then((mod) => setComponent(() => mod.default))
+      .catch((err) => setError(String(err)));
   }, []);
 
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "#09090b",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "monospace",
-        color: "#fff",
-        gap: 16,
-      }}
-    >
-      <div style={{ fontSize: 11, color: "#52525b" }}>
-        SSR rendered ✓ — client JS: {mounted ? "LOADED ✓" : "loading…"}
-      </div>
-
-      <div style={{ fontSize: 28, fontWeight: 700 }}>Vision Test</div>
-
+  if (error) {
+    return (
       <div
         style={{
-          fontSize: 13,
-          color: "#a1a1aa",
-          background: "#18181b",
-          padding: "8px 16px",
-          borderRadius: 8,
-          border: "1px solid #27272a",
+          position: "fixed",
+          inset: 0,
+          background: "#09090b",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "monospace",
+          padding: 32,
         }}
       >
-        {mounted ? "React mounted successfully" : "Hydrating…"}
+        <div style={{ maxWidth: 600 }}>
+          <p style={{ color: "#f87171", fontWeight: 700, marginBottom: 8 }}>
+            VisionWeb import failed
+          </p>
+          <pre
+            style={{
+              color: "#fca5a5",
+              fontSize: 12,
+              background: "#1c0a0a",
+              padding: 16,
+              borderRadius: 8,
+              whiteSpace: "pre-wrap",
+              border: "1px solid rgba(239,68,68,0.3)",
+            }}
+          >
+            {error}
+          </pre>
+        </div>
       </div>
+    );
+  }
 
-      <button
-        onClick={() => alert("Button clicked — JS is working")}
+  if (!Component) {
+    return (
+      <div
         style={{
-          padding: "12px 32px",
-          borderRadius: 12,
-          background: "#6366f1",
-          border: "none",
-          color: "#fff",
-          fontSize: 14,
-          fontWeight: 600,
-          cursor: "pointer",
+          position: "fixed",
+          inset: 0,
+          background: "#09090b",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "Inter, sans-serif",
         }}
       >
-        Click me to test JS
-      </button>
-
-      <button
-        onClick={() => {
-          navigator.mediaDevices
-            ?.getUserMedia({ video: true })
-            .then(() => alert("Camera: GRANTED"))
-            .catch((e) => alert("Camera error: " + e.name + " — " + e.message));
-        }}
-        style={{
-          padding: "12px 32px",
-          borderRadius: 12,
-          background: "#059669",
-          border: "none",
-          color: "#fff",
-          fontSize: 14,
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        Test camera directly
-      </button>
-
-      <div style={{ fontSize: 11, color: "#3f3f46", marginTop: 8 }}>
-        URL: {mounted ? window.location.href : "…"}
+        <div
+          style={{
+            width: 80,
+            height: 80,
+            borderRadius: 28,
+            background:
+              "linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.15))",
+            border: "1px solid rgba(99,102,241,0.3)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <svg
+            width="36"
+            height="36"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#818cf8"
+            strokeWidth="2"
+          >
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return <Component />;
 }
