@@ -253,7 +253,9 @@ export default function VisionWeb() {
   const webgazerReadyRef = useRef(false);
   const gazeStartedRef = useRef(false);
   const handsStartedRef = useRef(false);
-  const gazeSmoothedRef = useRef({ x: -100, y: -100 });
+  // Initialize to center of screen so outlier rejection doesn't block the
+  // first real gaze samples (which would look like 1000px+ jumps from -100,-100)
+  const gazeSmoothedRef = useRef({ x: -1, y: -1 }); // -1 = uninitialized sentinel
   const streamRef = useRef<MediaStream | null>(null);
   const startingRef = useRef(false);
 
@@ -344,62 +346,64 @@ export default function VisionWeb() {
         );
       }
 
-      await wg
-        .setGazeListener((data) => {
-          if (!data) return;
-          // Discard known-bad outputs
-          if (data.x < 30 && data.y < 30) return;
-          if (data.x > window.innerWidth + 200) return;
-          if (data.y > window.innerHeight + 200) return;
+      wg.setGazeListener((data) => {
+        if (!data) return;
+        // Discard known-bad outputs (top-left corner default, out of bounds)
+        if (data.x < 30 && data.y < 30) return;
+        if (data.x > window.innerWidth + 200) return;
+        if (data.y > window.innerHeight + 200) return;
 
-          const clampedX = Math.max(0, Math.min(data.x, window.innerWidth));
-          const clampedY = Math.max(0, Math.min(data.y, window.innerHeight));
+        const clampedX = Math.max(0, Math.min(data.x, window.innerWidth));
+        const clampedY = Math.max(0, Math.min(data.y, window.innerHeight));
 
-          // Outlier rejection — if this prediction jumps more than 400px from
-          // the current smoothed position in one frame, it's noise. Ignore it.
+        // Seed smoothed position on first real sample — prevents the
+        // uninitialized sentinel (-1,-1) from making every first real point
+        // look like a 1000px+ outlier and getting rejected
+        const isUninitialized = gazeSmoothedRef.current.x === -1;
+        if (isUninitialized) {
+          gazeSmoothedRef.current = { x: clampedX, y: clampedY };
+        }
+
+        // Outlier rejection — skip if jump > 400px (only after initialized)
+        if (!isUninitialized) {
           const jumpDist = Math.hypot(
             clampedX - gazeSmoothedRef.current.x,
             clampedY - gazeSmoothedRef.current.y,
           );
           if (jumpDist > 400) return;
+        }
 
-          const now = performance.now();
-          // Adaptive smoothing: small movements get heavy damping (stable),
-          // large movements get lighter damping (responsive to intentional looks).
-          // Dead zone < 40px: alpha 0.06 (barely moves — filters micro-jitter)
-          // 40-150px: lerp alpha 0.06 → 0.18
-          // > 150px: alpha 0.18 (follows intentional gaze shifts quickly)
-          const dist = Math.hypot(
-            clampedX - gazeSmoothedRef.current.x,
-            clampedY - gazeSmoothedRef.current.y,
-          );
-          const t = Math.min(Math.max((dist - 40) / 110, 0), 1);
-          const alpha = 0.06 + t * 0.12;
-          // Hard cap: smoothed cursor moves at most 40px per sample regardless
-          const maxStep = 40;
-          const rawDx = alpha * (clampedX - gazeSmoothedRef.current.x);
-          const rawDy = alpha * (clampedY - gazeSmoothedRef.current.y);
-          const stepDist = Math.hypot(rawDx, rawDy);
-          const scale = stepDist > maxStep ? maxStep / stepDist : 1;
-          gazeSmoothedRef.current.x += rawDx * scale;
-          gazeSmoothedRef.current.y += rawDy * scale;
-          const sx = gazeSmoothedRef.current.x;
-          const sy = gazeSmoothedRef.current.y;
-          setGazePos({ x: sx, y: sy });
-          const r = feUpdate(sx, sy, now);
-          setDwellProgress(r.dwellProgress);
-          if (r.dwellProgress >= 1 && r.target && !dwellFiredRef.current) {
-            dwellFiredRef.current = true;
-            (r.target as HTMLElement).click();
-            _feDwellStart = now;
-            setTimeout(() => {
-              dwellFiredRef.current = false;
-            }, 800);
-          } else if (r.dwellProgress < 0.9) {
+        const now = performance.now();
+        // Adaptive alpha: stable when barely moving, responsive when looking far
+        const dist = Math.hypot(
+          clampedX - gazeSmoothedRef.current.x,
+          clampedY - gazeSmoothedRef.current.y,
+        );
+        const t = Math.min(Math.max((dist - 40) / 110, 0), 1);
+        const alpha = 0.06 + t * 0.12;
+        const maxStep = 40;
+        const rawDx = alpha * (clampedX - gazeSmoothedRef.current.x);
+        const rawDy = alpha * (clampedY - gazeSmoothedRef.current.y);
+        const stepDist = Math.hypot(rawDx, rawDy);
+        const scale = stepDist > maxStep ? maxStep / stepDist : 1;
+        gazeSmoothedRef.current.x += rawDx * scale;
+        gazeSmoothedRef.current.y += rawDy * scale;
+        const sx = gazeSmoothedRef.current.x;
+        const sy = gazeSmoothedRef.current.y;
+        setGazePos({ x: sx, y: sy });
+        const r = feUpdate(sx, sy, now);
+        setDwellProgress(r.dwellProgress);
+        if (r.dwellProgress >= 1 && r.target && !dwellFiredRef.current) {
+          dwellFiredRef.current = true;
+          (r.target as HTMLElement).click();
+          _feDwellStart = now;
+          setTimeout(() => {
             dwellFiredRef.current = false;
-          }
-        })
-        .begin();
+          }, 800);
+        } else if (r.dwellProgress < 0.9) {
+          dwellFiredRef.current = false;
+        }
+      }).begin();
 
       // Hide WebGazer's injected UI elements AFTER begin() — they don't exist before
       wg.showVideo(false);
@@ -664,12 +668,26 @@ export default function VisionWeb() {
       next[idx] = true;
       const allDone = next.every(Boolean);
       if (allDone) {
-        // Freeze the regression model — stop learning from live use so it
-        // never drifts away from calibrated weights during the session
-        const wg = (window as unknown as Record<string, unknown>).webgazer as
-          | { stopLearning?: () => void }
-          | undefined;
-        wg?.stopLearning?.();
+        // Freeze the model — try every known WebGazer API variant for stopping
+        // online learning. The API changed between versions.
+        const wgAny = (window as unknown as Record<string, unknown>)
+          .webgazer as Record<string, unknown> | undefined;
+        if (wgAny) {
+          // v2.x
+          if (typeof wgAny.stopLearning === "function")
+            (wgAny.stopLearning as () => void)();
+          // v1.x / alternate name
+          if (typeof wgAny.pauseLearning === "function")
+            (wgAny.pauseLearning as () => void)();
+          // Nuclear option: zero out the learning rate via params if exposed
+          if (wgAny.params && typeof wgAny.params === "object") {
+            const p = wgAny.params as Record<string, unknown>;
+            if ("learningRate" in p) p.learningRate = 0;
+            if ("dataTimestep" in p) p.dataTimestep = 0;
+          }
+        }
+        // Also reset smoothed position so it seeds fresh from next real sample
+        gazeSmoothedRef.current = { x: -1, y: -1 };
         setCalibrating(false);
         setGazeActive(true);
         toast.success("Eye tracking active");
