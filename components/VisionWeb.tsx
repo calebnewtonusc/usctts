@@ -920,66 +920,123 @@ export default function VisionWeb() {
       )}
 
       {/* Calibration screen — shown after camera starts, before main app */}
-      {calibrating && ready && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9000,
-            background:
-              "radial-gradient(ellipse at 50% 40%, rgba(99,102,241,0.15), transparent 65%), #09090b",
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              pointerEvents: "none",
-            }}
-          >
-            <p
+      {calibrating &&
+        ready &&
+        (() => {
+          const doneCount = calibDots.filter(Boolean).length;
+          // Current active dot = first uncompleted one
+          const activeIdx = calibDots.findIndex((d) => !d);
+          return (
+            <div
               style={{
-                color: "#a1a1aa",
-                fontSize: 13,
-                marginBottom: 8,
+                position: "fixed",
+                inset: 0,
+                zIndex: 9000,
+                background: "#09090b",
+                fontFamily: "Inter, sans-serif",
               }}
             >
-              Look at each dot and click it to calibrate eye tracking
-            </p>
-            <p style={{ color: "#52525b", fontSize: 11 }}>
-              {calibDots.filter(Boolean).length} / 9 complete
-            </p>
-          </div>
-          {CALIB_POSITIONS.map((pos, idx) => (
-            <button
-              key={idx}
-              onClick={(e) => handleCalibDot(idx, e)}
-              style={{
-                position: "absolute",
-                left: pos.x,
-                top: pos.y,
-                transform: "translate(-50%, -50%)",
-                width: calibDots[idx] ? 18 : 26,
-                height: calibDots[idx] ? 18 : 26,
-                borderRadius: "50%",
-                border: "none",
-                background: calibDots[idx]
-                  ? "rgba(52,211,153,0.9)"
-                  : "rgba(99,102,241,0.9)",
-                boxShadow: calibDots[idx]
-                  ? "0 0 16px rgba(52,211,153,0.5)"
-                  : "0 0 20px rgba(99,102,241,0.6)",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-              }}
-            />
-          ))}
-        </div>
-      )}
+              {/* Header */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  textAlign: "center",
+                  padding: "32px 24px 0",
+                  pointerEvents: "none",
+                }}
+              >
+                <p
+                  style={{
+                    color: "#fff",
+                    fontSize: 17,
+                    fontWeight: 700,
+                    margin: "0 0 8px",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  Eye Tracking Calibration
+                </p>
+                <p
+                  style={{
+                    color: "#a1a1aa",
+                    fontSize: 13,
+                    margin: "0 0 16px",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Look directly at the glowing dot, then click it
+                </p>
+                {/* Progress bar */}
+                <div
+                  style={{ display: "flex", gap: 6, justifyContent: "center" }}
+                >
+                  {Array.from({ length: 9 }).map((_, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        width: 24,
+                        height: 4,
+                        borderRadius: 2,
+                        background: calibDots[i]
+                          ? "#34d399"
+                          : i === activeIdx
+                            ? "#6366f1"
+                            : "rgba(255,255,255,0.1)",
+                        transition: "background 0.3s ease",
+                      }}
+                    />
+                  ))}
+                </div>
+                <p style={{ color: "#52525b", fontSize: 11, marginTop: 10 }}>
+                  {doneCount === 0
+                    ? "Start with the glowing dot"
+                    : doneCount < 9
+                      ? `${9 - doneCount} dots remaining`
+                      : "All done!"}
+                </p>
+              </div>
+
+              {/* Dots — only show completed ones + current active */}
+              {CALIB_POSITIONS.map((pos, idx) => {
+                const isDone = calibDots[idx];
+                const isActive = idx === activeIdx;
+                if (!isDone && !isActive) return null;
+                return (
+                  <button
+                    key={idx}
+                    onClick={(e) =>
+                      isActive ? handleCalibDot(idx, e) : undefined
+                    }
+                    style={{
+                      position: "absolute",
+                      left: pos.x,
+                      top: pos.y,
+                      transform: "translate(-50%, -50%)",
+                      width: isDone ? 14 : 32,
+                      height: isDone ? 14 : 32,
+                      borderRadius: "50%",
+                      border: "none",
+                      background: isDone
+                        ? "rgba(52,211,153,0.7)"
+                        : "rgba(99,102,241,1)",
+                      boxShadow: isDone
+                        ? "0 0 10px rgba(52,211,153,0.4)"
+                        : "0 0 0 0 rgba(99,102,241,0.7)",
+                      cursor: isActive ? "pointer" : "default",
+                      transition: "all 0.25s ease",
+                      animation: isActive
+                        ? "calib-pulse 1.4s ease-in-out infinite"
+                        : "none",
+                    }}
+                  />
+                );
+              })}
+            </div>
+          );
+        })()}
 
       {/* Main app */}
       {ready && !calibrating && (
@@ -1183,6 +1240,11 @@ export default function VisionWeb() {
       <style>{`
         @keyframes fadeOut {
           to { opacity: 0; }
+        }
+        @keyframes calib-pulse {
+          0%   { box-shadow: 0 0 0 0 rgba(99,102,241,0.7), 0 0 24px rgba(99,102,241,0.5); }
+          50%  { box-shadow: 0 0 0 16px rgba(99,102,241,0), 0 0 32px rgba(99,102,241,0.3); }
+          100% { box-shadow: 0 0 0 0 rgba(99,102,241,0), 0 0 24px rgba(99,102,241,0.5); }
         }
         /* Force-hide all WebGazer DOM elements */
         #webgazerVideoContainer,
