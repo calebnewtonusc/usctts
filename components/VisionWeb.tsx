@@ -247,8 +247,10 @@ export default function VisionWeb() {
   const [calibrating, setCalibrating] = useState(false);
   const [calibDots, setCalibDots] = useState<number[]>(Array(25).fill(0));
   const CALIB_CLICKS_NEEDED = 3;
+  // Ref mirror of calibDots so handleCalibDot reads current counts without
+  // stale closure — state setters are async, refs are always current
+  const calibDotsRef = useRef<number[]>(Array(25).fill(0));
   const dwellFiredRef = useRef(false);
-  const calibSamplesRef = useRef(0);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const pinchLeft = useRef(new PinchDetector());
@@ -301,11 +303,10 @@ export default function VisionWeb() {
     _feDwellMs = dwellMs;
   }, [dwellMs]);
 
-  // ── WebGazer init ──────────────────────────────────────────────────────
+  // ── WebGazer init — methods verified against 2.1.0 source ──────────────
   const startGaze = useCallback(async () => {
     if (gazeStartedRef.current) return;
 
-    // Wait up to 10s for WebGazer script to finish loading
     let waited = 0;
     while (
       !(window as unknown as Record<string, unknown>).webgazer &&
@@ -315,18 +316,28 @@ export default function VisionWeb() {
       waited += 100;
     }
 
+    // Type exactly what 2.1.0 actually exposes (verified from source)
+    type WG = {
+      begin: () => Promise<unknown>;
+      end: () => unknown;
+      pause: () => unknown;
+      setGazeListener: (fn: (d: { x: number; y: number } | null) => void) => WG;
+      clearGazeListener: () => WG;
+      setRegression: (name: string) => WG;
+      setTracker: (name: string) => WG;
+      saveDataAcrossSessions: (v: boolean) => WG;
+      applyKalmanFilter: (v: boolean) => WG;
+      showVideo: (v: boolean) => WG;
+      showFaceOverlay: (v: boolean) => WG;
+      showFaceFeedbackBox: (v: boolean) => WG;
+      showPredictionPoints: (v: boolean) => WG;
+      clearData: () => Promise<void>;
+      recordScreenPosition: (x: number, y: number, t?: string) => WG;
+      removeMouseEventListeners: () => WG;
+      addMouseEventListeners: () => WG;
+    };
     const wg = (window as unknown as Record<string, unknown>).webgazer as
-      | {
-          setGazeListener: (
-            fn: (d: { x: number; y: number } | null) => void,
-          ) => { begin: () => Promise<void> };
-          showVideo: (v: boolean) => void;
-          showFaceOverlay: (v: boolean) => void;
-          showFaceFeedbackBox: (v: boolean) => void;
-          showPredictionPoints: (v: boolean) => void;
-          stopLearning: () => void;
-          end: () => void;
-        }
+      | WG
       | undefined;
 
     if (!wg) {
@@ -337,101 +348,90 @@ export default function VisionWeb() {
     try {
       gazeStartedRef.current = true;
 
-      // Clear any stale calibration data from previous sessions stored in
-      // localStorage — this is the primary cause of the top-left default.
-      // WebGazer persists regression weights across page loads; bad old data
-      // means bad predictions immediately.
+      // Belt-and-suspenders: clear any localforage data WebGazer may have
+      // persisted from a prior session. saveDataAcrossSessions(false) below
+      // is the proper API but this catches edge cases.
       try {
         Object.keys(localStorage)
           .filter((k) => k.toLowerCase().includes("webgazer"))
           .forEach((k) => localStorage.removeItem(k));
       } catch {
-        // localStorage blocked (private mode) — continue anyway
+        /* private mode — continue */
       }
 
-      // Share the camera stream with WebGazer so both face detection and hand
-      // tracking read from one getUserMedia stream. The videoRef element is
-      // 640×480 in the DOM (opacity:0) so TF.js face detection gets real pixel
-      // data. Previously it was 1×1px which produced garbage landmarks.
-      const wgAny2 = wg as unknown as Record<string, unknown>;
-      if (typeof wgAny2.setVideoElement === "function" && videoRef.current) {
-        (wgAny2.setVideoElement as (el: HTMLVideoElement) => void)(
-          videoRef.current,
-        );
-      }
-      // Explicit regression and tracker — TFFacemesh is the highest-accuracy
-      // face landmark model; ridgeReg is the best regression for gaze mapping
-      if (typeof wgAny2.setRegression === "function") {
-        (wgAny2.setRegression as (name: string) => unknown)("ridgeReg");
-      }
-      if (typeof wgAny2.setTracker === "function") {
-        (wgAny2.setTracker as (name: string) => unknown)("TFFacemesh");
-      }
+      // ── Configure BEFORE begin() ─────────────────────────────────────────
+      // saveDataAcrossSessions MUST come before begin() — it prevents WebGazer
+      // from loading persisted regression weights from localforage on startup.
+      // This is the correct API for clearing old session data (not clearData).
+      wg.saveDataAcrossSessions(false);
+      // Valid regression names in 2.1.0: 'ridge', 'weightedRidge', 'threadedRidge'
+      // We were calling 'ridgeReg' which is invalid — WebGazer silently ignored it
+      wg.setRegression("ridge");
+      wg.setTracker("TFFacemesh");
+      // Use WebGazer's built-in Kalman filter for smoothing
+      wg.applyKalmanFilter(true);
 
-      await wg
-        .setGazeListener((data) => {
-          if (!data) return;
+      wg.setGazeListener((data) => {
+        if (!data) return;
 
-          const cw = calibViewportRef.current.w;
-          const ch = calibViewportRef.current.h;
-          const scaledX = cw > 0 ? data.x * (window.innerWidth / cw) : data.x;
-          const scaledY = ch > 0 ? data.y * (window.innerHeight / ch) : data.y;
+        // Scale from calibration viewport to current viewport size
+        const cw = calibViewportRef.current.w;
+        const ch = calibViewportRef.current.h;
+        const scaledX = cw > 0 ? data.x * (window.innerWidth / cw) : data.x;
+        const scaledY = ch > 0 ? data.y * (window.innerHeight / ch) : data.y;
 
-          if (scaledX < 30 && scaledY < 30) return;
-          if (scaledX > window.innerWidth + 200) return;
-          if (scaledY > window.innerHeight + 200) return;
+        // Guard: discard the known-bad top-left default and out-of-bounds
+        if (scaledX < 30 && scaledY < 30) return;
+        if (scaledX > window.innerWidth + 200) return;
+        if (scaledY > window.innerHeight + 200) return;
 
-          const clampedX = Math.max(0, Math.min(scaledX, window.innerWidth));
-          const clampedY = Math.max(0, Math.min(scaledY, window.innerHeight));
+        const clampedX = Math.max(0, Math.min(scaledX, window.innerWidth));
+        const clampedY = Math.max(0, Math.min(scaledY, window.innerHeight));
 
-          const isUninitialized = gazeSmoothedRef.current.x === -1;
-          if (isUninitialized) {
-            gazeSmoothedRef.current = { x: clampedX, y: clampedY };
-          }
-
-          if (!isUninitialized) {
-            const jumpDist = Math.hypot(
-              clampedX - gazeSmoothedRef.current.x,
-              clampedY - gazeSmoothedRef.current.y,
-            );
-            if (jumpDist > 300) return;
-          }
-
-          const now = performance.now();
+        // Seed on first real sample
+        if (gazeSmoothedRef.current.x === -1) {
           gazeSmoothedRef.current = { x: clampedX, y: clampedY };
-          const sx = clampedX;
-          const sy = clampedY;
-          setGazePos({ x: sx, y: sy });
-          const r = feUpdate(sx, sy, now);
-          setDwellProgress(r.dwellProgress);
-          if (r.dwellProgress >= 1 && r.target && !dwellFiredRef.current) {
-            dwellFiredRef.current = true;
-            (r.target as HTMLElement).click();
-            _feDwellStart = now;
-            setTimeout(() => {
-              dwellFiredRef.current = false;
-            }, 800);
-          } else if (r.dwellProgress < 0.9) {
-            dwellFiredRef.current = false;
-          }
-        })
-        .begin();
+        }
 
-      // Hide WebGazer UI, clear init garbage, disable auto-recording.
-      // All three must happen AFTER begin() resolves — that's why we await it.
+        // Outlier rejection: skip jumps > 300px in a single frame
+        const jumpDist = Math.hypot(
+          clampedX - gazeSmoothedRef.current.x,
+          clampedY - gazeSmoothedRef.current.y,
+        );
+        if (jumpDist > 300) return;
+
+        gazeSmoothedRef.current = { x: clampedX, y: clampedY };
+
+        const now = performance.now();
+        setGazePos({ x: clampedX, y: clampedY });
+        const r = feUpdate(clampedX, clampedY, now);
+        setDwellProgress(r.dwellProgress);
+        if (r.dwellProgress >= 1 && r.target && !dwellFiredRef.current) {
+          dwellFiredRef.current = true;
+          (r.target as HTMLElement).click();
+          _feDwellStart = now;
+          setTimeout(() => {
+            dwellFiredRef.current = false;
+          }, 800);
+        } else if (r.dwellProgress < 0.9) {
+          dwellFiredRef.current = false;
+        }
+      });
+
+      // ── Start ────────────────────────────────────────────────────────────
+      await wg.begin();
+
+      // ── Post-init (must run after begin() resolves) ──────────────────────
       wg.showVideo(false);
       wg.showFaceOverlay(false);
       wg.showFaceFeedbackBox(false);
       wg.showPredictionPoints(false);
-      // Wipe samples WebGazer auto-collected during TF.js face detection init
-      // (all near 0,0 before the model locks onto a face)
-      const wgFull = wg as unknown as Record<string, unknown>;
-      if (typeof wgFull.clearData === "function")
-        (wgFull.clearData as () => void)();
-      // Disable WebGazer's built-in click listener — we record training data
-      // manually in handleCalibDot, only for clicks 2+ when the eye is fixated
-      if (typeof wgFull.removeMouseEventListeners === "function")
-        (wgFull.removeMouseEventListeners as () => void)();
+      // clearData() is async — await it so init garbage is actually gone
+      // before calibration starts
+      await wg.clearData();
+      // Disable auto-recording entirely — handleCalibDot records manually,
+      // only for fixated clicks (clicks 2+ per dot)
+      wg.removeMouseEventListeners();
     } catch (err) {
       gazeStartedRef.current = false;
       const msg = err instanceof Error ? err.message : String(err);
@@ -670,77 +670,46 @@ export default function VisionWeb() {
   }, []);
 
   const handleCalibDot = useCallback((idx: number, _e: React.MouseEvent) => {
-    // WebGazer's auto click listener is disabled (removeMouseEventListeners ran
-    // after begin()). We record training data manually here, but ONLY for
-    // clicks 2 and 3 — click 1 is skipped because the eye is still mid-saccade,
-    // transitioning from the previous dot. Recording it would poison the model
-    // with a sample where the click position is the new dot but the eye is
-    // somewhere between dots.
-    setCalibDots((prev) => {
-      const next = [...prev];
-      const prevCount = next[idx]; // count BEFORE this click
-      next[idx] = Math.min(next[idx] + 1, CALIB_CLICKS_NEEDED);
+    // Read prevCount from ref (always current, no stale closure risk)
+    const prevCount = calibDotsRef.current[idx];
+    const newCount = Math.min(prevCount + 1, CALIB_CLICKS_NEEDED);
+    calibDotsRef.current[idx] = newCount;
+    setCalibDots([...calibDotsRef.current]);
 
-      // Only record clicks 2+ (prevCount >= 1) — eye is fixated by then
-      if (prevCount >= 1) {
-        const pos = CALIB_POSITIONS[idx];
-        const pxX = (parseFloat(pos.x) / 100) * window.innerWidth;
-        const pxY = (parseFloat(pos.y) / 100) * window.innerHeight;
-        const wgR = (window as unknown as Record<string, unknown>).webgazer as
-          | Record<string, unknown>
-          | undefined;
-        if (typeof wgR?.recordScreenPosition === "function") {
-          (
-            wgR.recordScreenPosition as (
-              x: number,
-              y: number,
-              t: string,
-            ) => void
-          )(pxX, pxY, "click");
-        }
-      }
-      const allDone = next.every((n) => n >= CALIB_CLICKS_NEEDED);
-      if (allDone) {
-        // Freeze the model — try every known WebGazer API variant for stopping
-        // online learning. The API changed between versions.
-        const wgAny = (window as unknown as Record<string, unknown>)
-          .webgazer as Record<string, unknown> | undefined;
-        if (wgAny) {
-          // Stop fitting the model on new data
-          if (typeof wgAny.stopLearning === "function")
-            (wgAny.stopLearning as () => void)();
-          if (typeof wgAny.pauseLearning === "function")
-            (wgAny.pauseLearning as () => void)();
-          // Remove WebGazer's document click/mousemove listeners — these are
-          // what feed new training samples into the regression after calibration.
-          // Without this, every subsequent click on the page (including our
-          // dwell-clicks and pinch-clicks) biases the model away from calibration.
-          if (typeof wgAny.removeMouseEventListeners === "function")
-            (wgAny.removeMouseEventListeners as () => void)();
-          // Fix time-decay params:
-          // dataTimestep=0 caused ema_decay = 1 - 1/0 = -Infinity (broken math).
-          // dataTimestep=Infinity gives ema_decay = 1 - 0 = 1 = no forgetting,
-          // so calibration samples keep full weight forever instead of decaying.
-          if (wgAny.params && typeof wgAny.params === "object") {
-            const p = wgAny.params as Record<string, unknown>;
-            if ("learningRate" in p) p.learningRate = 0;
-            if ("dataTimestep" in p) p.dataTimestep = Infinity;
-          }
-        }
-        // Store viewport size at calibration time — predictions are in these
-        // pixel coordinates and must be scaled if the window is later resized
-        calibViewportRef.current = {
-          w: window.innerWidth,
-          h: window.innerHeight,
-        };
-        // Reset smoothed position so it seeds fresh from next real sample
-        gazeSmoothedRef.current = { x: -1, y: -1 };
-        setCalibrating(false);
-        setGazeActive(true);
-        toast.success("Eye tracking active");
-      }
-      return next;
-    });
+    // Record training sample OUTSIDE state setter (no side effects in setters).
+    // Skip click 1 (prevCount === 0) — eye is still mid-saccade from last dot.
+    // Record clicks 2 and 3 (prevCount >= 1) — eye is fixated on dot center.
+    // recordScreenPosition reads webgazer.latestEyeFeatures internally so it
+    // captures the current face landmark vector at the exact moment of click.
+    if (prevCount >= 1) {
+      const pos = CALIB_POSITIONS[idx];
+      const pxX = (parseFloat(pos.x) / 100) * window.innerWidth;
+      const pxY = (parseFloat(pos.y) / 100) * window.innerHeight;
+      const wg = (window as unknown as Record<string, unknown>).webgazer as
+        | { recordScreenPosition: (x: number, y: number, t: string) => void }
+        | undefined;
+      wg?.recordScreenPosition(pxX, pxY, "click");
+    }
+
+    // Check if all dots are done
+    const allDone = calibDotsRef.current.every((n) => n >= CALIB_CLICKS_NEEDED);
+    if (allDone) {
+      // removeMouseEventListeners was already called in startGaze after begin(),
+      // but call again to be safe — this is the only "stop learning" API in 2.1.0
+      const wg = (window as unknown as Record<string, unknown>).webgazer as
+        | { removeMouseEventListeners: () => void; pause: () => void }
+        | undefined;
+      wg?.removeMouseEventListeners();
+      // Store viewport at calibration time for resize scaling
+      calibViewportRef.current = {
+        w: window.innerWidth,
+        h: window.innerHeight,
+      };
+      gazeSmoothedRef.current = { x: -1, y: -1 };
+      setCalibrating(false);
+      setGazeActive(true);
+      toast.success("Eye tracking active");
+    }
   }, []);
 
   const closePanel = useCallback((id: string) => {
