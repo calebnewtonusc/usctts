@@ -422,10 +422,37 @@ export default function VisionWeb() {
       await wg.begin();
 
       // ── Post-init (must run after begin() resolves) ──────────────────────
-      wg.showVideo(false);
+      // Keep video + face feedback box ON during calibration.
+      // The green/red rectangle tells the user if WebGazer has a face lock.
+      // Calibrating without face detection produces garbage training data.
+      wg.showVideo(true);
       wg.showFaceOverlay(false);
-      wg.showFaceFeedbackBox(false);
+      wg.showFaceFeedbackBox(true);
       wg.showPredictionPoints(false);
+      // Move WebGazer's video container to bottom-right so it doesn't
+      // cover the top-left calibration dot. done in a rAF so the DOM
+      // element is guaranteed to exist by then.
+      requestAnimationFrame(() => {
+        try {
+          const wgVid = document.getElementById("webgazerVideoContainer");
+          if (wgVid) {
+            Object.assign(wgVid.style, {
+              position: "fixed",
+              top: "auto",
+              left: "auto",
+              bottom: "16px",
+              right: "16px",
+              zIndex: "9999",
+              borderRadius: "12px",
+              overflow: "hidden",
+              border: "2px solid rgba(99,102,241,0.5)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.6)",
+            });
+          }
+        } catch {
+          /* ignore */
+        }
+      });
       // clearData() is async — wipe any garbage samples from TF.js init
       await wg.clearData();
       // Keep auto click-recording ON during calibration — that's exactly how
@@ -682,9 +709,16 @@ export default function VisionWeb() {
     if (allDone) {
       // Stop learning: removeMouseEventListeners is the correct 2.1.0 API
       const wg = (window as unknown as Record<string, unknown>).webgazer as
-        | { removeMouseEventListeners: () => void }
+        | {
+            removeMouseEventListeners: () => void;
+            showVideo: (v: boolean) => void;
+            showFaceFeedbackBox: (v: boolean) => void;
+          }
         | undefined;
       wg?.removeMouseEventListeners();
+      // Hide webcam preview and face box now that calibration is done
+      wg?.showVideo(false);
+      wg?.showFaceFeedbackBox(false);
       calibViewportRef.current = {
         w: window.innerWidth,
         h: window.innerHeight,
@@ -1029,7 +1063,8 @@ export default function VisionWeb() {
                     lineHeight: 1.5,
                   }}
                 >
-                  Stare at the dot. Hold still. Then click it.
+                  Look at the dot. Hold perfectly still. Click it{" "}
+                  {CALIB_CLICKS_NEEDED} times.
                 </p>
                 <p
                   style={{
@@ -1039,8 +1074,8 @@ export default function VisionWeb() {
                     lineHeight: 1.5,
                   }}
                 >
-                  Click {CALIB_CLICKS_NEEDED}× per dot — eyes on the dot the
-                  whole time, not on your cursor
+                  Check the preview in the bottom-right corner. Green box means
+                  your face is detected. Red box means it is not.
                 </p>
                 {/* Progress bar */}
                 <div
