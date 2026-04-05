@@ -426,12 +426,11 @@ export default function VisionWeb() {
       wg.showFaceOverlay(false);
       wg.showFaceFeedbackBox(false);
       wg.showPredictionPoints(false);
-      // clearData() is async — await it so init garbage is actually gone
-      // before calibration starts
+      // clearData() is async — wipe any garbage samples from TF.js init
       await wg.clearData();
-      // Disable auto-recording entirely — handleCalibDot records manually,
-      // only for fixated clicks (clicks 2+ per dot)
-      wg.removeMouseEventListeners();
+      // Keep auto click-recording ON during calibration — that's exactly how
+      // WebGazer is designed to be used. Every dot click = one training sample.
+      // We stop recording after calibration completes in handleCalibDot.
     } catch (err) {
       gazeStartedRef.current = false;
       const msg = err instanceof Error ? err.message : String(err);
@@ -670,37 +669,22 @@ export default function VisionWeb() {
   }, []);
 
   const handleCalibDot = useCallback((idx: number, _e: React.MouseEvent) => {
-    // Read prevCount from ref (always current, no stale closure risk)
-    const prevCount = calibDotsRef.current[idx];
-    const newCount = Math.min(prevCount + 1, CALIB_CLICKS_NEEDED);
+    // Auto click-recording is ON — WebGazer captures this click automatically.
+    // We just track UI state (which dot, how many clicks).
+    const newCount = Math.min(
+      calibDotsRef.current[idx] + 1,
+      CALIB_CLICKS_NEEDED,
+    );
     calibDotsRef.current[idx] = newCount;
     setCalibDots([...calibDotsRef.current]);
 
-    // Record training sample OUTSIDE state setter (no side effects in setters).
-    // Skip click 1 (prevCount === 0) — eye is still mid-saccade from last dot.
-    // Record clicks 2 and 3 (prevCount >= 1) — eye is fixated on dot center.
-    // recordScreenPosition reads webgazer.latestEyeFeatures internally so it
-    // captures the current face landmark vector at the exact moment of click.
-    if (prevCount >= 1) {
-      const pos = CALIB_POSITIONS[idx];
-      const pxX = (parseFloat(pos.x) / 100) * window.innerWidth;
-      const pxY = (parseFloat(pos.y) / 100) * window.innerHeight;
-      const wg = (window as unknown as Record<string, unknown>).webgazer as
-        | { recordScreenPosition: (x: number, y: number, t: string) => void }
-        | undefined;
-      wg?.recordScreenPosition(pxX, pxY, "click");
-    }
-
-    // Check if all dots are done
     const allDone = calibDotsRef.current.every((n) => n >= CALIB_CLICKS_NEEDED);
     if (allDone) {
-      // removeMouseEventListeners was already called in startGaze after begin(),
-      // but call again to be safe — this is the only "stop learning" API in 2.1.0
+      // Stop learning: removeMouseEventListeners is the correct 2.1.0 API
       const wg = (window as unknown as Record<string, unknown>).webgazer as
-        | { removeMouseEventListeners: () => void; pause: () => void }
+        | { removeMouseEventListeners: () => void }
         | undefined;
       wg?.removeMouseEventListeners();
-      // Store viewport at calibration time for resize scaling
       calibViewportRef.current = {
         w: window.innerWidth,
         h: window.innerHeight,
