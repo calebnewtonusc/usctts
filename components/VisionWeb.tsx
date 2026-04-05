@@ -694,17 +694,25 @@ export default function VisionWeb() {
         const wgAny = (window as unknown as Record<string, unknown>)
           .webgazer as Record<string, unknown> | undefined;
         if (wgAny) {
-          // v2.x
+          // Stop fitting the model on new data
           if (typeof wgAny.stopLearning === "function")
             (wgAny.stopLearning as () => void)();
-          // v1.x / alternate name
           if (typeof wgAny.pauseLearning === "function")
             (wgAny.pauseLearning as () => void)();
-          // Nuclear option: zero out the learning rate via params if exposed
+          // Remove WebGazer's document click/mousemove listeners — these are
+          // what feed new training samples into the regression after calibration.
+          // Without this, every subsequent click on the page (including our
+          // dwell-clicks and pinch-clicks) biases the model away from calibration.
+          if (typeof wgAny.removeMouseEventListeners === "function")
+            (wgAny.removeMouseEventListeners as () => void)();
+          // Fix time-decay params:
+          // dataTimestep=0 caused ema_decay = 1 - 1/0 = -Infinity (broken math).
+          // dataTimestep=Infinity gives ema_decay = 1 - 0 = 1 = no forgetting,
+          // so calibration samples keep full weight forever instead of decaying.
           if (wgAny.params && typeof wgAny.params === "object") {
             const p = wgAny.params as Record<string, unknown>;
             if ("learningRate" in p) p.learningRate = 0;
-            if ("dataTimestep" in p) p.dataTimestep = 0;
+            if ("dataTimestep" in p) p.dataTimestep = Infinity;
           }
         }
         // Store viewport size at calibration time — predictions are in these
