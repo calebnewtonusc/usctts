@@ -218,6 +218,14 @@ function AboutContent() {
   );
 }
 
+// Calibration dot positions — 5x5 grid covering the viewport.
+// Module-level so handleCalibDot can reference it without stale closures.
+const CALIB_POSITIONS = (() => {
+  const xs = ["6%", "25%", "50%", "75%", "94%"];
+  const ys = ["6%", "25%", "50%", "75%", "94%"];
+  return ys.flatMap((y) => xs.map((x) => ({ x, y })));
+})();
+
 // ── Main component ─────────────────────────────────────────────────────────
 export default function VisionWeb() {
   const [started, setStarted] = useState(false);
@@ -360,75 +368,70 @@ export default function VisionWeb() {
         (wgAny2.setTracker as (name: string) => unknown)("TFFacemesh");
       }
 
-      wg.setGazeListener((data) => {
-        if (!data) return;
+      await wg
+        .setGazeListener((data) => {
+          if (!data) return;
 
-        // Scale prediction from calibration viewport → current viewport.
-        // WebGazer stores training samples as raw clientX/clientY pixels.
-        // If the window was resized or the page is viewed at a different size,
-        // predictions are in the OLD pixel space and must be rescaled.
-        // calibViewportRef is 0,0 until calibration completes — skip scaling
-        // during calibration itself (those frames are just noise anyway).
-        const cw = calibViewportRef.current.w;
-        const ch = calibViewportRef.current.h;
-        const scaledX = cw > 0 ? data.x * (window.innerWidth / cw) : data.x;
-        const scaledY = ch > 0 ? data.y * (window.innerHeight / ch) : data.y;
+          const cw = calibViewportRef.current.w;
+          const ch = calibViewportRef.current.h;
+          const scaledX = cw > 0 ? data.x * (window.innerWidth / cw) : data.x;
+          const scaledY = ch > 0 ? data.y * (window.innerHeight / ch) : data.y;
 
-        // Discard known-bad outputs (top-left corner default, out of bounds)
-        if (scaledX < 30 && scaledY < 30) return;
-        if (scaledX > window.innerWidth + 200) return;
-        if (scaledY > window.innerHeight + 200) return;
+          if (scaledX < 30 && scaledY < 30) return;
+          if (scaledX > window.innerWidth + 200) return;
+          if (scaledY > window.innerHeight + 200) return;
 
-        const clampedX = Math.max(0, Math.min(scaledX, window.innerWidth));
-        const clampedY = Math.max(0, Math.min(scaledY, window.innerHeight));
+          const clampedX = Math.max(0, Math.min(scaledX, window.innerWidth));
+          const clampedY = Math.max(0, Math.min(scaledY, window.innerHeight));
 
-        // Seed smoothed position on first real sample — prevents the
-        // uninitialized sentinel (-1,-1) from making every first real point
-        // look like a 1000px+ outlier and getting rejected
-        const isUninitialized = gazeSmoothedRef.current.x === -1;
-        if (isUninitialized) {
+          const isUninitialized = gazeSmoothedRef.current.x === -1;
+          if (isUninitialized) {
+            gazeSmoothedRef.current = { x: clampedX, y: clampedY };
+          }
+
+          if (!isUninitialized) {
+            const jumpDist = Math.hypot(
+              clampedX - gazeSmoothedRef.current.x,
+              clampedY - gazeSmoothedRef.current.y,
+            );
+            if (jumpDist > 300) return;
+          }
+
+          const now = performance.now();
           gazeSmoothedRef.current = { x: clampedX, y: clampedY };
-        }
-
-        // Outlier rejection — skip single-frame jumps > 300px.
-        // Real saccades happen over multiple frames; 300px in one frame is noise.
-        if (!isUninitialized) {
-          const jumpDist = Math.hypot(
-            clampedX - gazeSmoothedRef.current.x,
-            clampedY - gazeSmoothedRef.current.y,
-          );
-          if (jumpDist > 300) return;
-        }
-
-        const now = performance.now();
-        // Raw pass-through — no EMA, no step cap, no lag.
-        // Cursor goes exactly where WebGazer predicts the eye is.
-        // Only filter keeping is the outlier rejection above (>300px jumps).
-        gazeSmoothedRef.current = { x: clampedX, y: clampedY };
-        const sx = clampedX;
-        const sy = clampedY;
-        setGazePos({ x: sx, y: sy });
-        const r = feUpdate(sx, sy, now);
-        setDwellProgress(r.dwellProgress);
-        if (r.dwellProgress >= 1 && r.target && !dwellFiredRef.current) {
-          dwellFiredRef.current = true;
-          (r.target as HTMLElement).click();
-          _feDwellStart = now;
-          setTimeout(() => {
+          const sx = clampedX;
+          const sy = clampedY;
+          setGazePos({ x: sx, y: sy });
+          const r = feUpdate(sx, sy, now);
+          setDwellProgress(r.dwellProgress);
+          if (r.dwellProgress >= 1 && r.target && !dwellFiredRef.current) {
+            dwellFiredRef.current = true;
+            (r.target as HTMLElement).click();
+            _feDwellStart = now;
+            setTimeout(() => {
+              dwellFiredRef.current = false;
+            }, 800);
+          } else if (r.dwellProgress < 0.9) {
             dwellFiredRef.current = false;
-          }, 800);
-        } else if (r.dwellProgress < 0.9) {
-          dwellFiredRef.current = false;
-        }
-      }).begin();
+          }
+        })
+        .begin();
 
-      // Hide WebGazer's injected UI elements AFTER begin()
+      // Hide WebGazer UI, clear init garbage, disable auto-recording.
+      // All three must happen AFTER begin() resolves — that's why we await it.
       wg.showVideo(false);
       wg.showFaceOverlay(false);
       wg.showFaceFeedbackBox(false);
       wg.showPredictionPoints(false);
-      // gazeActive is set to true by handleCalibDot after calibration completes,
-      // not here — cursor should only show after the model is trained
+      // Wipe samples WebGazer auto-collected during TF.js face detection init
+      // (all near 0,0 before the model locks onto a face)
+      const wgFull = wg as unknown as Record<string, unknown>;
+      if (typeof wgFull.clearData === "function")
+        (wgFull.clearData as () => void)();
+      // Disable WebGazer's built-in click listener — we record training data
+      // manually in handleCalibDot, only for clicks 2+ when the eye is fixated
+      if (typeof wgFull.removeMouseEventListeners === "function")
+        (wgFull.removeMouseEventListeners as () => void)();
     } catch (err) {
       gazeStartedRef.current = false;
       const msg = err instanceof Error ? err.message : String(err);
@@ -642,13 +645,9 @@ export default function VisionWeb() {
     // Start WebGazer — wait 1.5s before showing calibration dots so TF.js
     // face detection fully initializes. Then call clearData() to wipe any
     // garbage auto-collected samples from the init period (all near 0,0).
+    // startGaze now awaits begin() internally, so by the time .then() fires:
+    // clearData and removeMouseEventListeners have already run inside startGaze.
     startGaze().then(() => {
-      const wgAny = (window as unknown as Record<string, unknown>).webgazer as
-        | Record<string, unknown>
-        | undefined;
-      // clearData wipes any zero-biased samples collected before face lock
-      if (typeof wgAny?.clearData === "function")
-        (wgAny.clearData as () => void)();
       setCalibrating(true);
     });
   }, [startHands, startGaze]);
@@ -670,23 +669,36 @@ export default function VisionWeb() {
       .catch(() => setPermState("unknown"));
   }, []);
 
-  // Calibration dot positions — 5x5 grid covering the viewport.
-  // More points = better regression fit, especially at screen edges/corners
-  // where accuracy degrades most on 9-point grids.
-  const CALIB_POSITIONS = (() => {
-    const xs = ["6%", "25%", "50%", "75%", "94%"];
-    const ys = ["6%", "25%", "50%", "75%", "94%"];
-    return ys.flatMap((y) => xs.map((x) => ({ x, y })));
-  })();
-
   const handleCalibDot = useCallback((idx: number, _e: React.MouseEvent) => {
-    // WebGazer's begin() adds its own document click listener that records
-    // every click as a training sample automatically — we do NOT call
-    // recordScreenPosition manually because that was double-counting and
-    // could pass wrong coordinates. Just let the natural click propagate.
+    // WebGazer's auto click listener is disabled (removeMouseEventListeners ran
+    // after begin()). We record training data manually here, but ONLY for
+    // clicks 2 and 3 — click 1 is skipped because the eye is still mid-saccade,
+    // transitioning from the previous dot. Recording it would poison the model
+    // with a sample where the click position is the new dot but the eye is
+    // somewhere between dots.
     setCalibDots((prev) => {
       const next = [...prev];
+      const prevCount = next[idx]; // count BEFORE this click
       next[idx] = Math.min(next[idx] + 1, CALIB_CLICKS_NEEDED);
+
+      // Only record clicks 2+ (prevCount >= 1) — eye is fixated by then
+      if (prevCount >= 1) {
+        const pos = CALIB_POSITIONS[idx];
+        const pxX = (parseFloat(pos.x) / 100) * window.innerWidth;
+        const pxY = (parseFloat(pos.y) / 100) * window.innerHeight;
+        const wgR = (window as unknown as Record<string, unknown>).webgazer as
+          | Record<string, unknown>
+          | undefined;
+        if (typeof wgR?.recordScreenPosition === "function") {
+          (
+            wgR.recordScreenPosition as (
+              x: number,
+              y: number,
+              t: string,
+            ) => void
+          )(pxX, pxY, "click");
+        }
+      }
       const allDone = next.every((n) => n >= CALIB_CLICKS_NEEDED);
       if (allDone) {
         // Freeze the model — try every known WebGazer API variant for stopping
