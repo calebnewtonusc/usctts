@@ -189,7 +189,7 @@ const CABINET: {
     initials: "AC",
     accent: "#06b6d4",
     link: "https://www.linkedin.com/in/austin-f-chen/",
-    headshot: null,
+    headshot: "/img/austin_shot.jpeg",
     position: "center top",
   },
   {
