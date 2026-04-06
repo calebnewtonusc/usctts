@@ -30,10 +30,7 @@ import {
   BookOpen,
   Target,
   HelpCircle,
-  Laptop,
   Flame,
-  Database,
-  Shield,
   Compass,
 } from "lucide-react";
 // ── Utilities ────────────────────────────────────────────────────────────────
@@ -341,45 +338,83 @@ function SplitText({
   );
 }
 
-// ── Wave divider — icon-only, no text ─────────────────────────────────────────
+// ── Ocean wave divider — animated SVG ─────────────────────────────────────────
 function WaveDivider({
-  chips,
   reverse = false,
-  amplitude = 26,
-  frequency = 1,
+  speed = 10,
+  amplitude = 24,
 }: {
-  chips: Array<{ Icon: React.ElementType; size?: number; color?: string }>;
   reverse?: boolean;
+  speed?: number;
   amplitude?: number;
-  frequency?: number;
 }) {
+  const cy = 40;
+  const A = amplitude;
+  const buildPath = (offsetX: number) => {
+    const o = offsetX;
+    return [
+      `M${o},${cy}`,
+      `C${o + 96},${cy - A} ${o + 224},${cy - A} ${o + 320},${cy}`,
+      `C${o + 416},${cy + A} ${o + 544},${cy + A} ${o + 640},${cy}`,
+      `C${o + 736},${cy - A} ${o + 864},${cy - A} ${o + 960},${cy}`,
+      `C${o + 1056},${cy + A} ${o + 1184},${cy + A} ${o + 1280},${cy}`,
+      `C${o + 1376},${cy - A} ${o + 1504},${cy - A} ${o + 1600},${cy}`,
+      `C${o + 1696},${cy + A} ${o + 1824},${cy + A} ${o + 1920},${cy}`,
+      `C${o + 2016},${cy - A} ${o + 2144},${cy - A} ${o + 2240},${cy}`,
+      `C${o + 2336},${cy + A} ${o + 2464},${cy + A} ${o + 2560},${cy}`,
+    ].join(" ");
+  };
+
   return (
-    <div className="tts-wave-divider" aria-hidden="true">
-      <div className="tts-wave-line" />
-      {chips.map(({ Icon, size = 14, color = "rgba(255,255,255,0.4)" }, i) => {
-        const total = chips.length;
-        const xPct = (i / (total - 1)) * 84 + 8;
-        const t = (i / (total - 1)) * Math.PI * frequency;
-        const sinVal = Math.sin(t) * (reverse ? -1 : 1);
-        const yOffset = sinVal * amplitude;
-        return (
-          <div
-            key={i}
-            className="tts-wave-chip"
-            style={{
-              left: `${xPct}%`,
-              top: `calc(50% + ${yOffset}px)`,
-              animationDelay: `${(i % 5) * 0.55}s`,
-              animationDuration: `${3.2 + (i % 3) * 0.6}s`,
-              borderColor: `${color}30`,
-              color,
-              padding: "8px 10px",
-            }}
-          >
-            <Icon size={size} />
-          </div>
-        );
-      })}
+    <div className="tts-ocean-divider" aria-hidden="true">
+      <svg
+        className={`tts-ocean-track${reverse ? " tts-ocean-reverse" : ""}`}
+        style={{ "--wave-dur": `${speed}s` } as React.CSSProperties}
+        width="5120"
+        height="80"
+        viewBox="0 0 5120 80"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d={buildPath(0)}
+          stroke="rgba(204,0,0,0.07)"
+          strokeWidth="40"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d={buildPath(2560)}
+          stroke="rgba(204,0,0,0.07)"
+          strokeWidth="40"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d={buildPath(0)}
+          stroke="rgba(204,0,0,0.22)"
+          strokeWidth="6"
+          fill="none"
+        />
+        <path
+          d={buildPath(2560)}
+          stroke="rgba(204,0,0,0.22)"
+          strokeWidth="6"
+          fill="none"
+        />
+        <path
+          d={buildPath(0)}
+          stroke="rgba(204,0,0,0.65)"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <path
+          d={buildPath(2560)}
+          stroke="rgba(204,0,0,0.65)"
+          strokeWidth="1.5"
+          fill="none"
+        />
+      </svg>
     </div>
   );
 }
@@ -566,8 +601,7 @@ export default function TTSSite() {
         const speedY = parseFloat(el.dataset.speed ?? "0.08");
         const speedX = parseFloat(el.dataset.speedx ?? "0");
         const rotate = el.dataset.rotate ?? "0";
-        const rect = el.parentElement?.getBoundingClientRect();
-        if (!rect) return;
+        const rect = el.getBoundingClientRect();
         const centerOffset =
           rect.top + rect.height / 2 - window.innerHeight / 2;
         const yShift = centerOffset * speedY;
@@ -643,14 +677,15 @@ export default function TTSSite() {
   const slideX =
     heroSlideProgress * Math.max(0, heroContainerW - 80 - h1WrapperW);
 
-  // Reveal section: three-phase choreography — no lead gap, fires immediately
-  // Phase 1 (0→0.30): "Real work" slides in from RIGHT
-  // Phase 2 (0.32→0.60): "Real work" exits DOWN
-  // Phase 3 (0.45→1.0):  "Walk in" slides in from TOP
+  // Reveal section: three-phase choreography
+  // Phase 1 (0→0.18): Panel A slides in from RIGHT (fast)
+  // Phase 2 (0.18→0.50): Panel A DWELLS — 32% of scroll = ~112vh dwell
+  // Phase 3 (0.50→0.72): Panel A exits DOWN
+  // Phase 4 (0.60→1.0):  Panel B "Walk in" enters from TOP
   const revealSlide = revealProgress;
-  const realWorkEnterP = Math.max(0, Math.min(1, revealSlide / 0.3));
-  const realWorkExitP = Math.max(0, Math.min(1, (revealSlide - 0.32) / 0.28));
-  const walkInEnterP = Math.max(0, Math.min(1, (revealSlide - 0.45) / 0.55));
+  const realWorkEnterP = Math.max(0, Math.min(1, revealSlide / 0.18));
+  const realWorkExitP = Math.max(0, Math.min(1, (revealSlide - 0.48) / 0.14));
+  const walkInEnterP = Math.max(0, Math.min(1, (revealSlide - 0.56) / 0.44));
   const panelRealWorkX = (1 - realWorkEnterP) * 100;
   const panelRealWorkY = realWorkExitP * 100;
   const panelWalkInY = -100 + walkInEnterP * 100;
@@ -829,107 +864,110 @@ export default function TTSSite() {
               }}
             />
 
-            {/* Floating parallax icons — hero */}
+            {/* Floating parallax icons — hero (3 depth layers) */}
             {[
+              // FOREGROUND — large, fast, wide x-drift
               {
                 Icon: Code,
                 top: "8%",
                 left: "5%",
-                size: 68,
-                speed: "0.18",
-                speedx: "0.06",
+                size: 120,
+                speed: "1.00",
+                speedx: "0.36",
                 rotate: -12,
                 color: "#CC0000",
               },
               {
+                Icon: Globe,
+                top: "30%",
+                right: "3%",
+                size: 100,
+                speed: "0.90",
+                speedx: "-0.40",
+                rotate: -25,
+                color: "#FFCC00",
+              },
+              {
+                Icon: Network,
+                bottom: "8%",
+                left: "12%",
+                size: 90,
+                speed: "0.96",
+                speedx: "0.30",
+                rotate: -10,
+                color: "#CC0000",
+              },
+              // MIDGROUND — medium, moderate drift
+              {
                 Icon: Rocket,
                 top: "12%",
-                right: "6%",
-                size: 76,
-                speed: "0.24",
-                speedx: "-0.08",
+                right: "8%",
+                size: 70,
+                speed: "0.56",
+                speedx: "-0.18",
                 rotate: 14,
-                color: "#FFCC00",
+                color: "rgba(255,255,255,0.65)",
               },
               {
                 Icon: Brain,
                 bottom: "22%",
                 left: "7%",
-                size: 60,
-                speed: "0.20",
-                speedx: "0.07",
+                size: 65,
+                speed: "0.50",
+                speedx: "0.16",
                 rotate: 8,
-                color: "rgba(255,255,255,0.5)",
-              },
-              {
-                Icon: Cpu,
-                top: "52%",
-                right: "4%",
-                size: 84,
-                speed: "0.12",
-                speedx: "-0.05",
-                rotate: -6,
-                color: "#CC0000",
+                color: "rgba(255,204,0,0.7)",
               },
               {
                 Icon: GitBranch,
-                bottom: "8%",
+                bottom: "12%",
                 right: "10%",
-                size: 56,
-                speed: "0.30",
-                speedx: "0.10",
+                size: 60,
+                speed: "0.44",
+                speedx: "-0.14",
                 rotate: 20,
-                color: "rgba(255,255,255,0.4)",
+                color: "rgba(255,255,255,0.55)",
               },
+              // BACKGROUND — small, slow, minimal x-drift
               {
-                Icon: Zap,
-                top: "68%",
-                left: "3%",
-                size: 52,
-                speed: "0.26",
-                speedx: "-0.07",
-                rotate: -18,
-                color: "#FFCC00",
+                Icon: Cpu,
+                top: "52%",
+                right: "1.5%",
+                size: 40,
+                speed: "0.16",
+                speedx: "-0.06",
+                rotate: -6,
+                color: "rgba(204,0,0,0.45)",
               },
               {
                 Icon: Terminal,
                 top: "35%",
-                left: "2%",
-                size: 44,
-                speed: "0.15",
+                left: "1.5%",
+                size: 35,
+                speed: "0.12",
                 speedx: "0.04",
                 rotate: 30,
-                color: "rgba(255,255,255,0.35)",
+                color: "rgba(255,255,255,0.25)",
               },
               {
-                Icon: Globe,
-                top: "30%",
-                right: "2%",
-                size: 48,
-                speed: "0.22",
-                speedx: "-0.06",
-                rotate: -25,
-                color: "#CC0000",
+                Icon: Zap,
+                top: "68%",
+                left: "2%",
+                size: 30,
+                speed: "0.10",
+                speedx: "-0.04",
+                rotate: -18,
+                color: "rgba(255,204,0,0.35)",
               },
               {
                 Icon: Layers,
                 bottom: "40%",
-                left: "1%",
-                size: 36,
-                speed: "0.35",
-                speedx: "0.09",
+                right: "2%",
+                size: 28,
+                speed: "0.08",
+                speedx: "0.04",
                 rotate: 15,
-                color: "rgba(255,255,255,0.3)",
-              },
-              {
-                Icon: Network,
-                bottom: "5%",
-                left: "14%",
-                size: 58,
-                speed: "0.16",
-                speedx: "-0.04",
-                rotate: -10,
-                color: "#FFCC00",
+                color: "rgba(255,255,255,0.2)",
               },
             ].map(
               (
@@ -1244,7 +1282,7 @@ export default function TTSSite() {
             background: "#0c0c0f",
             padding: "80px 40px",
             position: "relative",
-            overflow: "hidden",
+            overflow: "visible",
           }}
         >
           {/* Mission entrance flash */}
@@ -1252,77 +1290,80 @@ export default function TTSSite() {
             <div className="tts-mission-flash" aria-hidden="true" />
           )}
 
-          {/* Floating parallax icons — mission section */}
+          {/* Floating parallax icons — mission section (3 depth layers) */}
           {[
-            {
-              Icon: BookOpen,
-              top: "8%",
-              left: "2%",
-              size: 64,
-              speed: "0.20",
-              speedx: "0.06",
-              rotate: 12,
-              color: "rgba(255,255,255,0.45)",
-            },
+            // FOREGROUND — large, fast, wide x-drift
             {
               Icon: Lightbulb,
-              top: "12%",
+              top: "10%",
               right: "3%",
-              size: 76,
-              speed: "0.26",
-              speedx: "-0.08",
+              size: 110,
+              speed: "1.04",
+              speedx: "-0.40",
               rotate: -8,
               color: "#FFCC00",
             },
             {
-              Icon: Target,
-              bottom: "16%",
-              left: "3%",
-              size: 60,
-              speed: "0.18",
-              speedx: "0.07",
-              rotate: 20,
-              color: "rgba(255,255,255,0.4)",
-            },
-            {
               Icon: Compass,
-              bottom: "20%",
-              right: "4%",
-              size: 72,
-              speed: "0.28",
-              speedx: "-0.06",
+              bottom: "14%",
+              left: "3%",
+              size: 95,
+              speed: "0.92",
+              speedx: "0.34",
               rotate: -14,
               color: "#CC0000",
             },
+            // MIDGROUND — medium, moderate drift
+            {
+              Icon: BookOpen,
+              top: "8%",
+              left: "2%",
+              size: 68,
+              speed: "0.54",
+              speedx: "0.18",
+              rotate: 12,
+              color: "rgba(255,255,255,0.6)",
+            },
+            {
+              Icon: Target,
+              bottom: "18%",
+              right: "4%",
+              size: 62,
+              speed: "0.48",
+              speedx: "-0.16",
+              rotate: 20,
+              color: "rgba(255,255,255,0.5)",
+            },
+            {
+              Icon: Network,
+              top: "55%",
+              right: "2%",
+              size: 58,
+              speed: "0.60",
+              speedx: "-0.20",
+              rotate: 18,
+              color: "rgba(255,204,0,0.65)",
+            },
+            // BACKGROUND — small, slow, minimal x-drift
             {
               Icon: Globe,
               top: "48%",
               left: "1%",
-              size: 52,
-              speed: "0.32",
-              speedx: "0.10",
+              size: 38,
+              speed: "0.14",
+              speedx: "0.06",
               rotate: 6,
-              color: "rgba(255,255,255,0.35)",
+              color: "rgba(255,255,255,0.22)",
             },
             {
               Icon: Zap,
-              top: "38%",
-              right: "1.5%",
-              size: 56,
-              speed: "0.14",
-              speedx: "-0.05",
+              top: "28%",
+              right: "1%",
+              size: 32,
+              speed: "0.10",
+              speedx: "-0.04",
               rotate: -22,
-              color: "#CC0000",
-            },
-            {
-              Icon: Network,
-              top: "65%",
-              right: "3%",
-              size: 44,
-              speed: "0.22",
-              speedx: "-0.07",
-              rotate: 18,
-              color: "rgba(255,204,0,0.5)",
+              color: "rgba(204,0,0,0.35)",
             },
           ].map(
             (
@@ -1478,22 +1519,8 @@ export default function TTSSite() {
           </div>
         </section>
 
-        {/* Wave 1 — gentle arch, tech icons, mixed sizes */}
-        <WaveDivider
-          amplitude={28}
-          frequency={1}
-          chips={[
-            { Icon: Zap, size: 24, color: "#CC0000" },
-            { Icon: Code, size: 16, color: "rgba(255,255,255,0.35)" },
-            { Icon: Brain, size: 22, color: "#FFCC00" },
-            { Icon: Rocket, size: 14, color: "rgba(255,255,255,0.35)" },
-            { Icon: Cpu, size: 28, color: "#CC0000" },
-            { Icon: Globe, size: 16, color: "rgba(255,255,255,0.35)" },
-            { Icon: Terminal, size: 20, color: "#10b981" },
-            { Icon: GitBranch, size: 14, color: "rgba(255,255,255,0.35)" },
-            { Icon: Layers, size: 22, color: "#CC0000" },
-          ]}
-        />
+        {/* Wave 1 — before tracks */}
+        <WaveDivider amplitude={24} speed={10} />
 
         {/* ── TRACKS — center-to-left title + gravity card reveal ── */}
         <section
@@ -1526,125 +1553,6 @@ export default function TTSSite() {
                 pointerEvents: "none",
               }}
             />
-
-            {/* Floating parallax icons — tracks section */}
-            {[
-              {
-                Icon: Code,
-                top: "8%",
-                left: "4%",
-                size: 72,
-                speed: "0.20",
-                rotate: -14,
-                color: "#CC0000",
-              },
-              {
-                Icon: Terminal,
-                top: "12%",
-                right: "3%",
-                size: 60,
-                speed: "0.28",
-                rotate: 10,
-                color: "#FFCC00",
-              },
-              {
-                Icon: Cpu,
-                top: "60%",
-                left: "2%",
-                size: 84,
-                speed: "0.14",
-                rotate: 8,
-                color: "#CC0000",
-              },
-              {
-                Icon: Brain,
-                bottom: "6%",
-                right: "4%",
-                size: 68,
-                speed: "0.32",
-                rotate: -18,
-                color: "#FFCC00",
-              },
-              {
-                Icon: Rocket,
-                top: "36%",
-                left: "1%",
-                size: 56,
-                speed: "0.24",
-                rotate: 20,
-                color: "rgba(255,255,255,0.45)",
-              },
-              {
-                Icon: GitBranch,
-                bottom: "20%",
-                right: "2%",
-                size: 64,
-                speed: "0.22",
-                rotate: -8,
-                color: "rgba(255,255,255,0.4)",
-              },
-              {
-                Icon: Globe,
-                top: "78%",
-                left: "7%",
-                size: 52,
-                speed: "0.36",
-                rotate: 6,
-                color: "#FFCC00",
-              },
-              {
-                Icon: Music,
-                top: "26%",
-                right: "1.5%",
-                size: 56,
-                speed: "0.26",
-                rotate: -22,
-                color: "#CC0000",
-              },
-              {
-                Icon: Network,
-                top: "50%",
-                right: "6%",
-                size: 44,
-                speed: "0.18",
-                rotate: 16,
-                color: "rgba(255,255,255,0.35)",
-              },
-              {
-                Icon: BarChart2,
-                bottom: "35%",
-                left: "6%",
-                size: 48,
-                speed: "0.30",
-                rotate: -12,
-                color: "#CC0000",
-              },
-            ].map(
-              (
-                { Icon, top, left, right, bottom, size, speed, rotate, color },
-                idx,
-              ) => (
-                <div
-                  key={`track-float-${idx}`}
-                  ref={(el) => {
-                    if (el) floatRefs.current[idx + 10] = el;
-                  }}
-                  className="tts-float-icon"
-                  data-speed={speed}
-                  data-rotate={rotate}
-                  aria-hidden="true"
-                  style={{
-                    top,
-                    left,
-                    right,
-                    bottom,
-                    color,
-                  }}
-                >
-                  <Icon size={size} />
-                </div>
-              ),
-            )}
 
             {/* Scroll hint */}
             <div
@@ -2238,262 +2146,470 @@ export default function TTSSite() {
           </div>
         </div>
 
-        {/* Wave 2 — reverse S-curve, frequency=2, track icons */}
-        <WaveDivider
-          reverse
-          amplitude={22}
-          frequency={2}
-          chips={[
-            { Icon: Hammer, size: 20, color: "#CC0000" },
-            { Icon: Briefcase, size: 28, color: "#FFCC00" },
-            { Icon: BarChart2, size: 16, color: "rgba(255,255,255,0.35)" },
-            { Icon: TrendingUp, size: 24, color: "#10b981" },
-            { Icon: Music, size: 18, color: "#CC0000" },
-            { Icon: Network, size: 14, color: "rgba(255,255,255,0.35)" },
-            { Icon: Lightbulb, size: 26, color: "#FFCC00" },
-            { Icon: Database, size: 16, color: "rgba(255,255,255,0.35)" },
-          ]}
-        />
+        {/* Wave 2 — after reveal */}
+        <WaveDivider reverse amplitude={30} speed={8} />
 
         {/* ── LEADERSHIP ── */}
         <section
           id="leadership"
           className="tts-section-pad"
-          style={{ background: "#0c0c0f", padding: "80px 40px" }}
+          style={{
+            position: "relative",
+            background: "#000",
+            padding: "100px 0 120px",
+            overflow: "visible",
+          }}
         >
-          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-            <h2
-              style={{
-                fontSize: "clamp(28px, 4vw, 52px)",
-                fontWeight: 900,
-                color: "#fff",
-                letterSpacing: "-0.03em",
-                marginBottom: 12,
-              }}
-            >
-              <span className="tts-line-reveal">
-                <span>Meet the presidents</span>
-              </span>
-            </h2>
+          {/* Tyler floating icons — consulting */}
+          {(
+            [
+              {
+                Icon: Briefcase,
+                top: "22%",
+                left: "4%",
+                size: 84,
+                speed: "0.88",
+                speedx: "0.32",
+                rotate: -12,
+                color: "rgba(255,204,0,0.68)",
+              },
+              {
+                Icon: TrendingUp,
+                top: "62%",
+                left: "2%",
+                size: 58,
+                speed: "0.58",
+                speedx: "-0.20",
+                rotate: 14,
+                color: "rgba(255,204,0,0.52)",
+              },
+              {
+                Icon: BarChart2,
+                bottom: "12%",
+                left: "10%",
+                size: 46,
+                speed: "0.38",
+                speedx: "0.14",
+                rotate: -8,
+                color: "rgba(255,204,0,0.42)",
+              },
+              {
+                Icon: Users,
+                top: "42%",
+                left: "20%",
+                size: 36,
+                speed: "0.18",
+                speedx: "-0.08",
+                rotate: 22,
+                color: "rgba(255,204,0,0.28)",
+              },
+            ] as {
+              Icon: React.FC<{ size: number }>;
+              top?: string;
+              left?: string;
+              bottom?: string;
+              size: number;
+              speed: string;
+              speedx: string;
+              rotate: number;
+              color: string;
+            }[]
+          ).map(
+            (
+              { Icon, top, left, bottom, size, speed, speedx, rotate, color },
+              idx,
+            ) => (
+              <div
+                key={`lead-tyler-${idx}`}
+                ref={(el) => {
+                  if (el) floatRefs.current[idx + 70] = el;
+                }}
+                className="tts-float-icon"
+                data-speed={speed}
+                data-speedx={speedx}
+                data-rotate={rotate}
+                aria-hidden="true"
+                style={{ top, left, bottom, color }}
+              >
+                <Icon size={size} />
+              </div>
+            ),
+          )}
+
+          {/* Caleb floating icons — tech */}
+          {(
+            [
+              {
+                Icon: Cpu,
+                top: "18%",
+                right: "3%",
+                size: 92,
+                speed: "0.95",
+                speedx: "-0.35",
+                rotate: 8,
+                color: "rgba(204,0,0,0.72)",
+              },
+              {
+                Icon: Code,
+                top: "58%",
+                right: "2%",
+                size: 62,
+                speed: "0.62",
+                speedx: "0.22",
+                rotate: -16,
+                color: "rgba(204,0,0,0.58)",
+              },
+              {
+                Icon: Terminal,
+                bottom: "14%",
+                right: "8%",
+                size: 50,
+                speed: "0.42",
+                speedx: "-0.16",
+                rotate: 24,
+                color: "rgba(204,0,0,0.44)",
+              },
+              {
+                Icon: Brain,
+                top: "38%",
+                right: "21%",
+                size: 38,
+                speed: "0.20",
+                speedx: "0.10",
+                rotate: -28,
+                color: "rgba(204,0,0,0.30)",
+              },
+            ] as {
+              Icon: React.FC<{ size: number }>;
+              top?: string;
+              right?: string;
+              bottom?: string;
+              size: number;
+              speed: string;
+              speedx: string;
+              rotate: number;
+              color: string;
+            }[]
+          ).map(
+            (
+              { Icon, top, right, bottom, size, speed, speedx, rotate, color },
+              idx,
+            ) => (
+              <div
+                key={`lead-caleb-${idx}`}
+                ref={(el) => {
+                  if (el) floatRefs.current[idx + 74] = el;
+                }}
+                className="tts-float-icon"
+                data-speed={speed}
+                data-speedx={speedx}
+                data-rotate={rotate}
+                aria-hidden="true"
+                style={{ top, right, bottom, color }}
+              >
+                <Icon size={size} />
+              </div>
+            ),
+          )}
+
+          {/* Section header */}
+          <div
+            style={{
+              textAlign: "center",
+              padding: "0 40px 72px",
+              position: "relative",
+              zIndex: 2,
+            }}
+          >
             <p
               className="tts-fade"
               style={{
-                fontSize: 15,
-                color: "#a1a1aa",
-                marginBottom: 40,
-                transitionDelay: "0.08s",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#CC0000",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                marginBottom: 20,
               }}
             >
-              Two USC students who wanted actual experience before they
-              graduated. So they built it.
+              Trojan Technology Solutions
             </p>
-
-            <div
-              className="tts-leadership-grid"
+            <h2
+              className="tts-fade"
               style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 20,
+                fontSize: "clamp(52px, 8vw, 100px)",
+                fontWeight: 900,
+                letterSpacing: "-0.04em",
+                lineHeight: 0.9,
+                margin: 0,
+                transitionDelay: "0.05s",
               }}
             >
-              {FOUNDERS.map((f, i) => (
+              <span style={{ color: "#fff" }}>Meet the </span>
+              <span
+                style={{
+                  background:
+                    "linear-gradient(135deg, #FFCC00 0%, #CC0000 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                Presidents
+              </span>
+            </h2>
+          </div>
+
+          {/* Split layout */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              maxWidth: 1360,
+              margin: "0 auto",
+              padding: "0 24px",
+              gap: 20,
+              position: "relative",
+              zIndex: 2,
+            }}
+          >
+            {FOUNDERS.map((f, i) => {
+              const accentHex = f.id === "tyler" ? "#FFCC00" : "#CC0000";
+              return (
                 <div
                   key={f.id}
                   className={i === 0 ? "tts-from-left" : "tts-from-right"}
-                  style={{ transitionDelay: `${i * 0.12}s` }}
+                  style={{ transitionDelay: `${i * 0.14}s` }}
                 >
-                  <div
-                    style={{
-                      background: "#111113",
-                      borderRadius: 16,
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      overflow: "hidden",
-                    }}
+                  <a
+                    href={f.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${f.name}, ${f.role} — ${f.linkLabel} (opens in new tab)`}
+                    style={{ display: "block", textDecoration: "none" }}
                   >
                     <div
                       style={{
-                        position: "relative",
-                        width: "100%",
-                        aspectRatio: "4/5",
+                        borderRadius: 20,
                         overflow: "hidden",
+                        border: `1px solid ${hexToRgba(accentHex, 0.18)}`,
+                        transition:
+                          "border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        const el = e.currentTarget as HTMLDivElement;
+                        el.style.borderColor = hexToRgba(accentHex, 0.55);
+                        el.style.transform = "scale(1.015)";
+                        el.style.boxShadow = `0 28px 64px ${hexToRgba(accentHex, 0.18)}`;
+                      }}
+                      onMouseLeave={(e) => {
+                        const el = e.currentTarget as HTMLDivElement;
+                        el.style.borderColor = hexToRgba(accentHex, 0.18);
+                        el.style.transform = "scale(1)";
+                        el.style.boxShadow = "none";
                       }}
                     >
-                      <Image
-                        src={f.headshot}
-                        alt={`${f.name}, ${f.role} of TTS`}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        style={{
-                          objectFit: "cover",
-                          objectPosition: f.position,
-                        }}
-                      />
+                      {/* Photo */}
                       <div
                         style={{
-                          position: "absolute",
-                          inset: 0,
-                          background:
-                            "linear-gradient(to top, rgba(9,9,11,0.88) 0%, transparent 60%)",
+                          position: "relative",
+                          width: "100%",
+                          aspectRatio: "4/5",
                         }}
-                      />
+                      >
+                        <Image
+                          src={f.headshot}
+                          alt={`${f.name}, ${f.role} of TTS`}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          style={{
+                            objectFit: "cover",
+                            objectPosition: f.position,
+                          }}
+                        />
+                        {/* Gradient: dark top, clear mid, very dark bottom */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            background:
+                              "linear-gradient(to bottom, rgba(0,0,0,0.52) 0%, transparent 32%, transparent 48%, rgba(0,0,0,0.96) 100%)",
+                          }}
+                        />
+                        {/* Accent glow at bottom */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            height: "45%",
+                            background: `linear-gradient(to top, ${hexToRgba(accentHex, 0.14)} 0%, transparent 100%)`,
+                          }}
+                        />
+                        {/* Role pill — top left */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 20,
+                            left: 20,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            padding: "6px 14px",
+                            borderRadius: 100,
+                            background: hexToRgba(accentHex, 0.15),
+                            border: `1px solid ${hexToRgba(accentHex, 0.35)}`,
+                            backdropFilter: "blur(8px)",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 700,
+                              color: f.accent,
+                              letterSpacing: "0.08em",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {f.role}
+                          </span>
+                        </div>
+                        {/* Name + focus — bottom */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: 24,
+                            left: 24,
+                            right: 24,
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 700,
+                              color: f.accent,
+                              letterSpacing: "0.1em",
+                              textTransform: "uppercase",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {f.focus}
+                          </div>
+                          <h3
+                            style={{
+                              fontSize: "clamp(30px, 3.2vw, 48px)",
+                              fontWeight: 900,
+                              color: "#fff",
+                              letterSpacing: "-0.03em",
+                              lineHeight: 1,
+                              margin: 0,
+                            }}
+                          >
+                            {f.name}
+                          </h3>
+                        </div>
+                      </div>
+
+                      {/* Owned domains */}
                       <div
-                        style={{ position: "absolute", bottom: 20, left: 20 }}
+                        style={{
+                          background: "#080808",
+                          padding: "22px 26px 26px",
+                          borderTop: `1px solid ${hexToRgba(accentHex, 0.12)}`,
+                        }}
                       >
                         <div
                           style={{
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: f.accent,
-                            letterSpacing: "0.08em",
-                            textTransform: "uppercase",
-                            marginBottom: 4,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 10,
+                            marginBottom: 20,
                           }}
                         >
-                          {f.role} · {f.focus}
-                        </div>
-                        <h3
-                          className="tts-scramble"
-                          style={{
-                            fontSize: 20,
-                            fontWeight: 800,
-                            color: "#fff",
-                            letterSpacing: "-0.02em",
-                            margin: 0,
-                          }}
-                        >
-                          {f.name}
-                        </h3>
-                      </div>
-                    </div>
-                    <div style={{ padding: "20px 24px 24px" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 9,
-                          marginBottom: 20,
-                        }}
-                      >
-                        {f.owns.map((item) => (
-                          <div
-                            key={item}
-                            style={{
-                              display: "flex",
-                              alignItems: "flex-start",
-                              gap: 10,
-                            }}
-                          >
+                          {f.owns.map((item) => (
                             <div
+                              key={item}
                               style={{
-                                width: 3,
-                                height: 3,
-                                borderRadius: "50%",
-                                background: f.accent,
-                                flexShrink: 0,
-                                marginTop: 7,
-                                opacity: 0.7,
-                              }}
-                            />
-                            <span
-                              style={{
-                                fontSize: 13,
-                                color: "#c4c4c8",
-                                lineHeight: 1.6,
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: 12,
                               }}
                             >
-                              {item}
-                            </span>
-                          </div>
-                        ))}
+                              <div
+                                style={{
+                                  width: 4,
+                                  height: 4,
+                                  borderRadius: "50%",
+                                  background: f.accent,
+                                  flexShrink: 0,
+                                  marginTop: 8,
+                                }}
+                              />
+                              <span
+                                style={{
+                                  fontSize: 13.5,
+                                  color: "#d4d4d8",
+                                  lineHeight: 1.6,
+                                }}
+                              >
+                                {item}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <div
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: f.accent,
+                          }}
+                        >
+                          {f.linkLabel} <ExternalLink size={12} />
+                        </div>
                       </div>
-                      <a
-                        href={f.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`${f.name}, ${f.linkLabel} (opens in new tab)`}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 5,
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: f.accent,
-                          textDecoration: "none",
-                          transition: "opacity 0.15s",
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLAnchorElement).style.opacity =
-                            "0.7";
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLAnchorElement).style.opacity =
-                            "1";
-                        }}
-                      >
-                        {f.linkLabel} <ExternalLink size={11} />
-                      </a>
                     </div>
-                  </div>
+                  </a>
                 </div>
-              ))}
-            </div>
+              );
+            })}
+          </div>
 
-            {/* Section CTA */}
-            <div
-              className="tts-fade"
+          {/* Bottom tagline */}
+          <div
+            className="tts-fade"
+            style={{
+              textAlign: "center",
+              padding: "60px 40px 0",
+              transitionDelay: "0.28s",
+              position: "relative",
+              zIndex: 2,
+            }}
+          >
+            <p
               style={{
-                marginTop: 48,
-                textAlign: "center",
-                transitionDelay: "0.2s",
+                fontSize: 14,
+                color: "#3f3f46",
+                maxWidth: 380,
+                margin: "0 auto",
+                lineHeight: 1.7,
               }}
             >
-              <p style={{ fontSize: 14, color: "#a1a1aa", marginBottom: 16 }}>
-                Questions? Reach either of them directly.
-              </p>
+              Questions? Reach either of them directly at{" "}
               <a
                 href="mailto:trojantechsolutions@gmail.com"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#CC0000",
-                  textDecoration: "none",
-                  padding: "8px 16px",
-                  borderRadius: 8,
-                  border: "1px solid rgba(204,0,0,0.2)",
-                  transition: "all 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.background =
-                    "rgba(204,0,0,0.06)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.background =
-                    "transparent";
-                }}
+                style={{ color: "#CC0000", textDecoration: "none" }}
               >
-                <Mail size={13} /> trojantechsolutions@gmail.com
+                trojantechsolutions@gmail.com
               </a>
-            </div>
+            </p>
           </div>
         </section>
 
-        {/* Wave 3 — steep arch, large icons, community theme */}
-        <WaveDivider
-          amplitude={34}
-          frequency={1}
-          chips={[
-            { Icon: Users, size: 14, color: "rgba(255,255,255,0.3)" },
-            { Icon: Award, size: 26, color: "#FFCC00" },
-            { Icon: Star, size: 18, color: "#CC0000" },
-            { Icon: Compass, size: 30, color: "rgba(255,255,255,0.3)" },
-            { Icon: Shield, size: 22, color: "#CC0000" },
-            { Icon: Laptop, size: 16, color: "rgba(255,255,255,0.3)" },
-            { Icon: Flame, size: 28, color: "#FFCC00" },
-          ]}
-        />
+        {/* Wave 3 — before cabinet */}
+        <WaveDivider amplitude={36} speed={12} />
 
         {/* ── CABINET ── */}
         <section
@@ -2503,7 +2619,7 @@ export default function TTSSite() {
             background: "#09090b",
             padding: "80px 40px",
             position: "relative",
-            overflow: "hidden",
+            overflow: "visible",
           }}
         >
           {/* Dot grid background */}
@@ -2533,74 +2649,95 @@ export default function TTSSite() {
               pointerEvents: "none",
             }}
           />
-          {/* Floating parallax icons */}
+          {/* Floating parallax icons — cabinet section (3 depth layers) */}
           {[
-            {
-              Icon: Hammer,
-              top: "10%",
-              left: "6%",
-              size: 80,
-              speed: "0.18",
-              rotate: -18,
-              color: "#CC0000",
-            },
-            {
-              Icon: Briefcase,
-              top: "18%",
-              right: "7%",
-              size: 68,
-              speed: "0.28",
-              rotate: 12,
-              color: "#FFCC00",
-            },
-            {
-              Icon: TrendingUp,
-              bottom: "16%",
-              left: "9%",
-              size: 60,
-              speed: "0.22",
-              rotate: 8,
-              color: "rgba(255,255,255,0.45)",
-            },
+            // FOREGROUND — large, fast, wide x-drift
             {
               Icon: Zap,
               top: "52%",
-              right: "4%",
-              size: 88,
-              speed: "0.14",
+              right: "3%",
+              size: 105,
+              speed: "1.00",
+              speedx: "-0.38",
               rotate: -10,
               color: "#CC0000",
             },
             {
-              Icon: Mail,
-              bottom: "10%",
-              right: "14%",
-              size: 56,
-              speed: "0.34",
-              rotate: 22,
+              Icon: Award,
+              top: "10%",
+              left: "4%",
+              size: 95,
+              speed: "0.92",
+              speedx: "0.34",
+              rotate: -28,
               color: "#FFCC00",
             },
+            // MIDGROUND — medium, moderate drift
             {
-              Icon: Award,
-              top: "38%",
-              left: "2%",
+              Icon: Hammer,
+              top: "12%",
+              right: "6%",
+              size: 70,
+              speed: "0.52",
+              speedx: "-0.18",
+              rotate: -18,
+              color: "rgba(204,0,0,0.65)",
+            },
+            {
+              Icon: Briefcase,
+              bottom: "14%",
+              left: "7%",
               size: 64,
-              speed: "0.20",
-              rotate: -28,
-              color: "rgba(255,255,255,0.4)",
+              speed: "0.48",
+              speedx: "0.16",
+              rotate: 12,
+              color: "rgba(255,204,0,0.65)",
+            },
+            {
+              Icon: Mail,
+              bottom: "12%",
+              right: "12%",
+              size: 60,
+              speed: "0.56",
+              speedx: "-0.18",
+              rotate: 22,
+              color: "rgba(255,204,0,0.6)",
+            },
+            // BACKGROUND — small, slow, minimal x-drift
+            {
+              Icon: TrendingUp,
+              bottom: "18%",
+              right: "2%",
+              size: 38,
+              speed: "0.14",
+              speedx: "-0.04",
+              rotate: 8,
+              color: "rgba(255,255,255,0.25)",
             },
             {
               Icon: Star,
-              bottom: "32%",
-              right: "2%",
-              size: 48,
-              speed: "0.30",
+              bottom: "35%",
+              left: "1.5%",
+              size: 32,
+              speed: "0.10",
+              speedx: "0.04",
               rotate: 16,
-              color: "#FFCC00",
+              color: "rgba(255,204,0,0.3)",
             },
           ].map(
             (
-              { Icon, top, left, right, bottom, size, speed, rotate, color },
+              {
+                Icon,
+                top,
+                left,
+                right,
+                bottom,
+                size,
+                speed,
+                speedx,
+                rotate,
+                color,
+              },
               idx,
             ) => (
               <div
@@ -2610,6 +2747,7 @@ export default function TTSSite() {
                 }}
                 className="tts-float-icon"
                 data-speed={speed}
+                data-speedx={speedx}
                 data-rotate={rotate}
                 aria-hidden="true"
                 style={{ top, left, right, bottom, color }}
@@ -2852,7 +2990,7 @@ export default function TTSSite() {
             background: "#0c0c0f",
             padding: "80px 40px",
             position: "relative",
-            overflow: "hidden",
+            overflow: "visible",
           }}
         >
           {/* Gold glow bottom-left */}
@@ -3255,23 +3393,8 @@ export default function TTSSite() {
           </div>
         </section>
 
-        {/* Wave 4 — dense high-freq reverse, small icons scatter */}
-        <WaveDivider
-          reverse
-          amplitude={18}
-          frequency={2.5}
-          chips={[
-            { Icon: BookOpen, size: 13, color: "rgba(255,255,255,0.3)" },
-            { Icon: Target, size: 22, color: "#CC0000" },
-            { Icon: Star, size: 16, color: "rgba(255,255,255,0.3)" },
-            { Icon: Users, size: 28, color: "#FFCC00" },
-            { Icon: Compass, size: 13, color: "rgba(255,255,255,0.3)" },
-            { Icon: Award, size: 20, color: "#CC0000" },
-            { Icon: Layers, size: 14, color: "rgba(255,255,255,0.3)" },
-            { Icon: Shield, size: 24, color: "#FFCC00" },
-            { Icon: Flame, size: 13, color: "rgba(255,255,255,0.3)" },
-          ]}
-        />
+        {/* Wave 4 — before FAQ */}
+        <WaveDivider reverse amplitude={20} speed={7} />
 
         {/* ── FAQ ── */}
         <section
@@ -3281,70 +3404,73 @@ export default function TTSSite() {
             background: "#09090b",
             padding: "80px 40px",
             position: "relative",
-            overflow: "hidden",
+            overflow: "visible",
           }}
         >
-          {/* Floating parallax icons — FAQ section */}
+          {/* Floating parallax icons — FAQ section (3 depth layers) */}
           {[
+            // FOREGROUND — large, fast, wide x-drift
             {
               Icon: HelpCircle,
               top: "8%",
               left: "2%",
-              size: 76,
-              speed: "0.22",
-              speedx: "0.07",
+              size: 108,
+              speed: "1.04",
+              speedx: "0.40",
               rotate: 15,
-              color: "rgba(255,255,255,0.4)",
+              color: "rgba(255,255,255,0.55)",
             },
+            {
+              Icon: HelpCircle,
+              bottom: "18%",
+              right: "2.5%",
+              size: 96,
+              speed: "0.92",
+              speedx: "-0.36",
+              rotate: -18,
+              color: "rgba(255,204,0,0.65)",
+            },
+            // MIDGROUND — medium, moderate drift
             {
               Icon: HelpCircle,
               top: "16%",
               right: "3%",
-              size: 60,
-              speed: "0.16",
-              speedx: "-0.06",
+              size: 70,
+              speed: "0.56",
+              speedx: "-0.18",
               rotate: -10,
-              color: "rgba(204,0,0,0.6)",
+              color: "rgba(204,0,0,0.65)",
             },
+            {
+              Icon: HelpCircle,
+              bottom: "10%",
+              left: "3%",
+              size: 64,
+              speed: "0.48",
+              speedx: "0.16",
+              rotate: 8,
+              color: "rgba(255,255,255,0.5)",
+            },
+            // BACKGROUND — small, slow, minimal x-drift
             {
               Icon: HelpCircle,
               top: "48%",
-              left: "1.5%",
-              size: 44,
-              speed: "0.28",
-              speedx: "0.09",
-              rotate: 25,
-              color: "rgba(255,255,255,0.35)",
-            },
-            {
-              Icon: HelpCircle,
-              bottom: "22%",
-              right: "2.5%",
-              size: 68,
-              speed: "0.20",
-              speedx: "-0.07",
-              rotate: -18,
-              color: "rgba(255,204,0,0.55)",
-            },
-            {
-              Icon: HelpCircle,
-              bottom: "8%",
-              left: "3%",
-              size: 52,
+              left: "1%",
+              size: 38,
               speed: "0.14",
-              speedx: "0.05",
-              rotate: 8,
-              color: "rgba(255,255,255,0.3)",
+              speedx: "0.04",
+              rotate: 25,
+              color: "rgba(255,255,255,0.22)",
             },
             {
               Icon: HelpCircle,
               top: "33%",
-              right: "1.5%",
-              size: 36,
-              speed: "0.32",
-              speedx: "-0.10",
+              right: "1%",
+              size: 30,
+              speed: "0.10",
+              speedx: "-0.04",
               rotate: -30,
-              color: "rgba(204,0,0,0.45)",
+              color: "rgba(204,0,0,0.3)",
             },
           ].map(
             (
@@ -3668,20 +3794,8 @@ export default function TTSSite() {
           </div>
         </section>
 
-        {/* Wave 5 — wide sparse arch, bold accent icons pre-join */}
-        <WaveDivider
-          amplitude={32}
-          frequency={0.75}
-          chips={[
-            { Icon: Rocket, size: 14, color: "rgba(255,255,255,0.28)" },
-            { Icon: Flame, size: 32, color: "#CC0000" },
-            { Icon: Code, size: 16, color: "rgba(255,255,255,0.28)" },
-            { Icon: Zap, size: 38, color: "#FFCC00" },
-            { Icon: Brain, size: 16, color: "rgba(255,255,255,0.28)" },
-            { Icon: Laptop, size: 30, color: "#CC0000" },
-            { Icon: Globe, size: 14, color: "rgba(255,255,255,0.28)" },
-          ]}
-        />
+        {/* Wave 5 — before join */}
+        <WaveDivider amplitude={28} speed={9} />
 
         {/* ── JOIN ── */}
         <section
@@ -3692,7 +3806,7 @@ export default function TTSSite() {
             background: "#0a0508",
             padding: "100px 40px 120px",
             position: "relative",
-            overflow: "hidden",
+            overflow: "visible",
           }}
         >
           {/* Pulsing glow */}
@@ -3709,87 +3823,90 @@ export default function TTSSite() {
             ))}
           </div>
 
-          {/* Floating parallax icons — join section */}
+          {/* Floating parallax icons — join section (3 depth layers) */}
           {[
+            // FOREGROUND — large, fast, wide x-drift
             {
               Icon: Zap,
               top: "10%",
               left: "3%",
-              size: 72,
-              speed: "0.24",
-              speedx: "0.08",
+              size: 118,
+              speed: "1.04",
+              speedx: "0.40",
               rotate: -16,
               color: "#CC0000",
             },
             {
-              Icon: Users,
-              top: "15%",
-              right: "4%",
-              size: 60,
-              speed: "0.18",
-              speedx: "-0.06",
-              rotate: 10,
-              color: "rgba(255,255,255,0.45)",
-            },
-            {
               Icon: Rocket,
-              bottom: "12%",
+              bottom: "10%",
               left: "4%",
-              size: 80,
-              speed: "0.14",
-              speedx: "0.05",
+              size: 104,
+              speed: "0.92",
+              speedx: "0.36",
               rotate: 22,
               color: "#FFCC00",
             },
             {
               Icon: Globe,
-              bottom: "18%",
-              right: "5%",
-              size: 56,
-              speed: "0.28",
-              speedx: "-0.08",
+              bottom: "16%",
+              right: "4%",
+              size: 92,
+              speed: "0.98",
+              speedx: "-0.42",
               rotate: -8,
               color: "#CC0000",
             },
+            // MIDGROUND — medium, moderate drift
             {
-              Icon: Star,
-              top: "58%",
-              left: "2%",
-              size: 48,
-              speed: "0.32",
-              speedx: "0.10",
-              rotate: 14,
-              color: "rgba(255,255,255,0.4)",
+              Icon: Users,
+              top: "15%",
+              right: "5%",
+              size: 70,
+              speed: "0.54",
+              speedx: "-0.20",
+              rotate: 10,
+              color: "rgba(255,255,255,0.6)",
             },
             {
               Icon: Award,
-              top: "48%",
+              top: "45%",
               right: "2%",
               size: 64,
-              speed: "0.16",
-              speedx: "-0.05",
+              speed: "0.48",
+              speedx: "-0.16",
               rotate: -20,
-              color: "#FFCC00",
+              color: "rgba(255,204,0,0.65)",
             },
             {
               Icon: Flame,
-              top: "32%",
-              left: "1%",
-              size: 52,
-              speed: "0.36",
-              speedx: "0.12",
+              top: "30%",
+              left: "1.5%",
+              size: 60,
+              speed: "0.60",
+              speedx: "0.18",
               rotate: -30,
-              color: "rgba(204,0,0,0.6)",
+              color: "rgba(204,0,0,0.65)",
+            },
+            // BACKGROUND — small, slow, minimal x-drift
+            {
+              Icon: Star,
+              top: "60%",
+              left: "1%",
+              size: 36,
+              speed: "0.14",
+              speedx: "0.04",
+              rotate: 14,
+              color: "rgba(255,255,255,0.25)",
             },
             {
               Icon: Brain,
-              bottom: "35%",
-              right: "1.5%",
-              size: 44,
-              speed: "0.22",
-              speedx: "-0.07",
+              bottom: "38%",
+              right: "1%",
+              size: 30,
+              speed: "0.10",
+              speedx: "-0.04",
               rotate: 25,
-              color: "rgba(255,255,255,0.35)",
+              color: "rgba(255,255,255,0.2)",
             },
           ].map(
             (
