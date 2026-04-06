@@ -347,6 +347,71 @@ video[id^="webgazer"] {
   transform: perspective(700px) rotateX(0deg) translateY(0);
 }
 
+/* Reading progress bar — pure CSS scroll-driven */
+.tts-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #cc0000;
+  transform-origin: left;
+  animation: tts-progress linear;
+  animation-timeline: scroll(root);
+  z-index: 99999;
+  pointer-events: none;
+}
+@keyframes tts-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Highlight text sweep — key phrases light up on scroll enter */
+.tts-highlight {
+  background: linear-gradient(transparent 55%, rgba(204, 0, 0, 0.22) 55%);
+  background-size: 0% 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline;
+}
+.tts-highlight.tts-visible {
+  background-size: 100% 100%;
+}
+
+/* Sticky stacking track cards */
+.tts-stack-card {
+  position: sticky;
+  border-radius: 20px;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tts-stack-card:nth-child(1) {
+  top: 100px;
+}
+.tts-stack-card:nth-child(2) {
+  top: 124px;
+}
+.tts-stack-card:nth-child(3) {
+  top: 148px;
+}
+
+/* Stat counter — clips and counts up */
+.tts-counter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tts-counter.tts-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Prefers-reduced-motion: disable all scroll animations */
 @media (prefers-reduced-motion: reduce) {
   .tts-fade,

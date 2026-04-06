@@ -297,6 +297,8 @@ export default function TTSSite() {
   const mouseRef = useRef({ x: -100, y: -100 });
   const ringRef = useRef({ x: -100, y: -100 });
   const rafRef = useRef(0);
+  const velRef = useRef({ skew: 0, lastY: 0 });
+  const mainRef = useRef<HTMLDivElement>(null);
 
   // Custom cursor
   useEffect(() => {
@@ -355,10 +357,27 @@ export default function TTSSite() {
     );
     document
       .querySelectorAll(
-        ".tts-fade, .tts-slide, .tts-from-left, .tts-from-right, .tts-scale, .tts-curtain, .tts-perspective",
+        ".tts-fade, .tts-slide, .tts-from-left, .tts-from-right, .tts-scale, .tts-curtain, .tts-perspective, .tts-highlight, .tts-counter",
       )
       .forEach((el) => obs.observe(el));
     return () => obs.disconnect();
+  }, []);
+
+  // Velocity skew on scroll
+  useEffect(() => {
+    let raf = 0;
+    const loop = () => {
+      const y = window.scrollY;
+      const velocity = (y - velRef.current.lastY) * 0.06;
+      velRef.current.skew += (velocity - velRef.current.skew) * 0.09;
+      velRef.current.lastY = y;
+      if (mainRef.current) {
+        mainRef.current.style.transform = `skewY(${velRef.current.skew.toFixed(3)}deg)`;
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
   }, []);
 
   const scrollTo = useCallback((id: string) => {
@@ -480,6 +499,9 @@ export default function TTSSite() {
         Skip to main content
       </a>
 
+      {/* Reading progress bar */}
+      <div className="tts-progress-bar" aria-hidden="true" />
+
       {/* Custom cursor */}
       <div
         id="tts-cursor-dot"
@@ -515,12 +537,15 @@ export default function TTSSite() {
       />
 
       <div
+        ref={mainRef}
         className="tts-main"
         style={{
           cursor: "none",
           background: "#09090b",
           minHeight: "100vh",
           fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+          transformOrigin: "center top",
+          willChange: "transform",
         }}
       >
         {/* ── HERO ── */}
@@ -869,8 +894,9 @@ export default function TTSSite() {
                 }}
               >
                 SEP, BTG, BPX: great clubs. All have applications, waitlists,
-                and cuts. TTS has none of that. Walk in any week. No
-                application, no interview, no rejection email.
+                and cuts. TTS has{" "}
+                <span className="tts-highlight">none of that</span>. Walk in any
+                week. No application, no interview, no rejection email.
               </p>
               <p
                 className="tts-fade"
@@ -983,7 +1009,7 @@ export default function TTSSite() {
                 display: "grid",
                 gridTemplateColumns: "repeat(3, 1fr)",
                 gap: 20,
-                alignItems: "stretch",
+                alignItems: "start",
               }}
             >
               {TRACKS.map(
@@ -1010,7 +1036,7 @@ export default function TTSSite() {
                   return (
                     <div
                       key={num}
-                      className={animClass}
+                      className={`${animClass} tts-stack-card`}
                       style={{
                         transitionDelay: `${i * 0.1}s`,
                         display: "flex",
@@ -1445,6 +1471,7 @@ export default function TTSSite() {
                       }}
                     >
                       <div
+                        className="tts-counter"
                         style={{
                           fontSize: "clamp(40px, 5vw, 64px)",
                           fontWeight: 900,
@@ -1452,6 +1479,7 @@ export default function TTSSite() {
                           letterSpacing: "-0.04em",
                           lineHeight: 1,
                           marginBottom: 6,
+                          transitionDelay: `${i * 0.12}s`,
                         }}
                       >
                         {stat}
