@@ -854,11 +854,9 @@ export default function TTSSite() {
                   marginBottom: 32,
                 }}
               >
-                Not another club.
+                The club that
                 <br />
-                <span style={{ color: "#CC0000" }}>
-                  An actual builder community.
-                </span>
+                <span style={{ color: "#CC0000" }}>actually lets you in.</span>
               </h2>
               <p
                 className="tts-fade"
@@ -870,9 +868,9 @@ export default function TTSSite() {
                   transitionDelay: "0.08s",
                 }}
               >
-                Most clubs talk about using AI. TTS is where you actually use
-                it: build something, solve a real client problem, or get ahead
-                in whatever field you&apos;re going into.
+                SEP, LAVA, BPX — great clubs. All have applications, waitlists,
+                and cuts. TTS has none of that. Walk in any week. No form, no
+                interview, no rejection email.
               </p>
               <p
                 className="tts-fade"
@@ -880,13 +878,32 @@ export default function TTSSite() {
                   fontSize: 16,
                   color: "#d4d4d8",
                   lineHeight: 1.8,
-                  marginBottom: 44,
+                  marginBottom: 28,
                   transitionDelay: "0.12s",
                 }}
               >
-                We host workshops, build sessions, and speaker nights. Show up,
-                learn the tools, and apply them to your own work. That&apos;s
-                the whole model.
+                We run tracks across consulting, engineering, biotech, music
+                tech, and Web3 — because AI is reshaping every field, not just
+                software. Show up once and get value. Or join four project teams
+                and go deep. Both work.
+              </p>
+              <p
+                className="tts-fade"
+                style={{
+                  fontSize: 15,
+                  color: "#a1a1aa",
+                  lineHeight: 1.8,
+                  marginBottom: 44,
+                  transitionDelay: "0.16s",
+                  fontStyle: "italic",
+                  borderLeft: "2px solid #CC0000",
+                  paddingLeft: 16,
+                }}
+              >
+                &ldquo;Think the international student who can&apos;t land an
+                interview. Or the pre-med with no idea how AI is reshaping their
+                field. We&apos;re here for that student, and building them into
+                someone who lands their dream program.&rdquo;
               </p>
             </div>
 
