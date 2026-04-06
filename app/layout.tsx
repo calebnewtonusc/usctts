@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const inter = Inter({
@@ -39,6 +40,7 @@ export default function RootLayout({
       <body className={`${inter.className} min-h-full bg-zinc-950 antialiased`}>
         {children}
         <Toaster theme="dark" />
+        <Analytics />
       </body>
     </html>
   );
