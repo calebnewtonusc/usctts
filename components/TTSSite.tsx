@@ -29,6 +29,12 @@ import {
   Lightbulb,
   BookOpen,
   Target,
+  HelpCircle,
+  Laptop,
+  Flame,
+  Database,
+  Shield,
+  Compass,
 } from "lucide-react";
 // ── Utilities ────────────────────────────────────────────────────────────────
 function hexToRgba(hex: string, alpha: number): string {
@@ -335,23 +341,27 @@ function SplitText({
   );
 }
 
-// ── Wave divider ───────────────────────────────────────────────────────────────
+// ── Wave divider — icon-only, no text ─────────────────────────────────────────
 function WaveDivider({
   chips,
   reverse = false,
+  amplitude = 26,
+  frequency = 1,
 }: {
-  chips: Array<{ Icon: React.ElementType; label: string; color?: string }>;
+  chips: Array<{ Icon: React.ElementType; size?: number; color?: string }>;
   reverse?: boolean;
+  amplitude?: number;
+  frequency?: number;
 }) {
   return (
     <div className="tts-wave-divider" aria-hidden="true">
       <div className="tts-wave-line" />
-      {chips.map(({ Icon, label, color = "rgba(255,255,255,0.55)" }, i) => {
+      {chips.map(({ Icon, size = 14, color = "rgba(255,255,255,0.4)" }, i) => {
         const total = chips.length;
         const xPct = (i / (total - 1)) * 84 + 8;
-        const sinVal =
-          Math.sin((i / (total - 1)) * Math.PI) * (reverse ? -1 : 1);
-        const yOffset = sinVal * 24;
+        const t = (i / (total - 1)) * Math.PI * frequency;
+        const sinVal = Math.sin(t) * (reverse ? -1 : 1);
+        const yOffset = sinVal * amplitude;
         return (
           <div
             key={i}
@@ -359,13 +369,14 @@ function WaveDivider({
             style={{
               left: `${xPct}%`,
               top: `calc(50% + ${yOffset}px)`,
-              animationDelay: `${(i % 4) * 0.65}s`,
-              borderColor: `${color}35`,
+              animationDelay: `${(i % 5) * 0.55}s`,
+              animationDuration: `${3.2 + (i % 3) * 0.6}s`,
+              borderColor: `${color}30`,
               color,
+              padding: "8px 10px",
             }}
           >
-            <Icon size={13} />
-            <span>{label}</span>
+            <Icon size={size} />
           </div>
         );
       })}
@@ -382,6 +393,10 @@ export default function TTSSite() {
   const [heroProgress, setHeroProgress] = useState(0);
   const [revealProgress, setRevealProgress] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [joinActive, setJoinActive] = useState(false);
+  const [missionActive, setMissionActive] = useState(false);
+  const joinSectionRef = useRef<HTMLElement>(null);
+  const missionSectionRef = useRef<HTMLElement>(null);
   const cursorDotRef = useRef<HTMLDivElement>(null);
   const cursorRingRef = useRef<HTMLDivElement>(null);
   const heroSectionRef = useRef<HTMLDivElement>(null);
@@ -563,6 +578,24 @@ export default function TTSSite() {
     window.addEventListener("scroll", handle, { passive: true });
     handle();
     return () => window.removeEventListener("scroll", handle);
+  }, []);
+
+  // Epic section entrances — join rings + mission flash
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          if (e.target === joinSectionRef.current) setJoinActive(true);
+          if (e.target === missionSectionRef.current) setMissionActive(true);
+          obs.unobserve(e.target);
+        });
+      },
+      { threshold: 0.15 },
+    );
+    if (joinSectionRef.current) obs.observe(joinSectionRef.current);
+    if (missionSectionRef.current) obs.observe(missionSectionRef.current);
+    return () => obs.disconnect();
   }, []);
 
   // Stat counter animation
@@ -800,62 +833,102 @@ export default function TTSSite() {
             {[
               {
                 Icon: Code,
-                top: "10%",
-                left: "6%",
-                size: 38,
-                speed: "0.06",
-                speedx: "0.02",
+                top: "8%",
+                left: "5%",
+                size: 68,
+                speed: "0.18",
+                speedx: "0.06",
                 rotate: -12,
                 color: "#CC0000",
               },
               {
                 Icon: Rocket,
-                top: "15%",
-                right: "7%",
-                size: 44,
-                speed: "0.10",
-                speedx: "-0.03",
+                top: "12%",
+                right: "6%",
+                size: 76,
+                speed: "0.24",
+                speedx: "-0.08",
                 rotate: 14,
                 color: "#FFCC00",
               },
               {
                 Icon: Brain,
-                bottom: "20%",
-                left: "8%",
-                size: 34,
-                speed: "0.08",
-                speedx: "0.025",
+                bottom: "22%",
+                left: "7%",
+                size: 60,
+                speed: "0.20",
+                speedx: "0.07",
                 rotate: 8,
-                color: "rgba(255,255,255,0.35)",
+                color: "rgba(255,255,255,0.5)",
               },
               {
                 Icon: Cpu,
-                top: "55%",
-                right: "5%",
-                size: 50,
-                speed: "0.04",
-                speedx: "-0.02",
+                top: "52%",
+                right: "4%",
+                size: 84,
+                speed: "0.12",
+                speedx: "-0.05",
                 rotate: -6,
                 color: "#CC0000",
               },
               {
                 Icon: GitBranch,
-                bottom: "10%",
-                right: "12%",
-                size: 30,
-                speed: "0.13",
-                speedx: "0.04",
+                bottom: "8%",
+                right: "10%",
+                size: 56,
+                speed: "0.30",
+                speedx: "0.10",
                 rotate: 20,
-                color: "rgba(255,255,255,0.35)",
+                color: "rgba(255,255,255,0.4)",
               },
               {
                 Icon: Zap,
-                top: "70%",
-                left: "4%",
-                size: 28,
-                speed: "0.11",
-                speedx: "-0.025",
+                top: "68%",
+                left: "3%",
+                size: 52,
+                speed: "0.26",
+                speedx: "-0.07",
                 rotate: -18,
+                color: "#FFCC00",
+              },
+              {
+                Icon: Terminal,
+                top: "35%",
+                left: "2%",
+                size: 44,
+                speed: "0.15",
+                speedx: "0.04",
+                rotate: 30,
+                color: "rgba(255,255,255,0.35)",
+              },
+              {
+                Icon: Globe,
+                top: "30%",
+                right: "2%",
+                size: 48,
+                speed: "0.22",
+                speedx: "-0.06",
+                rotate: -25,
+                color: "#CC0000",
+              },
+              {
+                Icon: Layers,
+                bottom: "40%",
+                left: "1%",
+                size: 36,
+                speed: "0.35",
+                speedx: "0.09",
+                rotate: 15,
+                color: "rgba(255,255,255,0.3)",
+              },
+              {
+                Icon: Network,
+                bottom: "5%",
+                left: "14%",
+                size: 58,
+                speed: "0.16",
+                speedx: "-0.04",
+                rotate: -10,
                 color: "#FFCC00",
               },
             ].map(
@@ -1164,10 +1237,126 @@ export default function TTSSite() {
 
         {/* ── MISSION ── */}
         <section
+          ref={missionSectionRef}
           id="mission"
           className="tts-section-pad"
-          style={{ background: "#0c0c0f", padding: "80px 40px" }}
+          style={{
+            background: "#0c0c0f",
+            padding: "80px 40px",
+            position: "relative",
+            overflow: "hidden",
+          }}
         >
+          {/* Mission entrance flash */}
+          {missionActive && (
+            <div className="tts-mission-flash" aria-hidden="true" />
+          )}
+
+          {/* Floating parallax icons — mission section */}
+          {[
+            {
+              Icon: BookOpen,
+              top: "8%",
+              left: "2%",
+              size: 64,
+              speed: "0.20",
+              speedx: "0.06",
+              rotate: 12,
+              color: "rgba(255,255,255,0.45)",
+            },
+            {
+              Icon: Lightbulb,
+              top: "12%",
+              right: "3%",
+              size: 76,
+              speed: "0.26",
+              speedx: "-0.08",
+              rotate: -8,
+              color: "#FFCC00",
+            },
+            {
+              Icon: Target,
+              bottom: "16%",
+              left: "3%",
+              size: 60,
+              speed: "0.18",
+              speedx: "0.07",
+              rotate: 20,
+              color: "rgba(255,255,255,0.4)",
+            },
+            {
+              Icon: Compass,
+              bottom: "20%",
+              right: "4%",
+              size: 72,
+              speed: "0.28",
+              speedx: "-0.06",
+              rotate: -14,
+              color: "#CC0000",
+            },
+            {
+              Icon: Globe,
+              top: "48%",
+              left: "1%",
+              size: 52,
+              speed: "0.32",
+              speedx: "0.10",
+              rotate: 6,
+              color: "rgba(255,255,255,0.35)",
+            },
+            {
+              Icon: Zap,
+              top: "38%",
+              right: "1.5%",
+              size: 56,
+              speed: "0.14",
+              speedx: "-0.05",
+              rotate: -22,
+              color: "#CC0000",
+            },
+            {
+              Icon: Network,
+              top: "65%",
+              right: "3%",
+              size: 44,
+              speed: "0.22",
+              speedx: "-0.07",
+              rotate: 18,
+              color: "rgba(255,204,0,0.5)",
+            },
+          ].map(
+            (
+              {
+                Icon,
+                top,
+                left,
+                right,
+                bottom,
+                size,
+                speed,
+                speedx,
+                rotate,
+                color,
+              },
+              idx,
+            ) => (
+              <div
+                key={`mission-float-${idx}`}
+                ref={(el) => {
+                  if (el) floatRefs.current[idx + 60] = el;
+                }}
+                className="tts-float-icon"
+                data-speed={speed}
+                data-speedx={speedx}
+                data-rotate={rotate}
+                aria-hidden="true"
+                style={{ top, left, right, bottom, color }}
+              >
+                <Icon size={size} />
+              </div>
+            ),
+          )}
+
           <div
             className="tts-mission-grid"
             style={{
@@ -1289,19 +1478,20 @@ export default function TTSSite() {
           </div>
         </section>
 
+        {/* Wave 1 — gentle arch, tech icons, mixed sizes */}
         <WaveDivider
+          amplitude={28}
+          frequency={1}
           chips={[
-            { Icon: Users, label: "Open to all", color: "#CC0000" },
-            {
-              Icon: Layers,
-              label: "Any major",
-              color: "rgba(255,255,255,0.6)",
-            },
-            { Icon: Zap, label: "AI-first", color: "#FFCC00" },
-            { Icon: Code, label: "Real code", color: "#CC0000" },
-            { Icon: Brain, label: "Deep work", color: "rgba(255,255,255,0.6)" },
-            { Icon: Rocket, label: "Ship live", color: "#10b981" },
-            { Icon: Globe, label: "Any year", color: "rgba(255,255,255,0.6)" },
+            { Icon: Zap, size: 24, color: "#CC0000" },
+            { Icon: Code, size: 16, color: "rgba(255,255,255,0.35)" },
+            { Icon: Brain, size: 22, color: "#FFCC00" },
+            { Icon: Rocket, size: 14, color: "rgba(255,255,255,0.35)" },
+            { Icon: Cpu, size: 28, color: "#CC0000" },
+            { Icon: Globe, size: 16, color: "rgba(255,255,255,0.35)" },
+            { Icon: Terminal, size: 20, color: "#10b981" },
+            { Icon: GitBranch, size: 14, color: "rgba(255,255,255,0.35)" },
+            { Icon: Layers, size: 22, color: "#CC0000" },
           ]}
         />
 
@@ -1343,72 +1533,90 @@ export default function TTSSite() {
                 Icon: Code,
                 top: "8%",
                 left: "4%",
-                size: 44,
-                speed: "0.07",
+                size: 72,
+                speed: "0.20",
                 rotate: -14,
                 color: "#CC0000",
               },
               {
                 Icon: Terminal,
-                top: "14%",
-                right: "4%",
-                size: 36,
-                speed: "0.11",
+                top: "12%",
+                right: "3%",
+                size: 60,
+                speed: "0.28",
                 rotate: 10,
                 color: "#FFCC00",
               },
               {
                 Icon: Cpu,
-                top: "62%",
-                left: "3%",
-                size: 52,
-                speed: "0.05",
+                top: "60%",
+                left: "2%",
+                size: 84,
+                speed: "0.14",
                 rotate: 8,
                 color: "#CC0000",
               },
               {
                 Icon: Brain,
-                bottom: "8%",
-                right: "5%",
-                size: 40,
-                speed: "0.13",
+                bottom: "6%",
+                right: "4%",
+                size: 68,
+                speed: "0.32",
                 rotate: -18,
                 color: "#FFCC00",
               },
               {
                 Icon: Rocket,
-                top: "38%",
-                left: "1.5%",
-                size: 32,
-                speed: "0.09",
+                top: "36%",
+                left: "1%",
+                size: 56,
+                speed: "0.24",
                 rotate: 20,
-                color: "#10b981",
+                color: "rgba(255,255,255,0.45)",
               },
               {
                 Icon: GitBranch,
-                bottom: "22%",
-                right: "3%",
-                size: 38,
-                speed: "0.08",
+                bottom: "20%",
+                right: "2%",
+                size: 64,
+                speed: "0.22",
                 rotate: -8,
-                color: "#10b981",
+                color: "rgba(255,255,255,0.4)",
               },
               {
                 Icon: Globe,
-                top: "82%",
-                left: "8%",
-                size: 28,
-                speed: "0.15",
+                top: "78%",
+                left: "7%",
+                size: 52,
+                speed: "0.36",
                 rotate: 6,
                 color: "#FFCC00",
               },
               {
                 Icon: Music,
-                top: "28%",
-                right: "2%",
-                size: 30,
-                speed: "0.10",
+                top: "26%",
+                right: "1.5%",
+                size: 56,
+                speed: "0.26",
                 rotate: -22,
+                color: "#CC0000",
+              },
+              {
+                Icon: Network,
+                top: "50%",
+                right: "6%",
+                size: 44,
+                speed: "0.18",
+                rotate: 16,
+                color: "rgba(255,255,255,0.35)",
+              },
+              {
+                Icon: BarChart2,
+                bottom: "35%",
+                left: "6%",
+                size: 48,
+                speed: "0.30",
+                rotate: -12,
                 color: "#CC0000",
               },
             ].map(
@@ -2030,24 +2238,20 @@ export default function TTSSite() {
           </div>
         </div>
 
+        {/* Wave 2 — reverse S-curve, frequency=2, track icons */}
         <WaveDivider
           reverse
+          amplitude={22}
+          frequency={2}
           chips={[
-            { Icon: Hammer, label: "Build", color: "#CC0000" },
-            {
-              Icon: Terminal,
-              label: "Engineer",
-              color: "rgba(255,255,255,0.6)",
-            },
-            { Icon: Briefcase, label: "Consult", color: "#FFCC00" },
-            {
-              Icon: BarChart2,
-              label: "Analyze",
-              color: "rgba(255,255,255,0.6)",
-            },
-            { Icon: TrendingUp, label: "Grow", color: "#10b981" },
-            { Icon: Cpu, label: "Automate", color: "rgba(255,255,255,0.6)" },
-            { Icon: Music, label: "Music tech", color: "#CC0000" },
+            { Icon: Hammer, size: 20, color: "#CC0000" },
+            { Icon: Briefcase, size: 28, color: "#FFCC00" },
+            { Icon: BarChart2, size: 16, color: "rgba(255,255,255,0.35)" },
+            { Icon: TrendingUp, size: 24, color: "#10b981" },
+            { Icon: Music, size: 18, color: "#CC0000" },
+            { Icon: Network, size: 14, color: "rgba(255,255,255,0.35)" },
+            { Icon: Lightbulb, size: 26, color: "#FFCC00" },
+            { Icon: Database, size: 16, color: "rgba(255,255,255,0.35)" },
           ]}
         />
 
@@ -2276,23 +2480,18 @@ export default function TTSSite() {
           </div>
         </section>
 
+        {/* Wave 3 — steep arch, large icons, community theme */}
         <WaveDivider
+          amplitude={34}
+          frequency={1}
           chips={[
-            { Icon: Globe, label: "USC", color: "#CC0000" },
-            { Icon: Network, label: "Network", color: "rgba(255,255,255,0.6)" },
-            { Icon: Star, label: "Excellence", color: "#FFCC00" },
-            {
-              Icon: Lightbulb,
-              label: "Innovate",
-              color: "rgba(255,255,255,0.6)",
-            },
-            { Icon: Award, label: "Leadership", color: "#CC0000" },
-            {
-              Icon: GitBranch,
-              label: "Collaborate",
-              color: "rgba(255,255,255,0.6)",
-            },
-            { Icon: Rocket, label: "Launch", color: "#10b981" },
+            { Icon: Users, size: 14, color: "rgba(255,255,255,0.3)" },
+            { Icon: Award, size: 26, color: "#FFCC00" },
+            { Icon: Star, size: 18, color: "#CC0000" },
+            { Icon: Compass, size: 30, color: "rgba(255,255,255,0.3)" },
+            { Icon: Shield, size: 22, color: "#CC0000" },
+            { Icon: Laptop, size: 16, color: "rgba(255,255,255,0.3)" },
+            { Icon: Flame, size: 28, color: "#FFCC00" },
           ]}
         />
 
@@ -2338,46 +2537,72 @@ export default function TTSSite() {
           {[
             {
               Icon: Hammer,
-              top: "12%",
-              left: "8%",
-              size: 48,
-              speed: "0.06",
+              top: "10%",
+              left: "6%",
+              size: 80,
+              speed: "0.18",
               rotate: -18,
+              color: "#CC0000",
             },
             {
               Icon: Briefcase,
-              top: "22%",
-              right: "10%",
-              size: 40,
-              speed: "0.12",
+              top: "18%",
+              right: "7%",
+              size: 68,
+              speed: "0.28",
               rotate: 12,
+              color: "#FFCC00",
             },
             {
               Icon: TrendingUp,
-              bottom: "18%",
-              left: "12%",
-              size: 36,
-              speed: "0.09",
+              bottom: "16%",
+              left: "9%",
+              size: 60,
+              speed: "0.22",
               rotate: 8,
+              color: "rgba(255,255,255,0.45)",
             },
             {
               Icon: Zap,
-              top: "55%",
-              right: "6%",
-              size: 52,
-              speed: "0.05",
+              top: "52%",
+              right: "4%",
+              size: 88,
+              speed: "0.14",
               rotate: -10,
+              color: "#CC0000",
             },
             {
               Icon: Mail,
-              bottom: "12%",
-              right: "18%",
-              size: 30,
-              speed: "0.14",
+              bottom: "10%",
+              right: "14%",
+              size: 56,
+              speed: "0.34",
               rotate: 22,
+              color: "#FFCC00",
+            },
+            {
+              Icon: Award,
+              top: "38%",
+              left: "2%",
+              size: 64,
+              speed: "0.20",
+              rotate: -28,
+              color: "rgba(255,255,255,0.4)",
+            },
+            {
+              Icon: Star,
+              bottom: "32%",
+              right: "2%",
+              size: 48,
+              speed: "0.30",
+              rotate: 16,
+              color: "#FFCC00",
             },
           ].map(
-            ({ Icon, top, left, right, bottom, size, speed, rotate }, idx) => (
+            (
+              { Icon, top, left, right, bottom, size, speed, rotate, color },
+              idx,
+            ) => (
               <div
                 key={idx}
                 ref={(el) => {
@@ -2387,13 +2612,7 @@ export default function TTSSite() {
                 data-speed={speed}
                 data-rotate={rotate}
                 aria-hidden="true"
-                style={{
-                  top,
-                  left,
-                  right,
-                  bottom,
-                  color: idx % 2 === 0 ? "#CC0000" : "#FFCC00",
-                }}
+                style={{ top, left, right, bottom, color }}
               >
                 <Icon size={size} />
               </div>
@@ -2900,43 +3119,23 @@ export default function TTSSite() {
                         flexWrap: "wrap",
                       }}
                     >
-                      {person.companies.length > 0 ? (
-                        person.companies.map((co) => (
-                          <span
-                            key={co}
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 700,
-                              color: "#71717a",
-                              background: "rgba(255,255,255,0.04)",
-                              border: "1px solid rgba(255,255,255,0.12)",
-                              borderRadius: 6,
-                              padding: "3px 8px",
-                              letterSpacing: "0.04em",
-                            }}
-                          >
-                            {co}
-                          </span>
-                        ))
-                      ) : (
+                      {person.companies.map((co) => (
                         <span
+                          key={co}
                           style={{
                             fontSize: 11,
-                            color: "#71717a",
-                            fontStyle: "italic",
+                            fontWeight: 700,
+                            color: "#a1a1aa",
+                            background: "rgba(255,255,255,0.07)",
+                            border: "1px solid rgba(255,255,255,0.15)",
+                            borderRadius: 6,
+                            padding: "3px 8px",
+                            letterSpacing: "0.04em",
                           }}
                         >
-                          LinkedIn{" "}
-                          <ExternalLink
-                            size={10}
-                            style={{
-                              display: "inline",
-                              verticalAlign: "middle",
-                              marginLeft: 3,
-                            }}
-                          />
+                          {co}
                         </span>
-                      )}
+                      ))}
                     </div>
                   </a>
                 ))}
@@ -2972,11 +3171,10 @@ export default function TTSSite() {
                   >
                     <div
                       style={{
-                        background: "transparent",
+                        background: "rgba(255,255,255,0.04)",
                         borderRadius: 14,
-                        border: "1px dashed rgba(255,255,255,0.12)",
+                        border: "1px dashed rgba(255,255,255,0.25)",
                         padding: "20px",
-                        opacity: 0.4,
                       }}
                     >
                       <div
@@ -2992,14 +3190,15 @@ export default function TTSSite() {
                             width: 40,
                             height: 40,
                             borderRadius: 10,
-                            border: "1px dashed rgba(255,255,255,0.12)",
+                            border: "1px dashed rgba(255,255,255,0.3)",
+                            background: "rgba(255,255,255,0.06)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             flexShrink: 0,
                           }}
                         >
-                          <span style={{ fontSize: 14, color: "#71717a" }}>
+                          <span style={{ fontSize: 14, color: "#a1a1aa" }}>
                             ?
                           </span>
                         </div>
@@ -3008,7 +3207,7 @@ export default function TTSSite() {
                             style={{
                               width: 80,
                               height: 10,
-                              background: "rgba(255,255,255,0.12)",
+                              background: "rgba(255,255,255,0.2)",
                               borderRadius: 4,
                               marginBottom: 6,
                             }}
@@ -3017,7 +3216,7 @@ export default function TTSSite() {
                             style={{
                               width: 56,
                               height: 8,
-                              background: "rgba(255,255,255,0.04)",
+                              background: "rgba(255,255,255,0.1)",
                               borderRadius: 4,
                             }}
                           />
@@ -3031,8 +3230,8 @@ export default function TTSSite() {
                               width: 28,
                               height: 28,
                               borderRadius: 6,
-                              background: "rgba(255,255,255,0.02)",
-                              border: "1px dashed rgba(255,255,255,0.1)",
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px dashed rgba(255,255,255,0.2)",
                             }}
                           />
                         ))}
@@ -3056,20 +3255,21 @@ export default function TTSSite() {
           </div>
         </section>
 
+        {/* Wave 4 — dense high-freq reverse, small icons scatter */}
         <WaveDivider
           reverse
+          amplitude={18}
+          frequency={2.5}
           chips={[
-            { Icon: Users, label: "Founders", color: "#CC0000" },
-            { Icon: Award, label: "Advisors", color: "#FFCC00" },
-            { Icon: BookOpen, label: "Alumni", color: "rgba(255,255,255,0.6)" },
-            { Icon: Target, label: "Mentors", color: "#CC0000" },
-            {
-              Icon: Layers,
-              label: "Community",
-              color: "rgba(255,255,255,0.6)",
-            },
-            { Icon: Star, label: "Legacy", color: "#FFCC00" },
-            { Icon: Globe, label: "Network", color: "rgba(255,255,255,0.6)" },
+            { Icon: BookOpen, size: 13, color: "rgba(255,255,255,0.3)" },
+            { Icon: Target, size: 22, color: "#CC0000" },
+            { Icon: Star, size: 16, color: "rgba(255,255,255,0.3)" },
+            { Icon: Users, size: 28, color: "#FFCC00" },
+            { Icon: Compass, size: 13, color: "rgba(255,255,255,0.3)" },
+            { Icon: Award, size: 20, color: "#CC0000" },
+            { Icon: Layers, size: 14, color: "rgba(255,255,255,0.3)" },
+            { Icon: Shield, size: 24, color: "#FFCC00" },
+            { Icon: Flame, size: 13, color: "rgba(255,255,255,0.3)" },
           ]}
         />
 
@@ -3077,26 +3277,160 @@ export default function TTSSite() {
         <section
           id="faq"
           className="tts-section-pad"
-          style={{ background: "#09090b", padding: "80px 40px" }}
+          style={{
+            background: "#09090b",
+            padding: "80px 40px",
+            position: "relative",
+            overflow: "hidden",
+          }}
         >
-          <div style={{ maxWidth: 800, margin: "0 auto" }}>
-            <div style={{ marginBottom: 48 }}>
+          {/* Floating parallax icons — FAQ section */}
+          {[
+            {
+              Icon: HelpCircle,
+              top: "8%",
+              left: "2%",
+              size: 76,
+              speed: "0.22",
+              speedx: "0.07",
+              rotate: 15,
+              color: "rgba(255,255,255,0.4)",
+            },
+            {
+              Icon: HelpCircle,
+              top: "16%",
+              right: "3%",
+              size: 60,
+              speed: "0.16",
+              speedx: "-0.06",
+              rotate: -10,
+              color: "rgba(204,0,0,0.6)",
+            },
+            {
+              Icon: HelpCircle,
+              top: "48%",
+              left: "1.5%",
+              size: 44,
+              speed: "0.28",
+              speedx: "0.09",
+              rotate: 25,
+              color: "rgba(255,255,255,0.35)",
+            },
+            {
+              Icon: HelpCircle,
+              bottom: "22%",
+              right: "2.5%",
+              size: 68,
+              speed: "0.20",
+              speedx: "-0.07",
+              rotate: -18,
+              color: "rgba(255,204,0,0.55)",
+            },
+            {
+              Icon: HelpCircle,
+              bottom: "8%",
+              left: "3%",
+              size: 52,
+              speed: "0.14",
+              speedx: "0.05",
+              rotate: 8,
+              color: "rgba(255,255,255,0.3)",
+            },
+            {
+              Icon: HelpCircle,
+              top: "33%",
+              right: "1.5%",
+              size: 36,
+              speed: "0.32",
+              speedx: "-0.10",
+              rotate: -30,
+              color: "rgba(204,0,0,0.45)",
+            },
+          ].map(
+            (
+              {
+                Icon,
+                top,
+                left,
+                right,
+                bottom,
+                size,
+                speed,
+                speedx,
+                rotate,
+                color,
+              },
+              idx,
+            ) => (
+              <div
+                key={`faq-float-${idx}`}
+                ref={(el) => {
+                  if (el) floatRefs.current[idx + 50] = el;
+                }}
+                className="tts-float-icon"
+                data-speed={speed}
+                data-speedx={speedx}
+                data-rotate={rotate}
+                aria-hidden="true"
+                style={{ top, left, right, bottom, color }}
+              >
+                <Icon size={size} />
+              </div>
+            ),
+          )}
+
+          {/* Radial spotlight that tracks open item */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 700,
+              height: 700,
+              borderRadius: "50%",
+              background:
+                "radial-gradient(circle, rgba(204,0,0,0.06) 0%, transparent 60%)",
+              pointerEvents: "none",
+              transition: "opacity 0.5s ease",
+              opacity: openFaq !== null ? 1 : 0.4,
+            }}
+          />
+
+          <div
+            style={{ maxWidth: 800, margin: "0 auto", position: "relative" }}
+          >
+            <div style={{ marginBottom: 56 }}>
               <h2
                 style={{
-                  fontSize: "clamp(28px, 4vw, 52px)",
+                  fontSize: "clamp(32px, 4.5vw, 60px)",
                   fontWeight: 900,
                   color: "#fff",
-                  letterSpacing: "-0.03em",
+                  letterSpacing: "-0.04em",
+                  lineHeight: 1.1,
                 }}
               >
-                <SplitText text="Questions we always get" charDelay={0.018} />
+                <SplitText text="Questions we" charDelay={0.018} />
+                <br />
+                <span
+                  style={{
+                    background:
+                      "linear-gradient(90deg, #CC0000 0%, #ff4444 50%, #FFCC00 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
+                >
+                  always get.
+                </span>
               </h2>
               <p
                 className="tts-fade"
                 style={{
-                  fontSize: 15,
-                  color: "#a1a1aa",
-                  marginTop: 10,
+                  fontSize: 16,
+                  color: "#71717a",
+                  marginTop: 14,
                   transitionDelay: "0.1s",
                 }}
               >
@@ -3104,15 +3438,13 @@ export default function TTSSite() {
               </p>
             </div>
 
-            {/* Accordion */}
+            {/* 3D card FAQ */}
             <div
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: 0,
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 12,
-                overflow: "hidden",
+                gap: 10,
+                perspective: "1000px",
               }}
             >
               {FAQ_ITEMS.map(({ q, a }, i) => {
@@ -3122,11 +3454,44 @@ export default function TTSSite() {
                     key={q}
                     className="tts-from-right"
                     style={{
-                      transitionDelay: `${i * 0.07}s`,
-                      borderBottom:
-                        i < FAQ_ITEMS.length - 1
-                          ? "1px solid rgba(255,255,255,0.1)"
-                          : "none",
+                      transitionDelay: `${i * 0.06}s`,
+                      borderRadius: 16,
+                      overflow: "hidden",
+                      background: isOpen
+                        ? "rgba(204,0,0,0.06)"
+                        : "rgba(255,255,255,0.03)",
+                      border: isOpen
+                        ? "1px solid rgba(204,0,0,0.3)"
+                        : "1px solid rgba(255,255,255,0.08)",
+                      boxShadow: isOpen
+                        ? "0 0 40px rgba(204,0,0,0.1), 0 20px 60px rgba(0,0,0,0.4)"
+                        : "0 4px 20px rgba(0,0,0,0.3)",
+                      transform: isOpen
+                        ? "perspective(1000px) rotateX(0deg) scale(1.015)"
+                        : "perspective(1000px) rotateX(0deg) scale(1)",
+                      transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+                      backdropFilter: "blur(12px)",
+                      WebkitBackdropFilter: "blur(12px)",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isOpen) {
+                        (e.currentTarget as HTMLDivElement).style.transform =
+                          "perspective(1000px) rotateX(-1.5deg) scale(1.008) translateY(-2px)";
+                        (e.currentTarget as HTMLDivElement).style.borderColor =
+                          "rgba(255,255,255,0.15)";
+                        (e.currentTarget as HTMLDivElement).style.boxShadow =
+                          "0 16px 48px rgba(0,0,0,0.5)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isOpen) {
+                        (e.currentTarget as HTMLDivElement).style.transform =
+                          "perspective(1000px) rotateX(0deg) scale(1)";
+                        (e.currentTarget as HTMLDivElement).style.borderColor =
+                          "rgba(255,255,255,0.08)";
+                        (e.currentTarget as HTMLDivElement).style.boxShadow =
+                          "0 4px 20px rgba(0,0,0,0.3)";
+                      }
                     }}
                   >
                     <button
@@ -3139,45 +3504,73 @@ export default function TTSSite() {
                         alignItems: "center",
                         justifyContent: "space-between",
                         gap: 16,
-                        padding: "20px 24px",
-                        background: isOpen ? "#111113" : "transparent",
+                        padding: "22px 28px",
+                        background: "transparent",
                         border: "none",
                         cursor: "pointer",
                         textAlign: "left",
-                        transition: "background 0.2s",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isOpen)
-                          (
-                            e.currentTarget as HTMLButtonElement
-                          ).style.background = "rgba(255,255,255,0.03)";
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isOpen)
-                          (
-                            e.currentTarget as HTMLButtonElement
-                          ).style.background = "transparent";
                       }}
                     >
-                      <span
+                      <div
                         style={{
-                          fontSize: 15,
-                          fontWeight: 600,
-                          color: isOpen ? "#fff" : "#e4e4e7",
-                          lineHeight: 1.4,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 14,
                         }}
                       >
-                        {q}
-                      </span>
-                      <ChevronDown
-                        size={16}
-                        color={isOpen ? "#CC0000" : "#6b7280"}
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 800,
+                            color: isOpen ? "#CC0000" : "#3f3f46",
+                            letterSpacing: "0.08em",
+                            minWidth: 24,
+                            transition: "color 0.3s",
+                          }}
+                        >
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 16,
+                            fontWeight: 600,
+                            color: isOpen ? "#fff" : "#d4d4d8",
+                            lineHeight: 1.4,
+                            transition: "color 0.3s",
+                          }}
+                        >
+                          {q}
+                        </span>
+                      </div>
+                      <div
                         style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: "50%",
+                          background: isOpen
+                            ? "rgba(204,0,0,0.2)"
+                            : "rgba(255,255,255,0.06)",
+                          border: isOpen
+                            ? "1px solid rgba(204,0,0,0.4)"
+                            : "1px solid rgba(255,255,255,0.1)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                           flexShrink: 0,
-                          transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-                          transition: "transform 0.3s ease",
+                          transition: "all 0.3s ease",
                         }}
-                      />
+                      >
+                        <ChevronDown
+                          size={14}
+                          color={isOpen ? "#CC0000" : "#6b7280"}
+                          style={{
+                            transform: isOpen
+                              ? "rotate(180deg)"
+                              : "rotate(0deg)",
+                            transition: "transform 0.35s ease",
+                          }}
+                        />
+                      </div>
                     </button>
                     <div
                       id={`faq-answer-${i}`}
@@ -3185,16 +3578,16 @@ export default function TTSSite() {
                       role="region"
                       aria-label={q}
                       style={{
-                        maxHeight: isOpen ? "300px" : "0px",
+                        maxHeight: isOpen ? "320px" : "0px",
                         opacity: isOpen ? 1 : 0,
                       }}
                     >
                       <p
                         style={{
-                          fontSize: 14,
+                          fontSize: 15,
                           color: "#a1a1aa",
-                          lineHeight: 1.7,
-                          padding: "0 24px 20px",
+                          lineHeight: 1.75,
+                          padding: "0 28px 24px 66px",
                           margin: 0,
                         }}
                         dangerouslySetInnerHTML={{
@@ -3217,11 +3610,12 @@ export default function TTSSite() {
             <div
               className="tts-fade"
               style={{
-                marginTop: 20,
-                padding: "20px 24px",
-                borderRadius: 12,
-                background: "rgba(204,0,0,0.04)",
-                border: "1px solid rgba(204,0,0,0.12)",
+                marginTop: 24,
+                padding: "22px 28px",
+                borderRadius: 16,
+                background:
+                  "linear-gradient(135deg, rgba(204,0,0,0.06) 0%, rgba(255,204,0,0.03) 100%)",
+                border: "1px solid rgba(204,0,0,0.2)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -3230,60 +3624,73 @@ export default function TTSSite() {
                 transitionDelay: "0.15s",
               }}
             >
-              <div style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>
-                Still have a question?
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>
+                  Still have a question?
+                </div>
+                <div style={{ fontSize: 13, color: "#71717a", marginTop: 2 }}>
+                  We&apos;re a real club with real people. Just reach out.
+                </div>
               </div>
               <a
                 href="mailto:trojantechsolutions@gmail.com"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 6,
-                  padding: "8px 16px",
-                  borderRadius: 8,
-                  background: "rgba(204,0,0,0.1)",
-                  border: "1px solid rgba(204,0,0,0.2)",
-                  color: "#CC0000",
+                  gap: 8,
+                  padding: "10px 20px",
+                  borderRadius: 100,
+                  background: "#CC0000",
+                  color: "#fff",
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   textDecoration: "none",
-                  transition: "background 0.15s",
+                  transition: "all 0.2s ease",
                   whiteSpace: "nowrap",
+                  boxShadow: "0 4px 20px rgba(204,0,0,0.3)",
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLAnchorElement).style.background =
-                    "rgba(204,0,0,0.18)";
+                    "#aa0000";
+                  (e.currentTarget as HTMLAnchorElement).style.transform =
+                    "translateY(-1px)";
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLAnchorElement).style.background =
-                    "rgba(204,0,0,0.1)";
+                    "#CC0000";
+                  (e.currentTarget as HTMLAnchorElement).style.transform =
+                    "translateY(0)";
                 }}
               >
-                <Mail size={13} /> Email us
+                <Mail size={14} /> Email us
               </a>
             </div>
           </div>
         </section>
 
+        {/* Wave 5 — wide sparse arch, bold accent icons pre-join */}
         <WaveDivider
+          amplitude={32}
+          frequency={0.75}
           chips={[
-            { Icon: Zap, label: "Join TTS", color: "#CC0000" },
-            { Icon: Users, label: "Any major", color: "rgba(255,255,255,0.6)" },
-            { Icon: Globe, label: "Any year", color: "#FFCC00" },
-            { Icon: Layers, label: "No app", color: "rgba(255,255,255,0.6)" },
-            { Icon: Code, label: "Build things", color: "#CC0000" },
-            { Icon: Rocket, label: "Ship live", color: "#10b981" },
-            { Icon: Brain, label: "Fight on", color: "rgba(255,255,255,0.6)" },
+            { Icon: Rocket, size: 14, color: "rgba(255,255,255,0.28)" },
+            { Icon: Flame, size: 32, color: "#CC0000" },
+            { Icon: Code, size: 16, color: "rgba(255,255,255,0.28)" },
+            { Icon: Zap, size: 38, color: "#FFCC00" },
+            { Icon: Brain, size: 16, color: "rgba(255,255,255,0.28)" },
+            { Icon: Laptop, size: 30, color: "#CC0000" },
+            { Icon: Globe, size: 14, color: "rgba(255,255,255,0.28)" },
           ]}
         />
 
         {/* ── JOIN ── */}
         <section
+          ref={joinSectionRef}
           id="join"
           className="tts-section-pad"
           style={{
-            background: "#0c0c0f",
-            padding: "80px 40px",
+            background: "#0a0508",
+            padding: "100px 40px 120px",
             position: "relative",
             overflow: "hidden",
           }}
@@ -3291,67 +3698,98 @@ export default function TTSSite() {
           {/* Pulsing glow */}
           <div className="tts-join-glow" aria-hidden="true" />
 
+          {/* Epic entrance rings — wrapped so nth-child applies correctly */}
+          <div aria-hidden="true">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div
+                key={`ring-${i}`}
+                className={`tts-join-ring${joinActive ? " tts-active" : ""}`}
+                style={{ animationDelay: `${i * 0.3}s` }}
+              />
+            ))}
+          </div>
+
           {/* Floating parallax icons — join section */}
           {[
             {
               Icon: Zap,
-              top: "12%",
+              top: "10%",
               left: "3%",
-              size: 40,
-              speed: "0.09",
-              speedx: "0.03",
+              size: 72,
+              speed: "0.24",
+              speedx: "0.08",
               rotate: -16,
               color: "#CC0000",
             },
             {
               Icon: Users,
-              top: "18%",
+              top: "15%",
               right: "4%",
-              size: 36,
-              speed: "0.07",
-              speedx: "-0.02",
+              size: 60,
+              speed: "0.18",
+              speedx: "-0.06",
               rotate: 10,
-              color: "rgba(255,255,255,0.3)",
+              color: "rgba(255,255,255,0.45)",
             },
             {
               Icon: Rocket,
-              bottom: "15%",
-              left: "5%",
-              size: 44,
-              speed: "0.05",
-              speedx: "0.015",
+              bottom: "12%",
+              left: "4%",
+              size: 80,
+              speed: "0.14",
+              speedx: "0.05",
               rotate: 22,
               color: "#FFCC00",
             },
             {
               Icon: Globe,
-              bottom: "20%",
-              right: "6%",
-              size: 32,
-              speed: "0.11",
-              speedx: "-0.03",
+              bottom: "18%",
+              right: "5%",
+              size: 56,
+              speed: "0.28",
+              speedx: "-0.08",
               rotate: -8,
               color: "#CC0000",
             },
             {
               Icon: Star,
-              top: "60%",
+              top: "58%",
               left: "2%",
-              size: 26,
-              speed: "0.13",
-              speedx: "0.04",
+              size: 48,
+              speed: "0.32",
+              speedx: "0.10",
               rotate: 14,
-              color: "rgba(255,255,255,0.3)",
+              color: "rgba(255,255,255,0.4)",
             },
             {
               Icon: Award,
-              top: "50%",
-              right: "3%",
-              size: 34,
-              speed: "0.06",
-              speedx: "-0.025",
+              top: "48%",
+              right: "2%",
+              size: 64,
+              speed: "0.16",
+              speedx: "-0.05",
               rotate: -20,
               color: "#FFCC00",
+            },
+            {
+              Icon: Flame,
+              top: "32%",
+              left: "1%",
+              size: 52,
+              speed: "0.36",
+              speedx: "0.12",
+              rotate: -30,
+              color: "rgba(204,0,0,0.6)",
+            },
+            {
+              Icon: Brain,
+              bottom: "35%",
+              right: "1.5%",
+              size: 44,
+              speed: "0.22",
+              speedx: "-0.07",
+              rotate: 25,
+              color: "rgba(255,255,255,0.35)",
             },
           ].map(
             (
@@ -3791,110 +4229,122 @@ export default function TTSSite() {
         {/* ── FOOTER ── */}
         <footer
           style={{
-            background: "#060608",
+            background:
+              "linear-gradient(to top, rgba(204,0,0,0.04) 0%, #060608 100%)",
             borderTop: "1px solid rgba(255,255,255,0.05)",
-            padding: "0 40px",
+            padding: "40px 40px 28px",
           }}
         >
+          {/* Floating nav pills */}
           <div
             style={{
-              maxWidth: 1200,
-              margin: "0 auto",
-              height: 56,
               display: "flex",
+              flexWrap: "wrap",
               alignItems: "center",
-              justifyContent: "space-between",
-              gap: 24,
+              justifyContent: "center",
+              gap: 8,
+              marginBottom: 28,
             }}
           >
-            {/* Brand */}
-            <div style={{ flexShrink: 0 }}>
-              <Image
-                src="/ttslogo2026.png"
-                alt="TTS"
-                width={40}
-                height={40}
-                style={{ objectFit: "contain", display: "block" }}
-              />
-            </div>
-
-            {/* Nav links */}
-            <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-              {[
-                { label: "Mission", id: "mission" },
-                { label: "Tracks", id: "tracks" },
-                { label: "Team", id: "leadership" },
-                { label: "E-Board", id: "cabinet" },
-                { label: "Alumni", id: "alumni" },
-                { label: "FAQ", id: "faq" },
-                { label: "Join", id: "join" },
-              ].map(({ label, id }) => (
-                <button
-                  key={label}
-                  onClick={() => scrollTo(id)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    padding: "4px 8px",
-                    fontSize: 12,
-                    color: "#71717a",
-                    cursor: "pointer",
-                    transition: "color 0.15s",
-                    whiteSpace: "nowrap",
-                    minHeight: 44,
-                    fontFamily: "inherit",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.color =
-                      "#a1a1aa";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.color =
-                      "#71717a";
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {/* Right: copyright + instagram */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 16,
-                flexShrink: 0,
-              }}
-            >
-              <span style={{ fontSize: 11, color: "#71717a" }}>
-                © {new Date().getFullYear()} Trojan Technology Solutions
-              </span>
-              <a
-                href={INSTAGRAM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+            {[
+              { label: "Mission", id: "mission" },
+              { label: "Tracks", id: "tracks" },
+              { label: "Team", id: "leadership" },
+              { label: "E-Board", id: "cabinet" },
+              { label: "Alumni", id: "alumni" },
+              { label: "FAQ", id: "faq" },
+              { label: "Join", id: "join" },
+            ].map(({ label, id }) => (
+              <button
+                key={label}
+                onClick={() => scrollTo(id)}
                 style={{
-                  fontSize: 11,
-                  color: "#71717a",
-                  textDecoration: "none",
-                  transition: "color 0.15s",
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 100,
+                  padding: "8px 18px",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "#a1a1aa",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  whiteSpace: "nowrap",
+                  fontFamily: "inherit",
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
+                  letterSpacing: "0.02em",
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.color =
-                    "#a1a1aa";
+                  const el = e.currentTarget as HTMLButtonElement;
+                  el.style.background = "rgba(255,255,255,0.08)";
+                  el.style.borderColor = "rgba(255,255,255,0.22)";
+                  el.style.color = "#ffffff";
+                  el.style.transform = "translateY(-2px)";
+                  el.style.boxShadow = "0 8px 24px rgba(0,0,0,0.4)";
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.color =
-                    "#52525b";
+                  const el = e.currentTarget as HTMLButtonElement;
+                  el.style.background = "rgba(255,255,255,0.04)";
+                  el.style.borderColor = "rgba(255,255,255,0.1)";
+                  el.style.color = "#a1a1aa";
+                  el.style.transform = "translateY(0)";
+                  el.style.boxShadow = "none";
                 }}
               >
-                Instagram
-              </a>
-            </div>
+                {label}
+              </button>
+            ))}
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                background: "rgba(204,0,0,0.08)",
+                border: "1px solid rgba(204,0,0,0.2)",
+                borderRadius: 100,
+                padding: "8px 18px",
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#CC0000",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                whiteSpace: "nowrap",
+                textDecoration: "none",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+                letterSpacing: "0.02em",
+                display: "inline-flex",
+                alignItems: "center",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.background = "rgba(204,0,0,0.16)";
+                el.style.transform = "translateY(-2px)";
+                el.style.boxShadow = "0 8px 24px rgba(204,0,0,0.2)";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.background = "rgba(204,0,0,0.08)";
+                el.style.transform = "translateY(0)";
+                el.style.boxShadow = "none";
+              }}
+            >
+              Instagram
+            </a>
           </div>
+
+          {/* Copyright */}
+          <p
+            style={{
+              textAlign: "center",
+              fontSize: 11,
+              color: "#3f3f46",
+              margin: 0,
+              letterSpacing: "0.04em",
+            }}
+          >
+            © {new Date().getFullYear()} Trojan Technology Solutions · USC
+          </p>
         </footer>
       </div>
     </>
