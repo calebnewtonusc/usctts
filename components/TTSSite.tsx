@@ -365,6 +365,7 @@ export default function TTSSite() {
   const ringRef = useRef({ x: -100, y: -100 });
   const rafRef = useRef(0);
   const trackScrollRef = useRef<HTMLElement>(null);
+  const trackStickyRef = useRef<HTMLDivElement>(null);
   const trackInnerRef = useRef<HTMLDivElement>(null);
   const trackTitleRef = useRef<HTMLDivElement>(null);
   const floatRefs = useRef<HTMLDivElement[]>([]);
@@ -502,6 +503,12 @@ export default function TTSSite() {
           card.style.transform = `translateX(${xOffset}px) translateY(${yOffset}px)`;
           card.style.opacity = String(Math.min(1, rawP * 2));
         });
+      }
+
+      // Section exit: whole sticky container slides left in final 22% of scroll
+      if (trackStickyRef.current) {
+        const exitP = easeOut(Math.max(0, Math.min(1, (p - 0.78) / 0.22)));
+        trackStickyRef.current.style.transform = `translateX(${-exitP * 100}%)`;
       }
     };
     window.addEventListener("scroll", handle, { passive: true });
@@ -1174,11 +1181,13 @@ export default function TTSSite() {
           }}
         >
           <div
+            ref={trackStickyRef}
             style={{
               position: "sticky",
               top: 0,
               height: "100vh",
               overflow: "hidden",
+              willChange: "transform",
             }}
           >
             {/* Background dot grid */}
@@ -1544,106 +1553,16 @@ export default function TTSSite() {
               overflow: "hidden",
             }}
           >
-            {/* Panel A: exits downward as Panel B arrives */}
+            {/* Panel A: exits downward — Real work stats */}
             <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: "#09090b",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transform: `translateY(${panelAExitY}%)`,
-                zIndex: 1,
-              }}
-            >
-              {/* dot grid */}
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  backgroundImage:
-                    "radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px)",
-                  backgroundSize: "36px 36px",
-                  pointerEvents: "none",
-                }}
-              />
-              {/* red glow */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%,-50%)",
-                  width: 700,
-                  height: 700,
-                  borderRadius: "50%",
-                  background:
-                    "radial-gradient(circle, rgba(204,0,0,0.1) 0%, transparent 65%)",
-                  pointerEvents: "none",
-                }}
-              />
-              <div
-                style={{
-                  padding: "0 40px",
-                  maxWidth: 900,
-                  textAlign: "center",
-                  position: "relative",
-                  zIndex: 1,
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#CC0000",
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    marginBottom: 28,
-                  }}
-                >
-                  USC · Any major · Every semester
-                </p>
-                <h2
-                  style={{
-                    fontSize: "clamp(52px, 9vw, 112px)",
-                    fontWeight: 900,
-                    color: "#fff",
-                    letterSpacing: "-0.04em",
-                    lineHeight: 0.92,
-                    marginBottom: 36,
-                  }}
-                >
-                  Walk in.
-                  <br />
-                  <span style={{ color: "#CC0000" }}>Walk out different.</span>
-                </h2>
-                <p
-                  style={{
-                    fontSize: 16,
-                    color: "#71717a",
-                    lineHeight: 1.7,
-                    maxWidth: 520,
-                    margin: "0 auto",
-                  }}
-                >
-                  No audition. No prerequisites. No waitlist. Just show up, pick
-                  a track, and start doing real work.
-                </p>
-              </div>
-            </div>
-
-            {/* Panel B: slides in from the right side */}
-            <div
-              aria-hidden={panelBX > 5}
               style={{
                 position: "absolute",
                 inset: 0,
                 background: "#0d0d10",
-                transform: `translateX(${panelBX}%)`,
-                zIndex: 2,
                 display: "flex",
                 alignItems: "center",
+                transform: `translateY(${panelAExitY}%)`,
+                zIndex: 1,
               }}
             >
               <div
@@ -1659,7 +1578,6 @@ export default function TTSSite() {
                   alignItems: "center",
                 }}
               >
-                {/* Left: headline */}
                 <div>
                   <p
                     style={{
@@ -1700,8 +1618,6 @@ export default function TTSSite() {
                     those clubs assume you already have.
                   </p>
                 </div>
-
-                {/* Right: stats */}
                 <div
                   style={{
                     display: "flex",
@@ -1780,6 +1696,96 @@ export default function TTSSite() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            {/* Panel B: slides in from the right — Walk in. Walk out different. */}
+            <div
+              aria-hidden={panelBX > 5}
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "#09090b",
+                transform: `translateX(${panelBX}%)`,
+                zIndex: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {/* dot grid */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  backgroundImage:
+                    "radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px)",
+                  backgroundSize: "36px 36px",
+                  pointerEvents: "none",
+                }}
+              />
+              {/* red glow */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%,-50%)",
+                  width: 700,
+                  height: 700,
+                  borderRadius: "50%",
+                  background:
+                    "radial-gradient(circle, rgba(204,0,0,0.1) 0%, transparent 65%)",
+                  pointerEvents: "none",
+                }}
+              />
+              <div
+                style={{
+                  padding: "0 40px",
+                  maxWidth: 900,
+                  textAlign: "center",
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#CC0000",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    marginBottom: 28,
+                  }}
+                >
+                  USC · Any major · Every semester
+                </p>
+                <h2
+                  style={{
+                    fontSize: "clamp(52px, 9vw, 112px)",
+                    fontWeight: 900,
+                    color: "#fff",
+                    letterSpacing: "-0.04em",
+                    lineHeight: 0.92,
+                    marginBottom: 36,
+                  }}
+                >
+                  Walk in.
+                  <br />
+                  <span style={{ color: "#CC0000" }}>Walk out different.</span>
+                </h2>
+                <p
+                  style={{
+                    fontSize: 16,
+                    color: "#71717a",
+                    lineHeight: 1.7,
+                    maxWidth: 520,
+                    margin: "0 auto",
+                  }}
+                >
+                  No audition. No prerequisites. No waitlist. Just show up, pick
+                  a track, and start doing real work.
+                </p>
               </div>
             </div>
           </div>
