@@ -137,6 +137,137 @@ const FAQ_ITEMS = [
   },
 ];
 
+const CABINET: {
+  name: string;
+  role: string;
+  initials: string;
+  accent: string;
+  link: string | null;
+  headshot: string | null;
+  position?: string;
+  placeholder?: boolean;
+}[] = [
+  {
+    name: "Esrom Dawit",
+    role: "Campus Affairs",
+    initials: "ED",
+    accent: "#CC0000",
+    link: "https://www.linkedin.com/in/esrom-dawit-4780302b2/",
+    headshot: "/img/esrom_shot.jpeg",
+    position: "center top",
+  },
+  {
+    name: "Gabriel Oliveri",
+    role: "Lead of Engineering",
+    initials: "GO",
+    accent: "#6366f1",
+    link: "https://www.linkedin.com/in/gabriel-oliveri/",
+    headshot: "/img/gabriel_shot.jpeg",
+    position: "center top",
+  },
+  {
+    name: "Ephrem Adugna",
+    role: "Co-lead of Entrepreneurship",
+    initials: "EA",
+    accent: "#10b981",
+    link: "https://www.linkedin.com/in/ephrem-adugna/",
+    headshot: "/img/ephrem_shot.jpeg",
+    position: "center top",
+  },
+  {
+    name: "Annabelle Forbes",
+    role: "Social Chair",
+    initials: "AF",
+    accent: "#f59e0b",
+    link: "https://www.linkedin.com/in/annabelle-forbes-9b381838b/",
+    headshot: "/img/annabelle_shot.jpeg",
+    position: "center top",
+  },
+  {
+    name: "Austin Chen",
+    role: "Lead of Biotech",
+    initials: "AC",
+    accent: "#06b6d4",
+    link: "https://www.linkedin.com/in/austin-f-chen/",
+    headshot: null,
+    position: "center top",
+  },
+  {
+    name: "Jet Jadeja",
+    role: "Lead of Web3",
+    initials: "JJ",
+    accent: "#8b5cf6",
+    link: "https://www.linkedin.com/in/jet-jadeja/",
+    headshot: "/img/jet_shot.jpeg",
+    position: "center top",
+  },
+  {
+    name: "Coming Soon",
+    role: "TBD",
+    initials: "?",
+    accent: "#52525b",
+    link: null,
+    headshot: null,
+    placeholder: true,
+  },
+  {
+    name: "Coming Soon",
+    role: "TBD",
+    initials: "?",
+    accent: "#52525b",
+    link: null,
+    headshot: null,
+    placeholder: true,
+  },
+  {
+    name: "Coming Soon",
+    role: "TBD",
+    initials: "?",
+    accent: "#52525b",
+    link: null,
+    headshot: null,
+    placeholder: true,
+  },
+  {
+    name: "Coming Soon",
+    role: "TBD",
+    initials: "?",
+    accent: "#52525b",
+    link: null,
+    headshot: null,
+    placeholder: true,
+  },
+];
+
+const BOARD: {
+  name: string;
+  role: string;
+  title: string;
+  initials: string;
+  link: string;
+  headshot: string | null;
+  position?: string;
+}[] = [
+  {
+    name: "Matthew Kim",
+    role: "OG Co-Founder",
+    title: "Board of Advisors",
+    initials: "MK",
+    link: "https://www.linkedin.com/in/matthewkiiim",
+    headshot: "/img/matthew_shot.jpeg",
+    position: "center top",
+  },
+  {
+    name: "Kevin Sangmuah",
+    role: "OG Co-Founder",
+    title: "Board of Advisors",
+    initials: "KS",
+    link: "https://www.linkedin.com/in/kevin-sangmuah-4a780a221",
+    headshot: "/img/kevin_shot.jpeg",
+    position: "center top",
+  },
+];
+
 const INSTAGRAM_URL = "https://instagram.com/trojantechsolutions";
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -1536,6 +1667,673 @@ export default function TTSSite() {
           </div>
         </section>
 
+        {/* ── CABINET ── */}
+        <section
+          id="cabinet"
+          className="tts-section-pad"
+          style={{ background: "#09090b", padding: "80px 40px" }}
+        >
+          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ marginBottom: 48 }}>
+              <p
+                className="tts-fade"
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#CC0000",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  marginBottom: 12,
+                }}
+              >
+                The team
+              </p>
+              <h2
+                className="tts-slide"
+                style={{
+                  fontSize: "clamp(28px, 4vw, 52px)",
+                  fontWeight: 900,
+                  color: "#fff",
+                  letterSpacing: "-0.03em",
+                  marginBottom: 12,
+                }}
+              >
+                E-Board
+              </h2>
+              <p
+                className="tts-fade"
+                style={{
+                  fontSize: 15,
+                  color: "#a1a1aa",
+                  maxWidth: 500,
+                  transitionDelay: "0.08s",
+                }}
+              >
+                The people running the tracks, building the community, and
+                keeping the machine moving.
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                gap: 16,
+              }}
+            >
+              {CABINET.map((member, i) => (
+                <div
+                  key={`${member.name}-${i}`}
+                  className="tts-fade"
+                  style={{ transitionDelay: `${i * 0.05}s` }}
+                >
+                  {member.placeholder ? (
+                    <div
+                      style={{
+                        background: "transparent",
+                        borderRadius: 14,
+                        border: "1px dashed rgba(255,255,255,0.1)",
+                        padding: "24px 20px",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 12,
+                        minHeight: 120,
+                        opacity: 0.45,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: "50%",
+                          border: "1px dashed rgba(255,255,255,0.2)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <span style={{ fontSize: 18, color: "#52525b" }}>
+                          +
+                        </span>
+                      </div>
+                      <div style={{ textAlign: "center" }}>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: "#52525b",
+                          }}
+                        >
+                          Coming Soon
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "#3f3f46",
+                            marginTop: 2,
+                          }}
+                        >
+                          Role TBD
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        background: "#111113",
+                        borderRadius: 14,
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        padding: "24px 20px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 14,
+                        transition: "border-color 0.2s, transform 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLDivElement).style.borderColor =
+                          `${member.accent}40`;
+                        (e.currentTarget as HTMLDivElement).style.transform =
+                          "translateY(-2px)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLDivElement).style.borderColor =
+                          "rgba(255,255,255,0.06)";
+                        (e.currentTarget as HTMLDivElement).style.transform =
+                          "translateY(0)";
+                      }}
+                    >
+                      {member.headshot ? (
+                        <div
+                          style={{
+                            position: "relative",
+                            width: "100%",
+                            aspectRatio: "1/1",
+                            overflow: "hidden",
+                            borderRadius: 10,
+                            marginBottom: 2,
+                          }}
+                        >
+                          <Image
+                            src={member.headshot}
+                            alt={`${member.name}`}
+                            fill
+                            sizes="(max-width: 768px) 50vw, 200px"
+                            style={{
+                              objectFit: "cover",
+                              objectPosition: member.position ?? "center top",
+                            }}
+                          />
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              background:
+                                "linear-gradient(to top, rgba(9,9,11,0.75) 0%, transparent 55%)",
+                            }}
+                          />
+                          <div
+                            style={{
+                              position: "absolute",
+                              bottom: 10,
+                              left: 12,
+                              right: 12,
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 700,
+                                color: "#fff",
+                                lineHeight: 1.3,
+                              }}
+                            >
+                              {member.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: 10,
+                                color: member.accent,
+                                fontWeight: 600,
+                                marginTop: 2,
+                                letterSpacing: "0.03em",
+                              }}
+                            >
+                              {member.role}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 12,
+                              background: `${member.accent}18`,
+                              border: `1px solid ${member.accent}30`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 14,
+                                fontWeight: 800,
+                                color: member.accent,
+                                letterSpacing: "-0.02em",
+                              }}
+                            >
+                              {member.initials}
+                            </span>
+                          </div>
+                          <div>
+                            <div
+                              style={{
+                                fontSize: 14,
+                                fontWeight: 700,
+                                color: "#fff",
+                                lineHeight: 1.3,
+                              }}
+                            >
+                              {member.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: 11,
+                                color: member.accent,
+                                fontWeight: 600,
+                                marginTop: 2,
+                                letterSpacing: "0.02em",
+                              }}
+                            >
+                              {member.role}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {member.link && (
+                        <a
+                          href={member.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${member.name} LinkedIn`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 4,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: "#52525b",
+                            textDecoration: "none",
+                            transition: "color 0.15s",
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLAnchorElement).style.color =
+                              member.accent;
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLAnchorElement).style.color =
+                              "#52525b";
+                          }}
+                        >
+                          LinkedIn <ExternalLink size={10} />
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── ALUMNI / BOARD ── */}
+        <section
+          id="alumni"
+          className="tts-section-pad"
+          style={{ background: "#0c0c0f", padding: "80px 40px" }}
+        >
+          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ marginBottom: 48 }}>
+              <p
+                className="tts-fade"
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#FFCC00",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  marginBottom: 12,
+                }}
+              >
+                Where it started
+              </p>
+              <h2
+                className="tts-slide"
+                style={{
+                  fontSize: "clamp(28px, 4vw, 52px)",
+                  fontWeight: 900,
+                  color: "#fff",
+                  letterSpacing: "-0.03em",
+                  marginBottom: 12,
+                }}
+              >
+                Alumni &amp; Advisors
+              </h2>
+              <p
+                className="tts-fade"
+                style={{
+                  fontSize: 15,
+                  color: "#a1a1aa",
+                  maxWidth: 520,
+                  transitionDelay: "0.08s",
+                }}
+              >
+                TTS didn&apos;t start with us. These are the people who built
+                the foundation we&apos;re standing on.
+              </p>
+            </div>
+
+            {/* Board of Advisors */}
+            <div style={{ marginBottom: 48 }}>
+              <p
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#52525b",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  marginBottom: 20,
+                }}
+              >
+                Board of Advisors
+              </p>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                  gap: 16,
+                }}
+              >
+                {BOARD.map((person, i) => (
+                  <div
+                    key={person.name}
+                    className="tts-fade"
+                    style={{ transitionDelay: `${i * 0.1}s` }}
+                  >
+                    <div
+                      style={{
+                        background: "#111113",
+                        borderRadius: 16,
+                        border: "1px solid rgba(255,204,0,0.12)",
+                        padding: "28px 24px",
+                        transition: "border-color 0.2s, transform 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLDivElement).style.borderColor =
+                          "rgba(255,204,0,0.3)";
+                        (e.currentTarget as HTMLDivElement).style.transform =
+                          "translateY(-2px)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLDivElement).style.borderColor =
+                          "rgba(255,204,0,0.12)";
+                        (e.currentTarget as HTMLDivElement).style.transform =
+                          "translateY(0)";
+                      }}
+                    >
+                      {person.headshot && (
+                        <div
+                          style={{
+                            position: "relative",
+                            width: "100%",
+                            aspectRatio: "16/9",
+                            overflow: "hidden",
+                            borderRadius: 10,
+                            marginBottom: 20,
+                          }}
+                        >
+                          <Image
+                            src={person.headshot}
+                            alt={person.name}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 400px"
+                            style={{
+                              objectFit: "cover",
+                              objectPosition: person.position ?? "center top",
+                            }}
+                          />
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              background:
+                                "linear-gradient(to top, rgba(9,9,11,0.7) 0%, transparent 50%)",
+                            }}
+                          />
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 16,
+                          marginBottom: 20,
+                        }}
+                      >
+                        {!person.headshot && (
+                          <div
+                            style={{
+                              width: 52,
+                              height: 52,
+                              borderRadius: 14,
+                              background: "rgba(255,204,0,0.1)",
+                              border: "1px solid rgba(255,204,0,0.25)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 16,
+                                fontWeight: 800,
+                                color: "#FFCC00",
+                                letterSpacing: "-0.02em",
+                              }}
+                            >
+                              {person.initials}
+                            </span>
+                          </div>
+                        )}
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 17,
+                              fontWeight: 800,
+                              color: "#fff",
+                              letterSpacing: "-0.02em",
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            {person.name}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#FFCC00",
+                              fontWeight: 600,
+                              marginTop: 3,
+                            }}
+                          >
+                            {person.role}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "#52525b",
+                              marginTop: 2,
+                              fontWeight: 500,
+                            }}
+                          >
+                            {person.title}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Placeholder company logo row */}
+                      <div style={{ marginBottom: 16 }}>
+                        <div
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 600,
+                            color: "#3f3f46",
+                            letterSpacing: "0.08em",
+                            textTransform: "uppercase",
+                            marginBottom: 10,
+                          }}
+                        >
+                          Experience
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          {[0, 1, 2, 3].map((j) => (
+                            <div
+                              key={j}
+                              style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 8,
+                                background: "rgba(255,255,255,0.02)",
+                                border: "1px dashed rgba(255,255,255,0.08)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <span style={{ fontSize: 14, color: "#3f3f46" }}>
+                                ?
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <a
+                        href={person.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${person.name} LinkedIn`}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: "#FFCC00",
+                          textDecoration: "none",
+                          transition: "opacity 0.15s",
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLAnchorElement).style.opacity =
+                            "0.7";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLAnchorElement).style.opacity =
+                            "1";
+                        }}
+                      >
+                        LinkedIn <ExternalLink size={11} />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Alumni placeholders */}
+            <div>
+              <p
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#52525b",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  marginBottom: 20,
+                }}
+              >
+                Alumni
+              </p>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="tts-fade"
+                    style={{ transitionDelay: `${i * 0.05}s` }}
+                  >
+                    <div
+                      style={{
+                        background: "transparent",
+                        borderRadius: 14,
+                        border: "1px dashed rgba(255,255,255,0.07)",
+                        padding: "20px",
+                        opacity: 0.4,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                          marginBottom: 14,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 10,
+                            border: "1px dashed rgba(255,255,255,0.12)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <span style={{ fontSize: 14, color: "#3f3f46" }}>
+                            ?
+                          </span>
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              width: 80,
+                              height: 10,
+                              background: "rgba(255,255,255,0.07)",
+                              borderRadius: 4,
+                              marginBottom: 6,
+                            }}
+                          />
+                          <div
+                            style={{
+                              width: 56,
+                              height: 8,
+                              background: "rgba(255,255,255,0.04)",
+                              borderRadius: 4,
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {[0, 1, 2].map((j) => (
+                          <div
+                            key={j}
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 6,
+                              background: "rgba(255,255,255,0.02)",
+                              border: "1px dashed rgba(255,255,255,0.06)",
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p
+                className="tts-fade"
+                style={{
+                  fontSize: 13,
+                  color: "#3f3f46",
+                  marginTop: 20,
+                  fontStyle: "italic",
+                }}
+              >
+                Alumni profiles coming soon. Reach out to add yours.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* ── FAQ ── */}
         <section
           id="faq"
@@ -2161,6 +2959,8 @@ export default function TTSSite() {
                 { label: "Mission", id: "mission" },
                 { label: "Tracks", id: "tracks" },
                 { label: "Team", id: "leadership" },
+                { label: "E-Board", id: "cabinet" },
+                { label: "Alumni", id: "alumni" },
                 { label: "FAQ", id: "faq" },
                 { label: "Join", id: "join" },
               ].map(({ label, id }) => (
