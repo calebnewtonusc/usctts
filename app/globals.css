@@ -399,6 +399,26 @@ video[id^="webgazer"] {
   transform: translateY(0);
 }
 
+/* ── Character-by-character split text reveal ────────────────────────────── */
+.tts-char {
+  display: inline-block;
+  transform: translateY(105%);
+  transition: transform 0.62s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tts-split-heading.tts-visible .tts-char {
+  transform: translateY(0);
+}
+
+/* ── Floating parallax icon ───────────────────────────────────────────────── */
+.tts-float-icon {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+  opacity: 0.07;
+  transition: opacity 0.3s ease;
+}
+
 /* ── Line-by-line heading reveal ─────────────────────────────────────────── */
 .tts-line-reveal {
   overflow: hidden;
@@ -483,10 +503,10 @@ video[id^="webgazer"] {
 }
 .tts-marquee-wrap {
   overflow: hidden;
-  padding: 13px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(255, 255, 255, 0.015);
+  padding: 14px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
   user-select: none;
   pointer-events: none;
 }
@@ -503,11 +523,11 @@ video[id^="webgazer"] {
   align-items: center;
   gap: 20px;
   padding: 0 28px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.18em;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.5);
 }
 .tts-marquee-dot {
   width: 3px;

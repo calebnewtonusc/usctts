@@ -282,6 +282,42 @@ const BOARD: {
 
 const INSTAGRAM_URL = "https://instagram.com/trojantechsolutions";
 
+// ── Split-text character reveal ───────────────────────────────────────────────
+function SplitText({
+  text,
+  style,
+  baseDelay = 0,
+  charDelay = 0.028,
+}: {
+  text: string;
+  style?: React.CSSProperties;
+  baseDelay?: number;
+  charDelay?: number;
+}) {
+  return (
+    <span className="tts-split-heading" style={style}>
+      {text.split("").map((char, i) => (
+        <span
+          key={i}
+          style={{
+            display: "inline-block",
+            overflow: "hidden",
+            verticalAlign: "bottom",
+            lineHeight: "inherit",
+          }}
+        >
+          <span
+            className="tts-char"
+            style={{ transitionDelay: `${baseDelay + i * charDelay}s` }}
+          >
+            {char === " " ? "\u00a0" : char}
+          </span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
 // ── Marquee separator ─────────────────────────────────────────────────────────
 function Marquee({
   items,
@@ -328,6 +364,9 @@ export default function TTSSite() {
   const mouseRef = useRef({ x: -100, y: -100 });
   const ringRef = useRef({ x: -100, y: -100 });
   const rafRef = useRef(0);
+  const trackScrollRef = useRef<HTMLElement>(null);
+  const trackInnerRef = useRef<HTMLDivElement>(null);
+  const floatRefs = useRef<HTMLDivElement[]>([]);
   // Custom cursor
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -412,9 +451,72 @@ export default function TTSSite() {
     );
     document
       .querySelectorAll(
-        ".tts-fade, .tts-slide, .tts-from-left, .tts-from-right, .tts-scale, .tts-curtain, .tts-highlight, .tts-counter, .tts-line-reveal, .tts-cascade, .tts-tilt-left, .tts-tilt-right, .tts-tilt-up, .tts-scramble",
+        ".tts-fade, .tts-slide, .tts-from-left, .tts-from-right, .tts-scale, .tts-curtain, .tts-highlight, .tts-counter, .tts-line-reveal, .tts-cascade, .tts-tilt-left, .tts-tilt-right, .tts-tilt-up, .tts-scramble, .tts-split-heading",
       )
       .forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  // Horizontal pinned track scroll
+  useEffect(() => {
+    const handle = () => {
+      if (!trackScrollRef.current || !trackInnerRef.current) return;
+      const rect = trackScrollRef.current.getBoundingClientRect();
+      const scrolled = -rect.top;
+      const total = trackScrollRef.current.offsetHeight - window.innerHeight;
+      const p = Math.max(0, Math.min(1, scrolled / total));
+      const inner = trackInnerRef.current;
+      const maxX = inner.scrollWidth - window.innerWidth;
+      inner.style.transform = `translateX(${-p * maxX}px)`;
+    };
+    window.addEventListener("scroll", handle, { passive: true });
+    handle();
+    return () => window.removeEventListener("scroll", handle);
+  }, []);
+
+  // Floating parallax icons
+  useEffect(() => {
+    const handle = () => {
+      floatRefs.current.forEach((el) => {
+        if (!el) return;
+        const speed = parseFloat(el.dataset.speed ?? "0.08");
+        const rect = el.parentElement?.getBoundingClientRect();
+        if (!rect) return;
+        const centerOffset =
+          rect.top + rect.height / 2 - window.innerHeight / 2;
+        el.style.transform = `translateY(${centerOffset * speed}px)`;
+      });
+    };
+    window.addEventListener("scroll", handle, { passive: true });
+    handle();
+    return () => window.removeEventListener("scroll", handle);
+  }, []);
+
+  // Stat counter animation
+  useEffect(() => {
+    const els = document.querySelectorAll<HTMLElement>("[data-count-to]");
+    const obs = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const el = e.target as HTMLElement;
+          const target = parseFloat(el.dataset.countTo ?? "0");
+          const suffix = el.dataset.countSuffix ?? "";
+          const duration = 1400;
+          const start = performance.now();
+          const tick = (now: number) => {
+            const t = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - t, 4);
+            el.textContent = Math.floor(target * eased) + suffix;
+            if (t < 1) requestAnimationFrame(tick);
+            else el.textContent = target + suffix;
+          };
+          requestAnimationFrame(tick);
+          obs.unobserve(el);
+        }),
+      { threshold: 0.6 },
+    );
+    els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
   }, []);
 
@@ -1025,317 +1127,353 @@ export default function TTSSite() {
           ]}
         />
 
-        {/* ── TRACKS ── */}
+        {/* ── TRACKS — horizontal pinned scroll ── */}
         <section
+          ref={trackScrollRef}
           id="tracks"
-          className="tts-section-pad"
-          style={{ background: "#09090b", padding: "80px 40px" }}
+          style={{
+            background: "#09090b",
+            height: "300vh",
+            position: "relative",
+          }}
         >
-          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ marginBottom: 48 }}>
-              <h2
-                style={{
-                  fontSize: "clamp(28px, 4vw, 52px)",
-                  fontWeight: 900,
-                  color: "#fff",
-                  letterSpacing: "-0.03em",
-                }}
-              >
-                <span className="tts-line-reveal">
-                  <span>Three ways in</span>
-                </span>
-              </h2>
-              <p
-                className="tts-fade"
-                style={{
-                  fontSize: 15,
-                  color: "#a1a1aa",
-                  marginTop: 10,
-                  transitionDelay: "0.1s",
-                }}
-              >
-                Pick one or explore all three. Most people drift across tracks
-                depending on what they&apos;re working on.
-              </p>
-            </div>
-
+          <div
+            style={{
+              position: "sticky",
+              top: 0,
+              height: "100vh",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            {/* Scroll hint */}
             <div
-              className="tts-tracks-grid"
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: 20,
-                alignItems: "start",
+                position: "absolute",
+                top: 36,
+                left: 80,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                zIndex: 2,
               }}
             >
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.35)",
+                  letterSpacing: "0.16em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Scroll to explore
+              </div>
+              <ArrowRight size={10} color="rgba(255,255,255,0.35)" />
+            </div>
+
+            {/* Horizontal strip */}
+            <div
+              ref={trackInnerRef}
+              style={{
+                display: "flex",
+                alignItems: "stretch",
+                gap: 24,
+                paddingLeft: 80,
+                paddingRight: 80,
+                willChange: "transform",
+              }}
+            >
+              {/* Title panel */}
+              <div
+                style={{
+                  width: "clamp(280px, 30vw, 420px)",
+                  flexShrink: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  paddingRight: 48,
+                  borderRight: "1px solid rgba(255,255,255,0.1)",
+                  marginRight: 8,
+                }}
+              >
+                <h2
+                  style={{
+                    fontSize: "clamp(40px, 5.5vw, 80px)",
+                    fontWeight: 900,
+                    color: "#fff",
+                    letterSpacing: "-0.04em",
+                    lineHeight: 0.95,
+                    marginBottom: 24,
+                  }}
+                >
+                  <SplitText text="Three" style={{ display: "block" }} />
+                  <SplitText
+                    text="ways"
+                    baseDelay={0.12}
+                    style={{ display: "block" }}
+                  />
+                  <SplitText
+                    text="in."
+                    baseDelay={0.2}
+                    style={{ display: "block", color: "#CC0000" }}
+                  />
+                </h2>
+                <p
+                  style={{
+                    fontSize: 14,
+                    color: "#71717a",
+                    lineHeight: 1.7,
+                    maxWidth: 260,
+                  }}
+                >
+                  Pick one or drift across all three. Most people do both.
+                </p>
+              </div>
+
+              {/* Track cards */}
               {TRACKS.map(
-                (
-                  {
-                    num,
-                    icon: Icon,
-                    accent,
-                    title,
-                    sub,
-                    tagline,
-                    items,
-                    for: forText,
-                    featured,
-                  },
-                  i,
-                ) => {
-                  const animClass =
-                    i === 0
-                      ? "tts-tilt-left"
-                      : i === 1
-                        ? "tts-tilt-up"
-                        : "tts-tilt-right";
-                  return (
+                ({
+                  num,
+                  icon: Icon,
+                  accent,
+                  title,
+                  sub,
+                  tagline,
+                  items,
+                  for: forText,
+                  featured,
+                }) => (
+                  <div
+                    key={num}
+                    style={{
+                      width: "clamp(340px, 42vw, 560px)",
+                      flexShrink: 0,
+                      height: "calc(100vh - 140px)",
+                      background: featured ? "#141416" : "#111113",
+                      borderRadius: 20,
+                      border: featured
+                        ? `1px solid ${accent}30`
+                        : "1px solid rgba(255,255,255,0.1)",
+                      borderTop: `4px solid ${accent}`,
+                      padding: "44px 40px 36px",
+                      display: "flex",
+                      flexDirection: "column",
+                      position: "relative",
+                      overflow: "hidden",
+                      boxShadow: featured
+                        ? `0 0 80px ${accent}15, 0 32px 80px rgba(0,0,0,0.5)`
+                        : "0 16px 48px rgba(0,0,0,0.4)",
+                    }}
+                  >
+                    {/* Giant ghost number */}
                     <div
-                      key={num}
-                      className={animClass}
+                      aria-hidden="true"
                       style={{
-                        transitionDelay: `${i * 0.12}s`,
+                        position: "absolute",
+                        bottom: -40,
+                        right: -20,
+                        fontSize: 280,
+                        fontWeight: 900,
+                        lineHeight: 1,
+                        color: accent,
+                        opacity: 0.04,
+                        letterSpacing: "-0.08em",
+                        pointerEvents: "none",
+                        userSelect: "none",
+                      }}
+                    >
+                      {num}
+                    </div>
+
+                    {featured && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 20,
+                          right: 20,
+                          background: accent,
+                          color: "#09090b",
+                          fontSize: 9,
+                          fontWeight: 800,
+                          letterSpacing: "0.12em",
+                          textTransform: "uppercase",
+                          padding: "3px 10px",
+                          borderRadius: 100,
+                        }}
+                      >
+                        Most popular
+                      </div>
+                    )}
+
+                    {/* Top row */}
+                    <div
+                      style={{
                         display: "flex",
-                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: 36,
                       }}
                     >
                       <div
-                        className="tts-card"
                         style={{
-                          background: featured ? "#141414" : "#111113",
-                          borderRadius: 16,
-                          border: featured
-                            ? "1px solid rgba(255,204,0,0.2)"
-                            : "1px solid rgba(255,255,255,0.12)",
-                          borderTop: `3px solid ${accent}`,
-                          padding: featured ? "40px 28px 32px" : "32px 28px",
-                          display: "flex",
-                          flexDirection: "column",
-                          flex: 1,
-                          boxShadow: featured
-                            ? "0 0 0 1px rgba(255,204,0,0.08), 0 24px 64px rgba(0,0,0,0.4)"
-                            : "none",
-                          position: "relative",
-                          overflow: "hidden",
+                          fontSize: 80,
+                          fontWeight: 900,
+                          color: "rgba(255,255,255,0.08)",
+                          letterSpacing: "-0.06em",
+                          lineHeight: 1,
+                          userSelect: "none",
                         }}
                       >
-                        {/* Ghost track number */}
-                        <div
-                          aria-hidden="true"
-                          style={{
-                            position: "absolute",
-                            bottom: -16,
-                            right: -8,
-                            fontSize: 160,
-                            fontWeight: 900,
-                            lineHeight: 1,
-                            color: accent,
-                            opacity: 0.05,
-                            letterSpacing: "-0.06em",
-                            pointerEvents: "none",
-                            userSelect: "none",
-                            zIndex: 0,
-                          }}
-                        >
-                          {num}
-                        </div>
-                        {/* Featured badge — inside the card, above the border */}
-                        {featured && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: -12,
-                              left: "50%",
-                              transform: "translateX(-50%)",
-                              background: "#FFCC00",
-                              color: "#09090b",
-                              fontSize: 10,
-                              fontWeight: 800,
-                              letterSpacing: "0.1em",
-                              textTransform: "uppercase",
-                              padding: "3px 10px",
-                              borderRadius: 100,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            Most popular
-                          </div>
-                        )}
+                        {num}
+                      </div>
+                      <div
+                        style={{
+                          width: 52,
+                          height: 52,
+                          borderRadius: 14,
+                          background: hexToRgba(accent, 0.15),
+                          border: `1px solid ${hexToRgba(accent, 0.4)}`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Icon size={22} color={accent} />
+                      </div>
+                    </div>
 
-                        <div
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: accent,
+                        letterSpacing: "0.12em",
+                        textTransform: "uppercase",
+                        marginBottom: 8,
+                      }}
+                    >
+                      {sub}
+                    </div>
+                    <h3
+                      style={{
+                        fontSize: 32,
+                        fontWeight: 900,
+                        color: "#fff",
+                        letterSpacing: "-0.03em",
+                        lineHeight: 1.05,
+                        marginBottom: 12,
+                      }}
+                    >
+                      {title}
+                    </h3>
+                    <p
+                      style={{
+                        fontSize: 15,
+                        color: "#a1a1aa",
+                        lineHeight: 1.65,
+                        marginBottom: 28,
+                      }}
+                    >
+                      {tagline}
+                    </p>
+
+                    <div
+                      style={{
+                        height: 1,
+                        background: "rgba(255,255,255,0.1)",
+                        marginBottom: 20,
+                      }}
+                    />
+
+                    <ul
+                      style={{
+                        listStyle: "none",
+                        margin: 0,
+                        padding: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 12,
+                        flex: 1,
+                      }}
+                    >
+                      {items.map((item) => (
+                        <li
+                          key={item}
                           style={{
                             display: "flex",
                             alignItems: "flex-start",
-                            justifyContent: "space-between",
-                            marginBottom: 28,
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontSize: 64,
-                              fontWeight: 900,
-                              color: "rgba(255,255,255,0.12)",
-                              letterSpacing: "-0.05em",
-                              lineHeight: 1,
-                              userSelect: "none",
-                            }}
-                          >
-                            {num}
-                          </div>
-                          <div
-                            style={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: 11,
-                              background: hexToRgba(accent, 0.15),
-                              border: `1px solid ${hexToRgba(accent, 0.4)}`,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Icon size={18} color={accent} />
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 600,
-                            color: accent,
-                            letterSpacing: "0.1em",
-                            textTransform: "uppercase",
-                            marginBottom: 6,
-                          }}
-                        >
-                          {sub}
-                        </div>
-                        <h3
-                          style={{
-                            fontSize: 26,
-                            fontWeight: 800,
-                            color: "#fff",
-                            letterSpacing: "-0.03em",
-                            lineHeight: 1.1,
-                            marginBottom: 12,
-                            margin: "0 0 12px",
-                          }}
-                        >
-                          {title}
-                        </h3>
-                        <div
-                          style={{
+                            gap: 10,
                             fontSize: 14,
-                            color: "#a1a1aa",
-                            lineHeight: 1.65,
-                            marginBottom: 28,
+                            color: "#d4d4d8",
                           }}
                         >
-                          {tagline}
-                        </div>
+                          <Check
+                            size={14}
+                            color={accent}
+                            strokeWidth={2.5}
+                            style={{ flexShrink: 0, marginTop: 2 }}
+                          />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
 
-                        <div
-                          style={{
-                            height: 1,
-                            background: "rgba(255,255,255,0.1)",
-                            marginBottom: 20,
-                          }}
-                        />
-
-                        <ul
-                          style={{
-                            listStyle: "none",
-                            margin: 0,
-                            padding: 0,
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 11,
-                            flex: 1,
-                          }}
-                        >
-                          {items.map((item) => (
-                            <li
-                              key={item}
-                              style={{
-                                display: "flex",
-                                alignItems: "flex-start",
-                                gap: 10,
-                                fontSize: 13,
-                                color: "#c4c4c8",
-                              }}
-                            >
-                              <Check
-                                size={13}
-                                color={accent}
-                                strokeWidth={2.5}
-                                style={{ flexShrink: 0, marginTop: 1 }}
-                              />
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-
-                        <div
-                          style={{
-                            marginTop: 24,
-                            paddingTop: 20,
-                            borderTop: "1px solid rgba(255,255,255,0.1)",
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 700,
-                              color: "#9ca3af",
-                              letterSpacing: "0.08em",
-                              textTransform: "uppercase",
-                              marginBottom: 6,
-                            }}
-                          >
-                            Best for
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 13,
-                              color: "#d4d4d8",
-                              lineHeight: 1.65,
-                              marginBottom: 18,
-                            }}
-                          >
-                            {forText}
-                          </div>
-                          <button
-                            onClick={() => scrollTo("join")}
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 5,
-                              fontSize: 13,
-                              fontWeight: 600,
-                              color: accent,
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              padding: 0,
-                              transition: "gap 0.15s",
-                            }}
-                            onMouseEnter={(e) => {
-                              (e.currentTarget as HTMLButtonElement).style.gap =
-                                "8px";
-                            }}
-                            onMouseLeave={(e) => {
-                              (e.currentTarget as HTMLButtonElement).style.gap =
-                                "5px";
-                            }}
-                          >
-                            Join this track <ArrowRight size={13} />
-                          </button>
-                        </div>
+                    <div
+                      style={{
+                        marginTop: 28,
+                        paddingTop: 20,
+                        borderTop: "1px solid rgba(255,255,255,0.1)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: "#71717a",
+                          maxWidth: 220,
+                        }}
+                      >
+                        {forText}
                       </div>
+                      <button
+                        onClick={() => scrollTo("join")}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: accent,
+                          background: hexToRgba(accent, 0.1),
+                          border: `1px solid ${hexToRgba(accent, 0.3)}`,
+                          borderRadius: 8,
+                          cursor: "pointer",
+                          padding: "8px 14px",
+                          flexShrink: 0,
+                          transition: "background 0.15s",
+                          whiteSpace: "nowrap",
+                        }}
+                        onMouseEnter={(e) => {
+                          (
+                            e.currentTarget as HTMLButtonElement
+                          ).style.background = hexToRgba(accent, 0.2);
+                        }}
+                        onMouseLeave={(e) => {
+                          (
+                            e.currentTarget as HTMLButtonElement
+                          ).style.background = hexToRgba(accent, 0.1);
+                        }}
+                      >
+                        Join <ArrowRight size={13} />
+                      </button>
                     </div>
-                  );
-                },
+                  </div>
+                ),
               )}
             </div>
           </div>
@@ -1524,20 +1662,26 @@ export default function TTSSite() {
                   {[
                     {
                       stat: "0",
+                      countTo: 0,
+                      suffix: "",
                       label: "Applications required",
                       sub: "Walk in any week. No application, no waitlist, no rejection.",
                     },
                     {
                       stat: "7+",
+                      countTo: 7,
+                      suffix: "+",
                       label: "Active tracks",
                       sub: "Consulting, engineering, biotech, music tech, Web3, and growing.",
                     },
                     {
                       stat: "1",
+                      countTo: 1,
+                      suffix: "",
                       label: "Semester to ship something real",
                       sub: "Not a class project. A live product or delivered client deck.",
                     },
-                  ].map(({ stat, label, sub }, i) => (
+                  ].map(({ stat, countTo, suffix, label, sub }, i) => (
                     <div
                       key={label}
                       style={{
@@ -1547,7 +1691,8 @@ export default function TTSSite() {
                       }}
                     >
                       <div
-                        className="tts-counter"
+                        data-count-to={countTo}
+                        data-count-suffix={suffix}
                         style={{
                           fontSize: "clamp(40px, 5vw, 64px)",
                           fontWeight: 900,
@@ -1555,7 +1700,6 @@ export default function TTSSite() {
                           letterSpacing: "-0.04em",
                           lineHeight: 1,
                           marginBottom: 6,
-                          transitionDelay: `${i * 0.12}s`,
                         }}
                       >
                         {stat}
@@ -1880,6 +2024,71 @@ export default function TTSSite() {
               pointerEvents: "none",
             }}
           />
+          {/* Floating parallax icons */}
+          {[
+            {
+              Icon: Hammer,
+              top: "12%",
+              left: "8%",
+              size: 48,
+              speed: "0.06",
+              rotate: -18,
+            },
+            {
+              Icon: Briefcase,
+              top: "22%",
+              right: "10%",
+              size: 40,
+              speed: "0.12",
+              rotate: 12,
+            },
+            {
+              Icon: TrendingUp,
+              bottom: "18%",
+              left: "12%",
+              size: 36,
+              speed: "0.09",
+              rotate: 8,
+            },
+            {
+              Icon: Zap,
+              top: "55%",
+              right: "6%",
+              size: 52,
+              speed: "0.05",
+              rotate: -10,
+            },
+            {
+              Icon: Mail,
+              bottom: "12%",
+              right: "18%",
+              size: 30,
+              speed: "0.14",
+              rotate: 22,
+            },
+          ].map(
+            ({ Icon, top, left, right, bottom, size, speed, rotate }, idx) => (
+              <div
+                key={idx}
+                ref={(el) => {
+                  if (el) floatRefs.current[idx] = el;
+                }}
+                className="tts-float-icon"
+                data-speed={speed}
+                aria-hidden="true"
+                style={{
+                  top,
+                  left,
+                  right,
+                  bottom,
+                  transform: `rotate(${rotate}deg)`,
+                  color: idx % 2 === 0 ? "#CC0000" : "#FFCC00",
+                }}
+              >
+                <Icon size={size} />
+              </div>
+            ),
+          )}
           <div
             style={{
               maxWidth: 1200,
@@ -1903,7 +2112,6 @@ export default function TTSSite() {
                 The team
               </p>
               <h2
-                className="tts-slide"
                 style={{
                   fontSize: "clamp(28px, 4vw, 52px)",
                   fontWeight: 900,
@@ -1912,7 +2120,7 @@ export default function TTSSite() {
                   marginBottom: 12,
                 }}
               >
-                E-Board
+                <SplitText text="E-Board" />
               </h2>
               <p
                 className="tts-fade"
@@ -2189,7 +2397,6 @@ export default function TTSSite() {
                 Where it started
               </p>
               <h2
-                className="tts-slide"
                 style={{
                   fontSize: "clamp(28px, 4vw, 52px)",
                   fontWeight: 900,
@@ -2198,7 +2405,7 @@ export default function TTSSite() {
                   marginBottom: 12,
                 }}
               >
-                Alumni &amp; Advisors
+                <SplitText text="Alumni & Advisors" />
               </h2>
               <p
                 className="tts-fade"
@@ -2563,7 +2770,6 @@ export default function TTSSite() {
           <div style={{ maxWidth: 800, margin: "0 auto" }}>
             <div style={{ marginBottom: 48 }}>
               <h2
-                className="tts-slide"
                 style={{
                   fontSize: "clamp(28px, 4vw, 52px)",
                   fontWeight: 900,
@@ -2571,7 +2777,7 @@ export default function TTSSite() {
                   letterSpacing: "-0.03em",
                 }}
               >
-                Questions we always get
+                <SplitText text="Questions we always get" charDelay={0.018} />
               </h2>
               <p
                 className="tts-fade"
