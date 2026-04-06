@@ -1373,13 +1373,13 @@ export default function TTSSite() {
                     style={{
                       fontSize: 11,
                       fontWeight: 700,
-                      color: "#10b981",
+                      color: "#CC0000",
                       letterSpacing: "0.12em",
                       textTransform: "uppercase",
                       marginBottom: 20,
                     }}
                   >
-                    What you walk away with
+                    Why it works
                   </p>
                   <h2
                     style={{
@@ -1393,7 +1393,7 @@ export default function TTSSite() {
                   >
                     Real work.
                     <br />
-                    <span style={{ color: "#10b981" }}>Not just classes.</span>
+                    <span style={{ color: "#CC0000" }}>Not just classes.</span>
                   </h2>
                   <p
                     style={{
@@ -1403,63 +1403,78 @@ export default function TTSSite() {
                       maxWidth: 400,
                     }}
                   >
-                    TTS gives you the reps that internships and grad school
-                    can&apos;t. A shipped product. A real client deck. A network
-                    that actually calls back.
+                    Build the portfolio and skills here, then use them to land
+                    SEP, BTG, BPX, or whatever comes next. TTS is the rep room
+                    those clubs assume you already have.
                   </p>
                 </div>
 
-                {/* Right: outcome tiles */}
+                {/* Right: stats */}
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: 12,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0,
+                    borderLeft: "1px solid rgba(255,255,255,0.07)",
+                    paddingLeft: 48,
                   }}
                 >
                   {[
                     {
-                      label: "Shipped product",
-                      sub: "Live. With real users.",
-                      accent: "#CC0000",
+                      stat: "0",
+                      label: "Applications required",
+                      sub: "Walk in any week. No form, no waitlist, no rejection.",
                     },
                     {
-                      label: "Client deck",
-                      sub: "Delivered to a real org.",
-                      accent: "#FFCC00",
+                      stat: "7+",
+                      label: "Active tracks",
+                      sub: "Consulting, engineering, biotech, music tech, Web3, and growing.",
                     },
                     {
-                      label: "YC network",
-                      sub: "Founders you can call.",
-                      accent: "#10b981",
+                      stat: "1",
+                      label: "Semester to ship something real",
+                      sub: "Not a class project. A live product or delivered client deck.",
                     },
-                    {
-                      label: "Portfolio proof",
-                      sub: "Not just a bullet point.",
-                      accent: "#6366f1",
-                    },
-                  ].map(({ label, sub, accent }) => (
+                  ].map(({ stat, label, sub }, i) => (
                     <div
                       key={label}
                       style={{
-                        padding: "20px 18px",
-                        borderRadius: 12,
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.07)",
-                        borderTop: `2px solid ${accent}`,
+                        padding: "28px 0",
+                        borderBottom:
+                          i < 2 ? "1px solid rgba(255,255,255,0.06)" : "none",
                       }}
                     >
                       <div
                         style={{
-                          fontSize: 14,
-                          fontWeight: 800,
+                          fontSize: "clamp(40px, 5vw, 64px)",
+                          fontWeight: 900,
                           color: "#fff",
-                          marginBottom: 4,
+                          letterSpacing: "-0.04em",
+                          lineHeight: 1,
+                          marginBottom: 6,
+                        }}
+                      >
+                        {stat}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: "#CC0000",
+                          marginBottom: 6,
+                          letterSpacing: "0.02em",
                         }}
                       >
                         {label}
                       </div>
-                      <div style={{ fontSize: 12, color: "#71717a" }}>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: "#52525b",
+                          lineHeight: 1.6,
+                          maxWidth: 320,
+                        }}
+                      >
                         {sub}
                       </div>
                     </div>
