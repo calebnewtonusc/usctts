@@ -589,11 +589,17 @@ export default function TTSSite() {
   const slideX =
     heroSlideProgress * Math.max(0, heroContainerW - 80 - h1WrapperW);
 
-  // Reverse-scroll reveal derived values
-  const revealSlide = Math.max(0, (revealProgress - 0.25) / 0.65);
-  // Panel A exits downward, Panel B slides in from the right
-  const panelBX = 100 - revealSlide * 100;
-  const panelAExitY = revealSlide * 100;
+  // Reveal section: three-phase choreography
+  // Phase 1 (0→0.38): "Real work" slides in from RIGHT
+  // Phase 2 (0.42→0.72): "Real work" exits DOWN
+  // Phase 3 (0.50→1.0):  "Walk in" slides in from TOP
+  const revealSlide = Math.max(0, (revealProgress - 0.15) / 0.85);
+  const realWorkEnterP = Math.max(0, Math.min(1, revealSlide / 0.38));
+  const realWorkExitP = Math.max(0, Math.min(1, (revealSlide - 0.42) / 0.3));
+  const walkInEnterP = Math.max(0, Math.min(1, (revealSlide - 0.5) / 0.5));
+  const panelRealWorkX = (1 - realWorkEnterP) * 100;
+  const panelRealWorkY = realWorkExitP * 100;
+  const panelWalkInY = -100 + walkInEnterP * 100;
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1657,7 +1663,7 @@ export default function TTSSite() {
         {/* ── REVERSE SCROLL REVEAL ── */}
         <div
           ref={revealSectionRef}
-          style={{ height: "220vh", position: "relative" }}
+          style={{ height: "300vh", position: "relative" }}
         >
           <div
             style={{
@@ -1667,7 +1673,7 @@ export default function TTSSite() {
               overflow: "hidden",
             }}
           >
-            {/* Panel A: exits downward — Real work stats */}
+            {/* Panel A: "Real work" — enters from RIGHT, exits DOWN */}
             <div
               style={{
                 position: "absolute",
@@ -1675,7 +1681,7 @@ export default function TTSSite() {
                 background: "#0d0d10",
                 display: "flex",
                 alignItems: "center",
-                transform: `translateY(${panelAExitY}%)`,
+                transform: `translateX(${panelRealWorkX}%) translateY(${panelRealWorkY}%)`,
                 zIndex: 1,
               }}
             >
@@ -1813,14 +1819,14 @@ export default function TTSSite() {
               </div>
             </div>
 
-            {/* Panel B: slides in from the right — Walk in. Walk out different. */}
+            {/* Panel B: "Walk in. Walk out different." — enters from TOP */}
             <div
-              aria-hidden={panelBX > 5}
+              aria-hidden={panelWalkInY < -5}
               style={{
                 position: "absolute",
                 inset: 0,
                 background: "#09090b",
-                transform: `translateX(${panelBX}%)`,
+                transform: `translateY(${panelWalkInY}%)`,
                 zIndex: 2,
                 display: "flex",
                 alignItems: "center",
