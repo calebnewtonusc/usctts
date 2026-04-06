@@ -1671,12 +1671,51 @@ export default function TTSSite() {
         <section
           id="cabinet"
           className="tts-section-pad"
-          style={{ background: "#09090b", padding: "80px 40px" }}
+          style={{
+            background: "#09090b",
+            padding: "80px 40px",
+            position: "relative",
+            overflow: "hidden",
+          }}
         >
-          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          {/* Dot grid background */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage:
+                "radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px)",
+              backgroundSize: "32px 32px",
+              pointerEvents: "none",
+            }}
+          />
+          {/* Subtle red glow top-right */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: "-10%",
+              right: "-5%",
+              width: 500,
+              height: 500,
+              borderRadius: "50%",
+              background:
+                "radial-gradient(circle, rgba(204,0,0,0.06) 0%, transparent 65%)",
+              pointerEvents: "none",
+            }}
+          />
+          <div
+            style={{
+              maxWidth: 1200,
+              margin: "0 auto",
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
             <div style={{ marginBottom: 48 }}>
               <p
-                className="tts-fade"
+                className="tts-from-left"
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
@@ -1724,8 +1763,8 @@ export default function TTSSite() {
               {CABINET.map((member, i) => (
                 <div
                   key={`${member.name}-${i}`}
-                  className="tts-fade"
-                  style={{ transitionDelay: `${i * 0.05}s` }}
+                  className={member.placeholder ? "tts-fade" : "tts-scale"}
+                  style={{ transitionDelay: `${i * 0.07}s` }}
                 >
                   {member.placeholder ? (
                     <div
@@ -1961,12 +2000,72 @@ export default function TTSSite() {
         <section
           id="alumni"
           className="tts-section-pad"
-          style={{ background: "#0c0c0f", padding: "80px 40px" }}
+          style={{
+            background: "#0c0c0f",
+            padding: "80px 40px",
+            position: "relative",
+            overflow: "hidden",
+          }}
         >
-          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          {/* Gold glow bottom-left */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              bottom: "-10%",
+              left: "-5%",
+              width: 600,
+              height: 600,
+              borderRadius: "50%",
+              background:
+                "radial-gradient(circle, rgba(255,204,0,0.05) 0%, transparent 65%)",
+              pointerEvents: "none",
+            }}
+          />
+          <div
+            style={{
+              maxWidth: 1200,
+              margin: "0 auto",
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            {/* Origin story quote */}
+            <div
+              className="tts-perspective"
+              style={{
+                marginBottom: 64,
+                padding: "24px 28px",
+                borderRadius: 14,
+                background: "rgba(255,204,0,0.04)",
+                border: "1px solid rgba(255,204,0,0.1)",
+                borderLeft: "3px solid #FFCC00",
+                maxWidth: 680,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 15,
+                  color: "#d4d4d8",
+                  lineHeight: 1.75,
+                  fontStyle: "italic",
+                  margin: 0,
+                  marginBottom: 12,
+                }}
+              >
+                &ldquo;The OG club focused on IT solutions and consulting for
+                local small businesses. Caleb and Tyler are taking the
+                foundations and scaling big time to create impact on all
+                levels.&rdquo;
+              </p>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#FFCC00" }}>
+                Matthew Kim, OG Co-Founder
+              </div>
+            </div>
+
             <div style={{ marginBottom: 48 }}>
               <p
-                className="tts-fade"
+                className="tts-from-left"
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
@@ -2029,8 +2128,8 @@ export default function TTSSite() {
                 {BOARD.map((person, i) => (
                   <div
                     key={person.name}
-                    className="tts-fade"
-                    style={{ transitionDelay: `${i * 0.1}s` }}
+                    className={i === 0 ? "tts-from-left" : "tts-from-right"}
+                    style={{ transitionDelay: `${i * 0.12}s` }}
                   >
                     <div
                       style={{
