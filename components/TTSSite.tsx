@@ -1756,242 +1756,178 @@ export default function TTSSite() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                gap: 16,
+                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                gap: 20,
               }}
             >
-              {CABINET.map((member, i) => (
-                <div
-                  key={`${member.name}-${i}`}
-                  className={member.placeholder ? "tts-fade" : "tts-scale"}
-                  style={{ transitionDelay: `${i * 0.07}s` }}
+              {CABINET.filter((m) => !m.placeholder).map((member, i) => (
+                <a
+                  key={member.name}
+                  href={member.link ?? "#"}
+                  target={member.link ? "_blank" : undefined}
+                  rel="noopener noreferrer"
+                  aria-label={`${member.name}, ${member.role}`}
+                  className="tts-scale"
+                  style={{
+                    transitionDelay: `${i * 0.07}s`,
+                    display: "block",
+                    textDecoration: "none",
+                    borderRadius: 16,
+                    overflow: "hidden",
+                    position: "relative",
+                    aspectRatio: "3/4",
+                    background: "#111113",
+                    border: `1px solid rgba(255,255,255,0.07)`,
+                    transition:
+                      "transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease, border-color 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.transform =
+                      "translateY(-6px) scale(1.02)";
+                    (e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                      `0 20px 60px ${member.accent}25`;
+                    (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                      `${member.accent}50`;
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.transform =
+                      "translateY(0) scale(1)";
+                    (e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                      "none";
+                    (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                      "rgba(255,255,255,0.07)";
+                  }}
                 >
-                  {member.placeholder ? (
-                    <div
+                  {/* Photo */}
+                  {member.headshot ? (
+                    <Image
+                      src={member.headshot}
+                      alt={member.name}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 300px"
                       style={{
-                        background: "transparent",
-                        borderRadius: 14,
-                        border: "1px dashed rgba(255,255,255,0.1)",
-                        padding: "24px 20px",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 12,
-                        minHeight: 120,
-                        opacity: 0.45,
+                        objectFit: "cover",
+                        objectPosition: member.position ?? "center top",
                       }}
-                    >
-                      <div
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: "50%",
-                          border: "1px dashed rgba(255,255,255,0.2)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <span style={{ fontSize: 18, color: "#52525b" }}>
-                          +
-                        </span>
-                      </div>
-                      <div style={{ textAlign: "center" }}>
-                        <div
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: "#52525b",
-                          }}
-                        >
-                          Coming Soon
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: "#3f3f46",
-                            marginTop: 2,
-                          }}
-                        >
-                          Role TBD
-                        </div>
-                      </div>
-                    </div>
+                    />
                   ) : (
                     <div
                       style={{
-                        background: "#111113",
-                        borderRadius: 14,
-                        border: "1px solid rgba(255,255,255,0.06)",
-                        padding: "24px 20px",
+                        position: "absolute",
+                        inset: 0,
+                        background: `linear-gradient(135deg, ${member.accent}18 0%, #111113 100%)`,
                         display: "flex",
-                        flexDirection: "column",
-                        gap: 14,
-                        transition: "border-color 0.2s, transform 0.2s",
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLDivElement).style.borderColor =
-                          `${member.accent}40`;
-                        (e.currentTarget as HTMLDivElement).style.transform =
-                          "translateY(-2px)";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLDivElement).style.borderColor =
-                          "rgba(255,255,255,0.06)";
-                        (e.currentTarget as HTMLDivElement).style.transform =
-                          "translateY(0)";
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      {member.headshot ? (
-                        <div
-                          style={{
-                            position: "relative",
-                            width: "100%",
-                            aspectRatio: "1/1",
-                            overflow: "hidden",
-                            borderRadius: 10,
-                            marginBottom: 2,
-                          }}
-                        >
-                          <Image
-                            src={member.headshot}
-                            alt={`${member.name}`}
-                            fill
-                            sizes="(max-width: 768px) 50vw, 200px"
-                            style={{
-                              objectFit: "cover",
-                              objectPosition: member.position ?? "center top",
-                            }}
-                          />
-                          <div
-                            style={{
-                              position: "absolute",
-                              inset: 0,
-                              background:
-                                "linear-gradient(to top, rgba(9,9,11,0.75) 0%, transparent 55%)",
-                            }}
-                          />
-                          <div
-                            style={{
-                              position: "absolute",
-                              bottom: 10,
-                              left: 12,
-                              right: 12,
-                            }}
-                          >
-                            <div
-                              style={{
-                                fontSize: 13,
-                                fontWeight: 700,
-                                color: "#fff",
-                                lineHeight: 1.3,
-                              }}
-                            >
-                              {member.name}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: 10,
-                                color: member.accent,
-                                fontWeight: 600,
-                                marginTop: 2,
-                                letterSpacing: "0.03em",
-                              }}
-                            >
-                              {member.role}
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 12,
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: 44,
-                              height: 44,
-                              borderRadius: 12,
-                              background: `${member.accent}18`,
-                              border: `1px solid ${member.accent}30`,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              flexShrink: 0,
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontSize: 14,
-                                fontWeight: 800,
-                                color: member.accent,
-                                letterSpacing: "-0.02em",
-                              }}
-                            >
-                              {member.initials}
-                            </span>
-                          </div>
-                          <div>
-                            <div
-                              style={{
-                                fontSize: 14,
-                                fontWeight: 700,
-                                color: "#fff",
-                                lineHeight: 1.3,
-                              }}
-                            >
-                              {member.name}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: 11,
-                                color: member.accent,
-                                fontWeight: 600,
-                                marginTop: 2,
-                                letterSpacing: "0.02em",
-                              }}
-                            >
-                              {member.role}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      {member.link && (
-                        <a
-                          href={member.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`${member.name} LinkedIn`}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 4,
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: "#52525b",
-                            textDecoration: "none",
-                            transition: "color 0.15s",
-                          }}
-                          onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLAnchorElement).style.color =
-                              member.accent;
-                          }}
-                          onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLAnchorElement).style.color =
-                              "#52525b";
-                          }}
-                        >
-                          LinkedIn <ExternalLink size={10} />
-                        </a>
-                      )}
+                      <span
+                        style={{
+                          fontSize: 52,
+                          fontWeight: 900,
+                          color: `${member.accent}40`,
+                        }}
+                      >
+                        {member.initials}
+                      </span>
                     </div>
                   )}
-                </div>
+
+                  {/* Gradient overlay */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background:
+                        "linear-gradient(to top, rgba(9,9,11,0.95) 0%, rgba(9,9,11,0.3) 45%, transparent 70%)",
+                    }}
+                  />
+
+                  {/* Accent top bar */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 3,
+                      background: member.accent,
+                    }}
+                  />
+
+                  {/* Name + role pinned to bottom */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      padding: "20px 20px 18px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 800,
+                        color: "#fff",
+                        letterSpacing: "-0.02em",
+                        lineHeight: 1.2,
+                        marginBottom: 4,
+                      }}
+                    >
+                      {member.name}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: member.accent,
+                        letterSpacing: "0.06em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {member.role}
+                    </div>
+                  </div>
+                </a>
               ))}
+            </div>
+
+            {/* Placeholder strip */}
+            <div
+              className="tts-fade"
+              style={{
+                marginTop: 16,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                opacity: 0.4,
+              }}
+            >
+              <div
+                style={{
+                  height: 1,
+                  flex: 1,
+                  background: "rgba(255,255,255,0.06)",
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 12,
+                  color: "#52525b",
+                  fontWeight: 500,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                + 4 roles opening soon
+              </span>
+              <div
+                style={{
+                  height: 1,
+                  flex: 1,
+                  background: "rgba(255,255,255,0.06)",
+                }}
+              />
             </div>
           </div>
         </section>
