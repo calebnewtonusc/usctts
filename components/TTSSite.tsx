@@ -2149,24 +2149,17 @@ export default function TTSSite() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
+                gap: 10,
                 flexShrink: 0,
               }}
             >
-              <div
-                style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: 5,
-                  background: "rgba(204,0,0,0.08)",
-                  border: "1px solid rgba(204,0,0,0.2)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Zap size={9} color="#CC0000" />
-              </div>
+              <Image
+                src="/ttslogo2026.png"
+                alt="TTS"
+                width={24}
+                height={24}
+                style={{ borderRadius: 6, objectFit: "contain" }}
+              />
               <span
                 style={{
                   fontSize: 12,
