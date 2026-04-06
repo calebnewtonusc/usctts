@@ -77,7 +77,7 @@ const FOUNDERS = [
   {
     id: "caleb",
     name: "Caleb Newton",
-    role: "Co-Founder",
+    role: "Co-President",
     focus: "USC Innovation · Iovine & Young",
     headshot: "/img/caleb_shot.jpg",
     position: "center 15%",
@@ -94,7 +94,7 @@ const FOUNDERS = [
   {
     id: "tyler",
     name: "Tyler Larsen",
-    role: "Co-Founder",
+    role: "Co-President",
     focus: "Consulting & People",
     headshot: "/img/tyler_shot.jpeg",
     position: "center center",
@@ -149,7 +149,7 @@ const CABINET: {
 }[] = [
   {
     name: "Esrom Dawit",
-    role: "Campus Affairs",
+    role: "External Affairs",
     initials: "ED",
     accent: "#CC0000",
     link: "https://www.linkedin.com/in/esrom-dawit-4780302b2/",
@@ -1461,7 +1461,7 @@ export default function TTSSite() {
                 marginBottom: 12,
               }}
             >
-              Meet the founders
+              Meet the presidents
             </h2>
             <p
               className="tts-fade"
