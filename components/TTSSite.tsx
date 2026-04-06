@@ -86,7 +86,7 @@ const FOUNDERS = [
     accent: "#CC0000",
     owns: [
       "Product curriculum and AI systems",
-      "Website, GitHub, and tooling",
+      "Website, codebase, and internal tooling",
       "Startup relationships and builder culture",
       "Technical execution and live demos",
     ],
