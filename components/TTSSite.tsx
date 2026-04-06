@@ -32,6 +32,7 @@ import {
   HelpCircle,
   Flame,
   Compass,
+  Trophy,
 } from "lucide-react";
 // ── Utilities ────────────────────────────────────────────────────────────────
 function hexToRgba(hex: string, alpha: number): string {
@@ -369,7 +370,7 @@ function WaveDivider({
     <div className="tts-ocean-divider" aria-hidden="true">
       <svg
         className={`tts-ocean-track${reverse ? " tts-ocean-reverse" : ""}`}
-        style={{ "--wave-dur": `${speed}s` } as React.CSSProperties}
+        style={{ animationDuration: `${speed}s` }}
         width="5120"
         height="80"
         viewBox="0 0 5120 80"
@@ -536,14 +537,23 @@ export default function TTSSite() {
     return () => obs.disconnect();
   }, []);
 
-  // Tracks: title shifts center-to-left, cards stagger in from right with gravity bounce
+  // Tracks: title shifts center-to-left, cards arc UP as they fly in from right, intense bounce at landing
   useEffect(() => {
     const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
-    // Spring bounce: starts above (-68px), falls through, bounces slightly below, settles at 0
-    const gravityY = (t: number): number => {
-      if (t <= 0) return -68;
+    // Arc trajectory: card rises as it moves left, then slams down with intense gravity bounce
+    // t=0: level (far right), t=0.5: peak (-280px), t=0.5→1: gravity slam + bounce
+    const arcY = (t: number): number => {
+      if (t <= 0) return 0;
       if (t >= 1) return 0;
-      return -68 * Math.exp(-5.5 * t) * Math.cos(3.5 * Math.PI * t);
+      if (t <= 0.5) {
+        // Rise phase: smooth quadratic arc up to -280px at t=0.5
+        const p = t / 0.5;
+        return -280 * p * (2 - p);
+      } else {
+        // Gravity slam: from -280px, plunges down with intense multi-bounce
+        const bt = (t - 0.5) / 0.5;
+        return -280 * Math.exp(-6 * bt) * Math.cos(3.5 * Math.PI * bt);
+      }
     };
 
     const handle = () => {
@@ -567,7 +577,7 @@ export default function TTSSite() {
           );
       }
 
-      // Cards: stagger slide-in from right with gravity bounce Y
+      // Cards: stagger arc in — rise as they fly from right, slam landing with intense bounce
       if (trackInnerRef.current) {
         const cards =
           trackInnerRef.current.querySelectorAll<HTMLElement>(".track-card");
@@ -576,9 +586,9 @@ export default function TTSSite() {
           const rawP = Math.max(0, Math.min(1, (p - start) / 0.34));
           const xP = easeOut(rawP);
           const xOffset = (1 - xP) * (window.innerWidth + 400);
-          const yOffset = gravityY(rawP);
+          const yOffset = arcY(rawP);
           card.style.transform = `translateX(${xOffset}px) translateY(${yOffset}px)`;
-          card.style.opacity = String(Math.min(1, rawP * 2));
+          card.style.opacity = String(Math.min(1, rawP * 3));
         });
       }
 
@@ -677,18 +687,14 @@ export default function TTSSite() {
   const slideX =
     heroSlideProgress * Math.max(0, heroContainerW - 80 - h1WrapperW);
 
-  // Reveal section: three-phase choreography
-  // Phase 1 (0→0.18): Panel A slides in from RIGHT (fast)
-  // Phase 2 (0.18→0.50): Panel A DWELLS — 32% of scroll = ~112vh dwell
-  // Phase 3 (0.50→0.72): Panel A exits DOWN
-  // Phase 4 (0.60→1.0):  Panel B "Walk in" enters from TOP
+  // Reveal section: two-phase choreography (no enter animation — Panel A is immediate)
+  // Phase 1 (0→0.42):  Panel A DWELLS — visible from the very first pixel
+  // Phase 2 (0.42→0.56): simultaneous swap — A exits down, B enters from top (touching)
+  // Phase 3 (0.56→1.0): Panel B DWELLS
   const revealSlide = revealProgress;
-  const realWorkEnterP = Math.max(0, Math.min(1, revealSlide / 0.18));
-  const realWorkExitP = Math.max(0, Math.min(1, (revealSlide - 0.48) / 0.14));
-  const walkInEnterP = Math.max(0, Math.min(1, (revealSlide - 0.56) / 0.44));
-  const panelRealWorkX = (1 - realWorkEnterP) * 100;
-  const panelRealWorkY = realWorkExitP * 100;
-  const panelWalkInY = -100 + walkInEnterP * 100;
+  const transP = Math.max(0, Math.min(1, (revealSlide - 0.42) / 0.14));
+  const panelRealWorkY = transP * 100;
+  const panelWalkInY = (-1 + transP) * 100;
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1288,7 +1294,7 @@ export default function TTSSite() {
           className="tts-section-pad"
           style={{
             background: "#0c0c0f",
-            padding: "80px 40px",
+            padding: "130px 40px 160px",
             position: "relative",
             overflow: "visible",
           }}
@@ -1420,12 +1426,12 @@ export default function TTSSite() {
             <div>
               <h2
                 style={{
-                  fontSize: "clamp(28px, 3.5vw, 46px)",
+                  fontSize: "clamp(42px, 5.5vw, 76px)",
                   fontWeight: 900,
                   color: "#fff",
-                  letterSpacing: "-0.03em",
-                  lineHeight: 1.15,
-                  marginBottom: 32,
+                  letterSpacing: "-0.04em",
+                  lineHeight: 1.05,
+                  marginBottom: 40,
                 }}
               >
                 <span className="tts-line-reveal">
@@ -1443,10 +1449,10 @@ export default function TTSSite() {
               <p
                 className="tts-fade"
                 style={{
-                  fontSize: 16,
+                  fontSize: 19,
                   color: "#d4d4d8",
                   lineHeight: 1.8,
-                  marginBottom: 16,
+                  marginBottom: 20,
                   transitionDelay: "0.08s",
                 }}
               >
@@ -1458,10 +1464,10 @@ export default function TTSSite() {
               <p
                 className="tts-fade"
                 style={{
-                  fontSize: 16,
+                  fontSize: 19,
                   color: "#d4d4d8",
                   lineHeight: 1.8,
-                  marginBottom: 28,
+                  marginBottom: 36,
                   transitionDelay: "0.12s",
                 }}
               >
@@ -1473,14 +1479,14 @@ export default function TTSSite() {
               <p
                 className="tts-fade"
                 style={{
-                  fontSize: 15,
+                  fontSize: 17,
                   color: "#a1a1aa",
-                  lineHeight: 1.8,
+                  lineHeight: 1.85,
                   marginBottom: 44,
                   transitionDelay: "0.16s",
                   fontStyle: "italic",
-                  borderLeft: "2px solid #CC0000",
-                  paddingLeft: 16,
+                  borderLeft: "3px solid #CC0000",
+                  paddingLeft: 20,
                 }}
               >
                 &ldquo;Think the international student who can&apos;t land an
@@ -1906,7 +1912,7 @@ export default function TTSSite() {
         {/* ── REVERSE SCROLL REVEAL ── */}
         <div
           ref={revealSectionRef}
-          style={{ height: "300vh", position: "relative" }}
+          style={{ height: "230vh", position: "relative" }}
         >
           <div
             style={{
@@ -1916,7 +1922,7 @@ export default function TTSSite() {
               overflow: "hidden",
             }}
           >
-            {/* Panel A: "Real work" — enters from RIGHT, exits DOWN */}
+            {/* Panel A: "Real work" — immediate, exits DOWN */}
             <div
               style={{
                 position: "absolute",
@@ -1924,10 +1930,108 @@ export default function TTSSite() {
                 background: "#0d0d10",
                 display: "flex",
                 alignItems: "center",
-                transform: `translateX(${panelRealWorkX}%) translateY(${panelRealWorkY}%)`,
+                transform: `translateY(${panelRealWorkY}%)`,
                 zIndex: 1,
+                overflow: "hidden",
               }}
             >
+              {/* Floating icons — Panel A */}
+              {(
+                [
+                  {
+                    Icon: Rocket,
+                    top: "12%",
+                    right: "4%",
+                    size: 80,
+                    speed: "0.75",
+                    speedx: "-0.28",
+                    rotate: 20,
+                    color: "rgba(204,0,0,0.65)",
+                  },
+                  {
+                    Icon: GitBranch,
+                    bottom: "18%",
+                    left: "3%",
+                    size: 64,
+                    speed: "0.55",
+                    speedx: "0.18",
+                    rotate: -14,
+                    color: "rgba(255,255,255,0.40)",
+                  },
+                  {
+                    Icon: Trophy,
+                    top: "55%",
+                    right: "2%",
+                    size: 52,
+                    speed: "0.40",
+                    speedx: "-0.14",
+                    rotate: 8,
+                    color: "rgba(255,204,0,0.50)",
+                  },
+                  {
+                    Icon: Globe,
+                    top: "25%",
+                    left: "2%",
+                    size: 44,
+                    speed: "0.28",
+                    speedx: "0.10",
+                    rotate: 30,
+                    color: "rgba(255,255,255,0.28)",
+                  },
+                  {
+                    Icon: Layers,
+                    bottom: "10%",
+                    right: "12%",
+                    size: 38,
+                    speed: "0.18",
+                    speedx: "-0.08",
+                    rotate: -22,
+                    color: "rgba(204,0,0,0.35)",
+                  },
+                ] as {
+                  Icon: React.FC<{ size: number }>;
+                  top?: string;
+                  left?: string;
+                  right?: string;
+                  bottom?: string;
+                  size: number;
+                  speed: string;
+                  speedx: string;
+                  rotate: number;
+                  color: string;
+                }[]
+              ).map(
+                (
+                  {
+                    Icon,
+                    top,
+                    left,
+                    right,
+                    bottom,
+                    size,
+                    speed,
+                    speedx,
+                    rotate,
+                    color,
+                  },
+                  idx,
+                ) => (
+                  <div
+                    key={`panel-a-${idx}`}
+                    ref={(el) => {
+                      if (el) floatRefs.current[idx + 80] = el;
+                    }}
+                    className="tts-float-icon"
+                    data-speed={speed}
+                    data-speedx={speedx}
+                    data-rotate={rotate}
+                    aria-hidden="true"
+                    style={{ top, left, right, bottom, color, zIndex: 0 }}
+                  >
+                    <Icon size={size} />
+                  </div>
+                ),
+              )}
               <div
                 className="tts-panel-b-grid tts-panel-b-inner"
                 style={{
@@ -1996,7 +2100,7 @@ export default function TTSSite() {
                       countTo: 0,
                       suffix: "",
                       label: "Applications required",
-                      sub: "Walk in any week. No application, no waitlist, no rejection.",
+                      sub: "Any major. Any year. First meeting this week.",
                     },
                     {
                       stat: "7+",
@@ -2146,8 +2250,8 @@ export default function TTSSite() {
                     margin: "0 auto",
                   }}
                 >
-                  No audition. No prerequisites. No waitlist. Just show up, pick
-                  a track, and start doing real work.
+                  Most clubs gatekeep. TTS hands you the keys. One semester here
+                  changes how you think about what you&apos;re capable of.
                 </p>
               </div>
             </div>
@@ -2455,33 +2559,6 @@ export default function TTSSite() {
                             background: `linear-gradient(to top, ${hexToRgba(accentHex, 0.14)} 0%, transparent 100%)`,
                           }}
                         />
-                        {/* Role pill — top left */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 20,
-                            left: 20,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            padding: "6px 14px",
-                            borderRadius: 100,
-                            background: hexToRgba(accentHex, 0.15),
-                            border: `1px solid ${hexToRgba(accentHex, 0.35)}`,
-                            backdropFilter: "blur(8px)",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 700,
-                              color: f.accent,
-                              letterSpacing: "0.08em",
-                              textTransform: "uppercase",
-                            }}
-                          >
-                            {f.role}
-                          </span>
-                        </div>
                         {/* Name + focus — bottom */}
                         <div
                           style={{
@@ -2564,18 +2641,6 @@ export default function TTSSite() {
                               </span>
                             </div>
                           ))}
-                        </div>
-                        <div
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: f.accent,
-                          }}
-                        >
-                          {f.linkLabel} <ExternalLink size={12} />
                         </div>
                       </div>
                     </div>
