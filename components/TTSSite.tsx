@@ -748,11 +748,6 @@ export default function TTSSite() {
   );
   const wordsMorphing = heroProgress > 0.62;
   const heroContentShown = heroProgress > 0.76;
-  // After content appears, heading shrinks away as left block grows
-  const heroGrowProgress = Math.max(
-    0,
-    Math.min(1, (heroProgress - 0.86) / 0.14),
-  );
   const h1WrapperW = h1WrapperRef.current?.offsetWidth ?? 0;
   const heroContainerW = heroContentRef.current?.clientWidth ?? 0;
   const slideX =
@@ -1133,13 +1128,7 @@ export default function TTSSite() {
                 ref={h1WrapperRef}
                 style={{
                   display: "inline-block",
-                  transform: `translateX(${slideX + heroGrowProgress * 120}px) scale(${1 - heroGrowProgress * 0.18})`,
-                  opacity: 1 - heroGrowProgress,
-                  transformOrigin: "right center",
-                  transition:
-                    heroGrowProgress > 0
-                      ? "none"
-                      : "opacity 0.55s cubic-bezier(0.16,1,0.3,1)",
+                  transform: `translateX(${slideX}px)`,
                 }}
               >
                 {/* Morph h1 */}
@@ -1278,18 +1267,13 @@ export default function TTSSite() {
                   position: "absolute",
                   top: 0,
                   left: 40,
-                  maxWidth: heroContentShown
-                    ? `${480 + heroGrowProgress * 280}px`
-                    : 480,
+                  maxWidth: 480,
                   opacity: heroContentShown ? 1 : 0,
                   transform: heroContentShown
-                    ? `translateY(0) scale(${1 + heroGrowProgress * 0.12})`
+                    ? "translateY(0)"
                     : "translateY(20px)",
-                  transformOrigin: "left top",
                   transition:
-                    heroGrowProgress > 0
-                      ? "none"
-                      : "opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1)",
+                    "opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1)",
                   pointerEvents: heroContentShown ? "auto" : "none",
                 }}
               >
@@ -2033,7 +2017,8 @@ export default function TTSSite() {
               )}
             </div>
 
-            {/* Panel A proxy — sits at left:100% of the sticky container so it slides into view as trackStickyRef translates left */}
+            {/* Panel A proxy — sits at left:100% of the sticky container so it slides into view as trackStickyRef translates left.
+                Crossfades out in the last 15% of exit so the real Panel A takes over seamlessly. */}
             <div
               aria-hidden="true"
               style={{
@@ -2047,6 +2032,11 @@ export default function TTSSite() {
                 alignItems: "center",
                 justifyContent: "center",
                 overflow: "hidden",
+                opacity: Math.max(
+                  0,
+                  1 - Math.max(0, (trackExitProg - 0.85) / 0.15),
+                ),
+                pointerEvents: "none",
               }}
             >
               <div
@@ -2225,7 +2215,7 @@ export default function TTSSite() {
               overflow: "hidden",
             }}
           >
-            {/* Panel A: "Real work" — immediate, exits DOWN */}
+            {/* Panel A: "Real work" — proxy handles slide-in, this fades in after proxy crossfades out */}
             <div
               style={{
                 position: "absolute",
@@ -2233,7 +2223,8 @@ export default function TTSSite() {
                 background: "#0d0d10",
                 display: "flex",
                 alignItems: "center",
-                transform: `translateX(${panelRealWorkX}%) translateY(${panelRealWorkY}%)`,
+                transform: `translateY(${panelRealWorkY}%)`,
+                opacity: Math.max(0, (trackExitProg - 0.85) / 0.15),
                 zIndex: 1,
                 overflow: "hidden",
               }}
@@ -4350,19 +4341,43 @@ export default function TTSSite() {
                 transition: "none",
               }}
             />
-            {/* Entrance rings — still triggered by intersection */}
+            {/* Entrance rings — scroll-driven via joinScrollProg so they reverse on scroll back */}
             <div
               ref={joinSectionRef as React.RefObject<HTMLDivElement>}
               aria-hidden="true"
               style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
             >
-              {[0, 1, 2, 3, 4].map((i) => (
-                <div
-                  key={`ring-${i}`}
-                  className={`tts-join-ring${joinActive ? " tts-active" : ""}`}
-                  style={{ animationDelay: `${i * 0.3}s` }}
-                />
-              ))}
+              {[0, 1, 2, 3, 4].map((i) => {
+                const ringStart = i * 0.08;
+                const ringP = Math.max(
+                  0,
+                  Math.min(1, (joinScrollProg - ringStart) / 0.65),
+                );
+                const ringColors = [
+                  "rgba(204,0,0,0.5)",
+                  "rgba(204,0,0,0.35)",
+                  "rgba(255,255,255,0.15)",
+                  "rgba(255,204,0,0.25)",
+                  "rgba(204,0,0,0.2)",
+                ];
+                return (
+                  <div
+                    key={`ring-${i}`}
+                    style={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      width: 300,
+                      height: 300,
+                      borderRadius: "50%",
+                      border: `1px solid ${ringColors[i]}`,
+                      transform: `translate(-50%, -50%) scale(${ringP * 4})`,
+                      opacity: ringP > 0 ? 0.7 * (1 - ringP) : 0,
+                      pointerEvents: "none",
+                    }}
+                  />
+                );
+              })}
             </div>
 
             {/* Floating parallax icons — join section */}
