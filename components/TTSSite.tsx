@@ -3352,18 +3352,51 @@ export default function TTSSite() {
                   pointerEvents: "none",
                 }}
               />
-              {/* Content — staggered by transP */}
+              {/* Content — staggered by transP + dwell parallax */}
               {(() => {
                 const ease = (t: number) =>
                   t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+                const spring = (t: number) => {
+                  // Overshoot spring: goes slightly past 1 then settles
+                  const c4 = (2 * Math.PI) / 2.8;
+                  return t === 0
+                    ? 0
+                    : t === 1
+                      ? 1
+                      : Math.pow(2, -8 * t) * Math.sin((t * 10 - 0.75) * c4) +
+                        1;
+                };
                 const ep = (start: number, len: number) =>
                   ease(Math.max(0, Math.min(1, (transP - start) / len)));
-                const eyebrowP = ep(0.1, 0.25);
-                const walkInP = ep(0.28, 0.28);
-                const dividerP = ep(0.38, 0.25);
-                const walkOutP = ep(0.45, 0.3);
-                const subtitleP = ep(0.68, 0.28);
-                const pillsP = ep(0.78, 0.2);
+                const sp = (start: number, len: number) =>
+                  spring(Math.max(0, Math.min(1, (transP - start) / len)));
+
+                // Entrance stagger
+                const eyebrowP = ep(0.05, 0.22);
+                const walkInP = sp(0.2, 0.25);
+                const dividerP = ep(0.32, 0.22);
+                // Word-split: "Walk out" from left, "different." from right
+                const walkWordP = sp(0.42, 0.28);
+                const diffWordP = sp(0.52, 0.28);
+                const subtitleP = ep(0.65, 0.25);
+
+                // Per-pill stagger
+                const pill0 = ep(0.75, 0.18);
+                const pill1 = ep(0.8, 0.18);
+                const pill2 = ep(0.85, 0.18);
+                const pillPs = [pill0, pill1, pill2];
+
+                // Dwell parallax — fires after everything is in (transP ≈ 1)
+                // Uses raw revealProgress 0.74→1.0 so motion is continuous
+                const dwellP = Math.max(
+                  0,
+                  Math.min(1, (revealProgress - 0.74) / 0.26),
+                );
+                const contentDrift = dwellP * -70;
+                const eyebrowDrift = dwellP * -24;
+                const walkInDrift = dwellP * -18;
+                const diffGlow = 60 + dwellP * 90;
+
                 return (
                   <div
                     style={{
@@ -3373,13 +3406,14 @@ export default function TTSSite() {
                       position: "relative",
                       zIndex: 1,
                       textAlign: "center",
+                      transform: `translateY(${contentDrift}px)`,
                     }}
                   >
                     {/* Eyebrow */}
                     <div
                       style={{
                         opacity: eyebrowP,
-                        transform: `translateY(${(1 - eyebrowP) * 20}px)`,
+                        transform: `translateY(${(1 - eyebrowP) * 24 + eyebrowDrift}px)`,
                         marginBottom: 32,
                       }}
                     >
@@ -3413,11 +3447,11 @@ export default function TTSSite() {
                       </span>
                     </div>
 
-                    {/* "Walk in." — small, white */}
+                    {/* "Walk in." — springs in, drifts up on dwell */}
                     <p
                       style={{
-                        opacity: walkInP,
-                        transform: `translateY(${(1 - walkInP) * 28}px)`,
+                        opacity: walkInP * (1 - dwellP * 0.4),
+                        transform: `translateY(${(1 - walkInP) * -32 + walkInDrift}px) scale(${0.88 + walkInP * 0.12})`,
                         fontSize: "clamp(22px, 3vw, 38px)",
                         fontWeight: 700,
                         color: "rgba(255,255,255,0.55)",
@@ -3429,36 +3463,78 @@ export default function TTSSite() {
                       Walk in.
                     </p>
 
-                    {/* Red expanding divider line */}
+                    {/* Red divider — draws from center outward */}
                     <div
                       style={{
+                        position: "relative",
                         height: 2,
-                        background:
-                          "linear-gradient(90deg, transparent, #CC0000, transparent)",
-                        width: `${dividerP * 100}%`,
                         margin: "0 auto 20px",
-                        boxShadow: "0 0 12px rgba(204,0,0,0.6)",
+                        width: "100%",
+                        overflow: "hidden",
                       }}
-                    />
+                    >
+                      {/* Left half */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          right: "50%",
+                          top: 0,
+                          height: "100%",
+                          width: `${dividerP * 50}%`,
+                          background:
+                            "linear-gradient(90deg, transparent, #CC0000)",
+                          boxShadow: "0 0 12px rgba(204,0,0,0.6)",
+                        }}
+                      />
+                      {/* Right half */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: "50%",
+                          top: 0,
+                          height: "100%",
+                          width: `${dividerP * 50}%`,
+                          background:
+                            "linear-gradient(90deg, #CC0000, transparent)",
+                          boxShadow: "0 0 12px rgba(204,0,0,0.6)",
+                        }}
+                      />
+                    </div>
 
-                    {/* "Walk out different." — massive, split coloring */}
+                    {/* "Walk out different." — word-split entrance */}
                     <h2
                       style={{
-                        opacity: walkOutP,
-                        transform: `translateY(${(1 - walkOutP) * 40}px) scale(${0.94 + walkOutP * 0.06})`,
                         fontSize: "clamp(58px, 10vw, 130px)",
                         fontWeight: 900,
-                        color: "#fff",
                         letterSpacing: "-0.05em",
                         lineHeight: 0.92,
                         marginBottom: 40,
+                        display: "flex",
+                        flexWrap: "wrap",
+                        justifyContent: "center",
+                        gap: "0.18em",
+                        overflow: "hidden",
                       }}
                     >
-                      Walk out{" "}
+                      {/* "Walk out" slides in from left */}
+                      <span
+                        style={{
+                          color: "#fff",
+                          opacity: walkWordP,
+                          display: "inline-block",
+                          transform: `translateX(${(1 - walkWordP) * -80}px) scale(${0.92 + walkWordP * 0.08})`,
+                        }}
+                      >
+                        Walk out
+                      </span>
+                      {/* "different." slides in from right with glow */}
                       <span
                         style={{
                           color: "#CC0000",
-                          textShadow: "0 0 60px rgba(204,0,0,0.35)",
+                          opacity: diffWordP,
+                          display: "inline-block",
+                          transform: `translateX(${(1 - diffWordP) * 80}px) scale(${0.92 + diffWordP * 0.08})`,
+                          textShadow: `0 0 ${diffGlow}px rgba(204,0,0,${0.25 + dwellP * 0.35})`,
                         }}
                       >
                         different.
@@ -3469,7 +3545,7 @@ export default function TTSSite() {
                     <p
                       style={{
                         opacity: subtitleP,
-                        transform: `translateY(${(1 - subtitleP) * 20}px)`,
+                        transform: `translateY(${(1 - subtitleP) * 24}px)`,
                         fontSize: 16,
                         color: "#52525b",
                         lineHeight: 1.75,
@@ -3482,11 +3558,9 @@ export default function TTSSite() {
                       of.
                     </p>
 
-                    {/* Fact pills */}
+                    {/* Fact pills — individual stagger */}
                     <div
                       style={{
-                        opacity: pillsP,
-                        transform: `translateY(${(1 - pillsP) * 16}px)`,
                         display: "flex",
                         gap: 10,
                         justifyContent: "center",
@@ -3497,10 +3571,13 @@ export default function TTSSite() {
                         "No application",
                         "No waitlist",
                         "No rejection email",
-                      ].map((t) => (
+                      ].map((t, i) => (
                         <span
                           key={t}
                           style={{
+                            opacity: pillPs[i],
+                            transform: `translateY(${(1 - pillPs[i]) * 20}px) scale(${0.88 + pillPs[i] * 0.12})`,
+                            display: "inline-block",
                             border: "1px solid rgba(255,255,255,0.10)",
                             borderRadius: 999,
                             padding: "6px 16px",
