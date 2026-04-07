@@ -927,8 +927,10 @@ export default function TTSSite() {
           alignItems: "center",
           overflow: "hidden",
           transform: `translateX(${(1 - trackExitProg) * 100}%)`,
+          // Fade out under the cover of Panel B sliding in (0.42→0.56).
+          // The switch is invisible because Panel B physically covers it.
           opacity:
-            trackExitProg > 0 ? Math.max(0, 1 - revealProgress / 0.15) : 0,
+            trackExitProg > 0 ? Math.max(0, (0.56 - revealProgress) / 0.14) : 0,
           pointerEvents: "none",
           willChange: "transform, opacity",
         }}
@@ -2295,9 +2297,10 @@ export default function TTSSite() {
                 display: "flex",
                 alignItems: "center",
                 transform: `translateY(${panelRealWorkY}%)`,
-                opacity: Math.min(1, revealProgress / 0.06),
+                opacity: 1,
                 zIndex: 1,
                 overflow: "hidden",
+                willChange: "transform",
               }}
             >
               {/* Floating icons — Panel A */}
