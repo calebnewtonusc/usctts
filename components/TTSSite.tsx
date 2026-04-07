@@ -43,6 +43,25 @@ import {
   Sparkles,
   MessageCircle,
   Microscope,
+  Shield,
+  Server,
+  Cloud,
+  Search,
+  GraduationCap,
+  Heart,
+  MapPin,
+  Medal,
+  Crown,
+  Atom,
+  CheckCircle,
+  Flag,
+  LineChart,
+  Handshake,
+  GitCommit,
+  Boxes,
+  Activity,
+  Database,
+  Lock,
 } from "lucide-react";
 // ── Utilities ────────────────────────────────────────────────────────────────
 function hexToRgba(hex: string, alpha: number): string {
@@ -1741,6 +1760,47 @@ export default function TTSSite() {
                 rotate: 15,
                 color: "rgba(255,255,255,0.2)",
               },
+              // Additional hero icons
+              {
+                Icon: Shield,
+                top: "22%",
+                left: "6%",
+                size: 36,
+                speed: "0.07",
+                speedx: "0.03",
+                rotate: -8,
+                color: "rgba(204,0,0,0.38)",
+              },
+              {
+                Icon: Server,
+                bottom: "30%",
+                right: "7%",
+                size: 32,
+                speed: "0.07",
+                speedx: "-0.03",
+                rotate: 12,
+                color: "rgba(255,255,255,0.22)",
+              },
+              {
+                Icon: Cloud,
+                top: "18%",
+                right: "12%",
+                size: 34,
+                speed: "0.04",
+                speedx: "-0.01",
+                rotate: -5,
+                color: "rgba(99,102,241,0.35)",
+              },
+              {
+                Icon: Lock,
+                top: "78%",
+                right: "6%",
+                size: 28,
+                speed: "0.04",
+                speedx: "-0.01",
+                rotate: 20,
+                color: "rgba(255,204,0,0.28)",
+              },
             ].map(
               (
                 {
@@ -1760,7 +1820,7 @@ export default function TTSSite() {
                 <div
                   key={`hero-float-${idx}`}
                   ref={(el) => {
-                    if (el) floatRefs.current[idx + 20] = el;
+                    if (el) floatRefs.current[idx + 115] = el;
                   }}
                   className="tts-float-icon"
                   data-speed={speed}
@@ -2255,6 +2315,37 @@ export default function TTSSite() {
               speedx: "-0.01",
               rotate: -22,
               color: "rgba(204,0,0,0.35)",
+            },
+            // Additional mission icons
+            {
+              Icon: GraduationCap,
+              top: "15%",
+              left: "8%",
+              size: 44,
+              speed: "0.10",
+              speedx: "0.04",
+              rotate: -14,
+              color: "rgba(255,204,0,0.45)",
+            },
+            {
+              Icon: Heart,
+              bottom: "25%",
+              right: "8%",
+              size: 36,
+              speed: "0.07",
+              speedx: "-0.03",
+              rotate: 8,
+              color: "rgba(204,0,0,0.42)",
+            },
+            {
+              Icon: MapPin,
+              top: "70%",
+              right: "6%",
+              size: 30,
+              speed: "0.04",
+              speedx: "-0.01",
+              rotate: 10,
+              color: "rgba(255,255,255,0.22)",
             },
           ].map(
             (
@@ -3248,6 +3339,36 @@ export default function TTSSite() {
                 rotate: 22,
                 color: "rgba(255,204,0,0.28)",
               },
+              {
+                Icon: LineChart,
+                top: "12%",
+                left: "18%",
+                size: 40,
+                speed: "0.10",
+                speedx: "0.03",
+                rotate: -6,
+                color: "rgba(255,204,0,0.35)",
+              },
+              {
+                Icon: Handshake,
+                bottom: "30%",
+                left: "6%",
+                size: 44,
+                speed: "0.07",
+                speedx: "0.03",
+                rotate: 10,
+                color: "rgba(255,255,255,0.20)",
+              },
+              {
+                Icon: Flag,
+                top: "55%",
+                left: "18%",
+                size: 30,
+                speed: "0.04",
+                speedx: "-0.01",
+                rotate: 18,
+                color: "rgba(255,204,0,0.25)",
+              },
             ] as {
               Icon: React.FC<{ size: number }>;
               top?: string;
@@ -3267,7 +3388,7 @@ export default function TTSSite() {
               <div
                 key={`lead-tyler-${idx}`}
                 ref={(el) => {
-                  if (el) floatRefs.current[idx + 70] = el;
+                  if (el) floatRefs.current[idx + 130] = el;
                 }}
                 className="tts-float-icon"
                 data-speed={speed}
@@ -3324,6 +3445,36 @@ export default function TTSSite() {
                 rotate: -28,
                 color: "rgba(204,0,0,0.30)",
               },
+              {
+                Icon: GitCommit,
+                top: "12%",
+                right: "18%",
+                size: 42,
+                speed: "0.10",
+                speedx: "-0.03",
+                rotate: 15,
+                color: "rgba(204,0,0,0.38)",
+              },
+              {
+                Icon: Atom,
+                bottom: "18%",
+                right: "20%",
+                size: 36,
+                speed: "0.07",
+                speedx: "0.03",
+                rotate: -10,
+                color: "rgba(99,102,241,0.38)",
+              },
+              {
+                Icon: Database,
+                top: "60%",
+                right: "5%",
+                size: 30,
+                speed: "0.04",
+                speedx: "-0.01",
+                rotate: 22,
+                color: "rgba(255,255,255,0.18)",
+              },
             ] as {
               Icon: React.FC<{ size: number }>;
               top?: string;
@@ -3343,7 +3494,7 @@ export default function TTSSite() {
               <div
                 key={`lead-caleb-${idx}`}
                 ref={(el) => {
-                  if (el) floatRefs.current[idx + 74] = el;
+                  if (el) floatRefs.current[idx + 140] = el;
                 }}
                 className="tts-float-icon"
                 data-speed={speed}
@@ -4169,6 +4320,57 @@ export default function TTSSite() {
               rotate: -10,
               color: "rgba(255,204,0,0.25)",
             },
+            // Additional alumni icons
+            {
+              Icon: GraduationCap,
+              top: "12%",
+              left: "8%",
+              size: 52,
+              speed: "0.10",
+              speedx: "0.04",
+              rotate: -18,
+              color: "rgba(255,204,0,0.40)",
+            },
+            {
+              Icon: Medal,
+              bottom: "40%",
+              right: "6%",
+              size: 44,
+              speed: "0.07",
+              speedx: "-0.03",
+              rotate: 14,
+              color: "rgba(255,204,0,0.32)",
+            },
+            {
+              Icon: Crown,
+              top: "38%",
+              left: "5%",
+              size: 36,
+              speed: "0.07",
+              speedx: "0.03",
+              rotate: -8,
+              color: "rgba(255,204,0,0.28)",
+            },
+            {
+              Icon: Heart,
+              bottom: "18%",
+              right: "12%",
+              size: 30,
+              speed: "0.04",
+              speedx: "-0.01",
+              rotate: 20,
+              color: "rgba(204,0,0,0.35)",
+            },
+            {
+              Icon: Activity,
+              top: "68%",
+              left: "10%",
+              size: 28,
+              speed: "0.04",
+              speedx: "0.01",
+              rotate: -15,
+              color: "rgba(255,255,255,0.18)",
+            },
           ].map(
             (
               {
@@ -4694,6 +4896,37 @@ export default function TTSSite() {
               rotate: -30,
               color: "rgba(204,0,0,0.3)",
             },
+            // Variety icons for FAQ
+            {
+              Icon: Search,
+              top: "62%",
+              left: "7%",
+              size: 40,
+              speed: "0.07",
+              speedx: "0.03",
+              rotate: -12,
+              color: "rgba(255,255,255,0.25)",
+            },
+            {
+              Icon: Lightbulb,
+              top: "20%",
+              left: "14%",
+              size: 36,
+              speed: "0.07",
+              speedx: "0.03",
+              rotate: 8,
+              color: "rgba(255,204,0,0.32)",
+            },
+            {
+              Icon: CheckCircle,
+              bottom: "30%",
+              right: "8%",
+              size: 32,
+              speed: "0.04",
+              speedx: "-0.01",
+              rotate: 16,
+              color: "rgba(16,185,129,0.35)",
+            },
           ].map(
             (
               {
@@ -5162,6 +5395,47 @@ export default function TTSSite() {
                 speedx: "-0.01",
                 rotate: 25,
                 color: "rgba(255,255,255,0.2)",
+              },
+              // Additional join icons
+              {
+                Icon: Flag,
+                top: "18%",
+                left: "6%",
+                size: 44,
+                speed: "0.10",
+                speedx: "0.04",
+                rotate: -10,
+                color: "rgba(204,0,0,0.45)",
+              },
+              {
+                Icon: Crown,
+                bottom: "22%",
+                left: "10%",
+                size: 38,
+                speed: "0.07",
+                speedx: "0.03",
+                rotate: 12,
+                color: "rgba(255,204,0,0.38)",
+              },
+              {
+                Icon: CheckCircle,
+                top: "55%",
+                right: "6%",
+                size: 34,
+                speed: "0.07",
+                speedx: "-0.03",
+                rotate: -8,
+                color: "rgba(16,185,129,0.40)",
+              },
+              {
+                Icon: Shield,
+                bottom: "12%",
+                right: "10%",
+                size: 28,
+                speed: "0.04",
+                speedx: "-0.01",
+                rotate: 20,
+                color: "rgba(255,255,255,0.18)",
               },
             ].map(
               (
