@@ -742,6 +742,7 @@ export default function TTSSite() {
           .tts-join-grid { grid-template-columns: 1fr !important; gap: 48px !important; }
           .tts-leadership-grid { grid-template-columns: 1fr !important; }
           .tts-footer-cols { flex-direction: column !important; gap: 32px !important; align-items: flex-start !important; }
+          .tts-advisors-alumni-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
         }
         @media (max-width: 768px) {
           .tts-tracks-grid { grid-template-columns: 1fr !important; }
@@ -753,9 +754,13 @@ export default function TTSSite() {
           .tts-panel-b-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
           .tts-hero-h1 { font-size: clamp(44px, 13vw, 80px) !important; }
           .tts-panel-b-inner { padding: 0 20px !important; }
+          .tts-panel-b-stats { border-left: none !important; padding-left: 0 !important; border-top: 1px solid rgba(255,255,255,0.1) !important; padding-top: 32px !important; }
+          .tts-track-title { left: 20px !important; width: clamp(120px, 30vw, 220px) !important; }
+          .tts-join-phase3-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
         }
         @media (max-width: 480px) {
           .tts-stats-grid { grid-template-columns: 1fr 1fr !important; }
+          .tts-leadership-grid { grid-template-columns: 1fr !important; }
         }
         @media (hover: none), (pointer: coarse) {
           #tts-cursor-dot, #tts-cursor-ring { display: none !important; }
@@ -1556,7 +1561,7 @@ export default function TTSSite() {
           id="tracks"
           style={{
             background: "#09090b",
-            height: "320vh",
+            height: "clamp(200vh, 320vh, 320vh)",
             position: "relative",
           }}
         >
@@ -1585,6 +1590,7 @@ export default function TTSSite() {
             {/* Title — absolutely positioned, JS shifts it center → left */}
             <div
               ref={trackTitleRef}
+              className="tts-track-title"
               style={{
                 position: "absolute",
                 left: 80,
@@ -1636,8 +1642,8 @@ export default function TTSSite() {
               ref={trackInnerRef}
               style={{
                 position: "absolute",
-                left: "clamp(300px, 28vw, 460px)",
-                right: 60,
+                left: "clamp(140px, 28vw, 460px)",
+                right: "clamp(16px, 5vw, 60px)",
                 top: 0,
                 bottom: 0,
                 display: "flex",
@@ -2074,6 +2080,7 @@ export default function TTSSite() {
                   </p>
                 </div>
                 <div
+                  className="tts-panel-b-stats"
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -2095,7 +2102,7 @@ export default function TTSSite() {
                       countTo: 7,
                       suffix: "+",
                       label: "Active tracks",
-                      sub: "Consulting, engineering, biotech, music tech, Web3, and growing.",
+                      sub: "Consulting, engineering, entrepreneurship, biotech, music tech, Web3.",
                     },
                     {
                       stat: "1",
@@ -2462,6 +2469,7 @@ export default function TTSSite() {
 
           {/* Split layout */}
           <div
+            className="tts-leadership-grid"
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
@@ -3161,6 +3169,7 @@ export default function TTSSite() {
 
             {/* Board of Advisors + Alumni — side by side */}
             <div
+              className="tts-advisors-alumni-grid"
               style={{
                 display: "grid",
                 gridTemplateColumns: "minmax(280px, 500px) 1fr",
@@ -3886,7 +3895,7 @@ export default function TTSSite() {
           ref={joinScrollRef}
           id="join"
           style={{
-            height: "240vh",
+            height: "clamp(160vh, 200vh, 240vh)",
             position: "relative",
             background: "#0a0508",
             overflow: "hidden",
@@ -4207,6 +4216,7 @@ export default function TTSSite() {
                   }}
                 >
                   <div
+                    className="tts-join-phase3-grid"
                     style={{
                       maxWidth: 1200,
                       width: "100%",
