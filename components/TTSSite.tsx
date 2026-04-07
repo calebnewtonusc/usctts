@@ -1467,11 +1467,9 @@ export default function TTSSite() {
                 revealStart: 0.22,
               },
             ].map(({ stat, label, sub, revealStart }, i) => {
-              // Base stagger on trackExitProg (overlay slide-in) so stats appear
-              // as the overlay enters — prevents blank right side during tracks exit
               const itemP = Math.max(
                 0,
-                Math.min(1, (trackExitProg - revealStart) / 0.09),
+                Math.min(1, (revealProgress - revealStart) / 0.09),
               );
               return (
                 <div
