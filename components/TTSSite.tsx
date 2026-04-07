@@ -453,6 +453,7 @@ export default function TTSSite() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [heroProgress, setHeroProgress] = useState(0);
   const [revealProgress, setRevealProgress] = useState(0);
+  const [trackExitProg, setTrackExitProg] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [joinActive, setJoinActive] = useState(false);
   const [joinScrollProg, setJoinScrollProg] = useState(0);
@@ -633,6 +634,7 @@ export default function TTSSite() {
       if (trackStickyRef.current) {
         const exitP = easeOut(Math.max(0, Math.min(1, (p - 0.78) / 0.22)));
         trackStickyRef.current.style.transform = `translateX(${-exitP * 100}%)`;
+        setTrackExitProg(exitP);
       }
     };
     window.addEventListener("scroll", handle, { passive: true });
@@ -729,10 +731,9 @@ export default function TTSSite() {
   // Phase 2 (0.42→0.56): simultaneous swap — A exits down, B enters from top (touching)
   // Phase 3 (0.56→1.0): Panel B DWELLS
   const revealSlide = revealProgress;
-  // Panel A: enters from RIGHT (0→0.15), then exits DOWN (0.42→0.56)
-  const enterP = Math.max(0, Math.min(1, revealSlide / 0.15));
-  const enterEased = 1 - Math.pow(1 - enterP, 3);
-  const panelRealWorkX = (1 - enterEased) * 100;
+  // Panel A: slides in from RIGHT locked to tracks exit (same exitP = no gap)
+  // then exits DOWN (0.42→0.56)
+  const panelRealWorkX = (1 - trackExitProg) * 100;
   const transP = Math.max(0, Math.min(1, (revealSlide - 0.42) / 0.14));
   const panelRealWorkY = transP * 100;
   const panelWalkInY = (-1 + transP) * 100;
@@ -2067,22 +2068,31 @@ export default function TTSSite() {
                     color,
                   },
                   idx,
-                ) => (
-                  <div
-                    key={`panel-a-${idx}`}
-                    ref={(el) => {
-                      if (el) floatRefs.current[idx + 80] = el;
-                    }}
-                    className="tts-float-icon"
-                    data-speed={speed}
-                    data-speedx={speedx}
-                    data-rotate={rotate}
-                    aria-hidden="true"
-                    style={{ top, left, right, bottom, color, zIndex: 0 }}
-                  >
-                    <Icon size={size} />
-                  </div>
-                ),
+                ) => {
+                  const sY = parseFloat(speed);
+                  const sX = parseFloat(speedx);
+                  const drift = revealProgress - 0.3;
+                  const yOff = drift * sY * 800;
+                  const xOff = drift * sX * 800;
+                  return (
+                    <div
+                      key={`panel-a-${idx}`}
+                      className="tts-float-icon"
+                      aria-hidden="true"
+                      style={{
+                        top,
+                        left,
+                        right,
+                        bottom,
+                        color,
+                        zIndex: 0,
+                        transform: `translateY(${yOff}px) translateX(${xOff}px) rotate(${rotate}deg)`,
+                      }}
+                    >
+                      <Icon size={size} />
+                    </div>
+                  );
+                },
               )}
               <div
                 className="tts-panel-b-grid tts-panel-b-inner"
@@ -3978,7 +3988,6 @@ export default function TTSSite() {
             height: "clamp(160vh, 200vh, 240vh)",
             position: "relative",
             background: "#0a0508",
-            overflow: "clip",
           }}
         >
           <div
@@ -4154,7 +4163,7 @@ export default function TTSSite() {
               const outP = Math.max(0, Math.min(1, (p - 0.28) / 0.12));
               const outEased = 1 - Math.pow(1 - outP, 3);
               const op = inEased * (1 - outEased);
-              const scale = 0.85 + inEased * 0.15 - outEased * 0.06;
+
               return (
                 <div
                   style={{
@@ -4165,7 +4174,6 @@ export default function TTSSite() {
                     alignItems: "center",
                     justifyContent: "center",
                     opacity: op,
-                    transform: `scale(${scale})`,
                     pointerEvents: "none",
                   }}
                 >
