@@ -342,11 +342,16 @@ function WaveDivider({
   reverse = false,
   speed = 10,
   amplitude = 24,
+  topColor = "#09090b",
+  bottomColor = "#09090b",
 }: {
   reverse?: boolean;
   speed?: number;
   amplitude?: number;
+  topColor?: string;
+  bottomColor?: string;
 }) {
+  const h = 80;
   const cy = 40;
   const A = amplitude;
   const buildPath = (offsetX: number) => {
@@ -363,53 +368,74 @@ function WaveDivider({
       `C${o + 2336},${cy + A} ${o + 2464},${cy + A} ${o + 2560},${cy}`,
     ].join(" ");
   };
+  // Fill path: wave line + close down to bottom of box = bottom section color floods below the wave
+  const buildFillPath = (o: number) =>
+    buildPath(o) + ` L${o + 2560},${h} L${o},${h} Z`;
 
   return (
-    <div className="tts-ocean-divider" aria-hidden="true">
+    <div
+      aria-hidden="true"
+      style={{
+        position: "relative",
+        height: h,
+        background: topColor,
+        overflow: "hidden",
+        flexShrink: 0,
+      }}
+    >
       <svg
         className={`tts-ocean-track${reverse ? " tts-ocean-reverse" : ""}`}
-        style={{ animationDuration: `${speed}s` }}
+        style={{
+          animationDuration: `${speed}s`,
+          position: "absolute",
+          top: 0,
+          left: 0,
+        }}
         width="5120"
-        height="80"
-        viewBox="0 0 5120 80"
+        height={h}
+        viewBox={`0 0 5120 ${h}`}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
+        {/* Bottom color flood below the wave */}
+        <path d={buildFillPath(0)} fill={bottomColor} />
+        <path d={buildFillPath(2560)} fill={bottomColor} />
+        {/* Glow strokes on top */}
         <path
           d={buildPath(0)}
-          stroke="rgba(204,0,0,0.07)"
-          strokeWidth="40"
+          stroke="rgba(204,0,0,0.08)"
+          strokeWidth="36"
           fill="none"
           strokeLinecap="round"
         />
         <path
           d={buildPath(2560)}
-          stroke="rgba(204,0,0,0.07)"
-          strokeWidth="40"
+          stroke="rgba(204,0,0,0.08)"
+          strokeWidth="36"
           fill="none"
           strokeLinecap="round"
         />
         <path
           d={buildPath(0)}
-          stroke="rgba(204,0,0,0.22)"
-          strokeWidth="6"
+          stroke="rgba(204,0,0,0.28)"
+          strokeWidth="5"
           fill="none"
         />
         <path
           d={buildPath(2560)}
-          stroke="rgba(204,0,0,0.22)"
-          strokeWidth="6"
+          stroke="rgba(204,0,0,0.28)"
+          strokeWidth="5"
           fill="none"
         />
         <path
           d={buildPath(0)}
-          stroke="rgba(204,0,0,0.65)"
+          stroke="rgba(204,0,0,0.75)"
           strokeWidth="1.5"
           fill="none"
         />
         <path
           d={buildPath(2560)}
-          stroke="rgba(204,0,0,0.65)"
+          stroke="rgba(204,0,0,0.75)"
           strokeWidth="1.5"
           fill="none"
         />
@@ -1306,6 +1332,9 @@ export default function TTSSite() {
           </div>
         </section>
 
+        {/* Gradient: Hero → Mission */}
+        <div aria-hidden="true" style={{ height: 80, background: 'linear-gradient(to bottom, #09090b 0%, #0c0c0f 100%)', pointerEvents: 'none', flexShrink: 0 }} />
+
         {/* ── MISSION ── */}
         <section
           ref={missionSectionRef}
@@ -1552,8 +1581,16 @@ export default function TTSSite() {
           </div>
         </section>
 
+        {/* Gradient: Mission → Tracks */}
+        <div aria-hidden="true" style={{ height: 80, background: 'linear-gradient(to bottom, #0c0c0f 0%, #09090b 100%)', pointerEvents: 'none', flexShrink: 0 }} />
+
         {/* Wave 1 — before tracks */}
-        <WaveDivider amplitude={24} speed={10} />
+        <WaveDivider
+          amplitude={24}
+          speed={10}
+          topColor="#09090b"
+          bottomColor="#09090b"
+        />
 
         {/* ── TRACKS — center-to-left title + gravity card reveal ── */}
         <section
@@ -2254,7 +2291,7 @@ export default function TTSSite() {
         </div>
 
         {/* Wave 2 — after reveal */}
-        <WaveDivider reverse amplitude={30} speed={8} />
+        <WaveDivider reverse amplitude={30} speed={8} topColor="#09090b" bottomColor="#000" />
 
         {/* ── LEADERSHIP ── */}
         <section
@@ -2678,7 +2715,7 @@ export default function TTSSite() {
         </section>
 
         {/* Wave 3 — before cabinet */}
-        <WaveDivider amplitude={36} speed={12} />
+        <WaveDivider amplitude={36} speed={12} topColor="#000" bottomColor="#09090b" />
 
         {/* ── CABINET ── */}
         <section
@@ -3487,7 +3524,7 @@ export default function TTSSite() {
         </section>
 
         {/* Wave 4 — before FAQ */}
-        <WaveDivider reverse amplitude={20} speed={7} />
+        <WaveDivider reverse amplitude={20} speed={7} topColor="#0c0c0f" bottomColor="#09090b" />
 
         {/* ── FAQ ── */}
         <section
@@ -3888,7 +3925,7 @@ export default function TTSSite() {
         </section>
 
         {/* Wave 5 — before join */}
-        <WaveDivider amplitude={28} speed={9} />
+        <WaveDivider amplitude={28} speed={9} topColor="#09090b" bottomColor="#0a0508" />
 
         {/* ── JOIN — scroll-driven cinematic ── */}
         <section
@@ -4617,8 +4654,10 @@ export default function TTSSite() {
             })()}
           </div>
 
-          {/* ── FOOTER — inside join section so it sits flush ── */}
-          <footer
+        </section>
+
+        {/* ── FOOTER ── */}
+        <footer
             style={{
               background: "transparent",
               padding: "32px 40px 28px",
@@ -4736,8 +4775,7 @@ export default function TTSSite() {
             >
               © {new Date().getFullYear()} Trojan Technology Solutions · USC
             </p>
-          </footer>
-        </section>
+        </footer>
       </div>
     </>
   );
