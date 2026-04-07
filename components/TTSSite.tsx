@@ -6089,10 +6089,10 @@ export default function TTSSite() {
                       opacity: Math.max(0, Math.min(1, (p - 0.22) / 0.06)),
                     }}
                   >
-                    They don&apos;t teach you.
+                    They count
                     <br />
                     <span style={{ color: "#CC0000" }}>
-                      They select for you.
+                      what you&apos;ve shipped.
                     </span>
                   </div>
                   <div
