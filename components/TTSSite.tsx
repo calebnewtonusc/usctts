@@ -3278,137 +3278,143 @@ export default function TTSSite() {
                 gap: 20,
               }}
             >
-              {CABINET.filter((m) => !m.placeholder).map((member, i) => (
-                <a
-                  key={member.name}
-                  href={member.link ?? "#"}
-                  target={member.link ? "_blank" : undefined}
-                  rel="noopener noreferrer"
-                  aria-label={`${member.name}, ${member.role}`}
-                  className="tts-cascade"
-                  style={{
-                    transitionDelay: `${i * 0.08}s`,
-                    display: "block",
-                    textDecoration: "none",
-                    borderRadius: 16,
-                    overflow: "hidden",
-                    position: "relative",
-                    aspectRatio: "3/4",
-                    background: "#111113",
-                    border: `1px solid rgba(255,255,255,0.12)`,
-                    transition:
-                      "transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease, border-color 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLAnchorElement).style.transform =
-                      "translateY(-6px) scale(1.02)";
-                    (e.currentTarget as HTMLAnchorElement).style.boxShadow =
-                      `0 20px 60px ${member.accent}25`;
-                    (e.currentTarget as HTMLAnchorElement).style.borderColor =
-                      `${member.accent}50`;
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLAnchorElement).style.transform =
-                      "translateY(0) scale(1)";
-                    (e.currentTarget as HTMLAnchorElement).style.boxShadow =
-                      "none";
-                    (e.currentTarget as HTMLAnchorElement).style.borderColor =
-                      "rgba(255,255,255,0.12)";
-                  }}
-                >
-                  {/* Photo */}
-                  {member.headshot ? (
-                    <Image
-                      src={member.headshot}
-                      alt={member.name}
-                      fill
-                      sizes="(max-width: 768px) 50vw, 300px"
-                      style={{
-                        objectFit: "cover",
-                        objectPosition: member.position ?? "center top",
-                      }}
-                    />
-                  ) : (
+              {CABINET.filter((m) => !m.placeholder)
+                .sort((a, b) => {
+                  const lastName = (n: string) =>
+                    n.trim().split(" ").slice(-1)[0].toLowerCase();
+                  return lastName(a.name).localeCompare(lastName(b.name));
+                })
+                .map((member, i) => (
+                  <a
+                    key={member.name}
+                    href={member.link ?? "#"}
+                    target={member.link ? "_blank" : undefined}
+                    rel="noopener noreferrer"
+                    aria-label={`${member.name}, ${member.role}`}
+                    className="tts-cascade"
+                    style={{
+                      transitionDelay: `${i * 0.08}s`,
+                      display: "block",
+                      textDecoration: "none",
+                      borderRadius: 16,
+                      overflow: "hidden",
+                      position: "relative",
+                      aspectRatio: "3/4",
+                      background: "#111113",
+                      border: `1px solid rgba(255,255,255,0.12)`,
+                      transition:
+                        "transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease, border-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLAnchorElement).style.transform =
+                        "translateY(-6px) scale(1.02)";
+                      (e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                        `0 20px 60px ${member.accent}25`;
+                      (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                        `${member.accent}50`;
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLAnchorElement).style.transform =
+                        "translateY(0) scale(1)";
+                      (e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                        "none";
+                      (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                        "rgba(255,255,255,0.12)";
+                    }}
+                  >
+                    {/* Photo */}
+                    {member.headshot ? (
+                      <Image
+                        src={member.headshot}
+                        alt={member.name}
+                        fill
+                        sizes="(max-width: 768px) 50vw, 300px"
+                        style={{
+                          objectFit: "cover",
+                          objectPosition: member.position ?? "center top",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          background: `linear-gradient(135deg, ${member.accent}18 0%, #111113 100%)`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 52,
+                            fontWeight: 900,
+                            color: `${member.accent}40`,
+                          }}
+                        >
+                          {member.initials}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Gradient overlay */}
                     <div
                       style={{
                         position: "absolute",
                         inset: 0,
-                        background: `linear-gradient(135deg, ${member.accent}18 0%, #111113 100%)`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        background:
+                          "linear-gradient(to top, rgba(9,9,11,0.95) 0%, rgba(9,9,11,0.3) 45%, transparent 70%)",
+                      }}
+                    />
+
+                    {/* Accent top bar */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 3,
+                        background: member.accent,
+                      }}
+                    />
+
+                    {/* Name + role pinned to bottom */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        padding: "20px 20px 18px",
                       }}
                     >
-                      <span
+                      <div
                         style={{
-                          fontSize: 52,
-                          fontWeight: 900,
-                          color: `${member.accent}40`,
+                          fontSize: 16,
+                          fontWeight: 800,
+                          color: "#fff",
+                          letterSpacing: "-0.02em",
+                          lineHeight: 1.2,
+                          marginBottom: 4,
                         }}
                       >
-                        {member.initials}
-                      </span>
+                        {member.name}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: member.accent,
+                          letterSpacing: "0.06em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {member.role}
+                      </div>
                     </div>
-                  )}
-
-                  {/* Gradient overlay */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background:
-                        "linear-gradient(to top, rgba(9,9,11,0.95) 0%, rgba(9,9,11,0.3) 45%, transparent 70%)",
-                    }}
-                  />
-
-                  {/* Accent top bar */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: 3,
-                      background: member.accent,
-                    }}
-                  />
-
-                  {/* Name + role pinned to bottom */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      padding: "20px 20px 18px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 800,
-                        color: "#fff",
-                        letterSpacing: "-0.02em",
-                        lineHeight: 1.2,
-                        marginBottom: 4,
-                      }}
-                    >
-                      {member.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: member.accent,
-                        letterSpacing: "0.06em",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      {member.role}
-                    </div>
-                  </div>
-                </a>
-              ))}
+                  </a>
+                ))}
             </div>
 
             {/* Placeholder strip */}
