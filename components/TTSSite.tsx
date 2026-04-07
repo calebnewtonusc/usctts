@@ -924,54 +924,78 @@ export default function TTSSite() {
             pointerEvents: "none",
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              top: "12%",
-              right: "5%",
-              color: "rgba(204,0,0,0.65)",
-              transform: "rotate(20deg)",
-              pointerEvents: "none",
-            }}
-          >
-            <Rocket size={80} />
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              bottom: "18%",
-              left: "5%",
-              color: "rgba(255,255,255,0.40)",
-              transform: "rotate(-14deg)",
-              pointerEvents: "none",
-            }}
-          >
-            <GitBranch size={64} />
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              top: "55%",
-              right: "5%",
-              color: "rgba(255,204,0,0.50)",
-              transform: "rotate(8deg)",
-              pointerEvents: "none",
-            }}
-          >
-            <Trophy size={52} />
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              top: "25%",
-              left: "5%",
-              color: "rgba(255,255,255,0.28)",
-              transform: "rotate(30deg)",
-              pointerEvents: "none",
-            }}
-          >
-            <Globe size={44} />
-          </div>
+          {/* Floating icons — matches real Panel A exactly */}
+          {(
+            [
+              {
+                Icon: Rocket,
+                top: "12%",
+                right: "5%",
+                size: 80,
+                rotate: 20,
+                color: "rgba(204,0,0,0.65)",
+              },
+              {
+                Icon: GitBranch,
+                bottom: "18%",
+                left: "5%",
+                size: 64,
+                rotate: -14,
+                color: "rgba(255,255,255,0.40)",
+              },
+              {
+                Icon: Trophy,
+                top: "55%",
+                right: "5%",
+                size: 52,
+                rotate: 8,
+                color: "rgba(255,204,0,0.50)",
+              },
+              {
+                Icon: Globe,
+                top: "25%",
+                left: "5%",
+                size: 44,
+                rotate: 30,
+                color: "rgba(255,255,255,0.28)",
+              },
+              {
+                Icon: Layers,
+                bottom: "10%",
+                right: "12%",
+                size: 38,
+                rotate: -22,
+                color: "rgba(204,0,0,0.35)",
+              },
+            ] as {
+              Icon: React.FC<{ size: number }>;
+              top?: string;
+              left?: string;
+              right?: string;
+              bottom?: string;
+              size: number;
+              rotate: number;
+              color: string;
+            }[]
+          ).map(
+            ({ Icon, top, left, right, bottom, size, rotate, color }, idx) => (
+              <div
+                key={`ov-icon-${idx}`}
+                className="tts-float-icon"
+                aria-hidden="true"
+                style={{
+                  top,
+                  left,
+                  right,
+                  bottom,
+                  color,
+                  transform: `rotate(${rotate}deg)`,
+                }}
+              >
+                <Icon size={size} />
+              </div>
+            ),
+          )}
           <div
             style={{
               maxWidth: 1200,
@@ -1046,10 +1070,22 @@ export default function TTSSite() {
               }}
             >
               {[
-                { stat: "Week 1", label: "You ship something" },
-                { stat: "Real", label: "Client work every semester" },
-                { stat: "Yours", label: "Everything you build" },
-              ].map(({ stat, label }, i) => (
+                {
+                  stat: "Week 1",
+                  label: "You ship something",
+                  sub: "Building track members deploy a live product in the first session. Not the end of the semester.",
+                },
+                {
+                  stat: "Real",
+                  label: "Client work every semester",
+                  sub: "Live engagements with actual organizations. Consulting track delivers real decks.",
+                },
+                {
+                  stat: "Yours",
+                  label: "Everything you build",
+                  sub: "Goes on your resume. Never stays in a classroom.",
+                },
+              ].map(({ stat, label, sub }, i) => (
                 <div
                   key={label}
                   style={{
@@ -1072,12 +1108,24 @@ export default function TTSSite() {
                   </div>
                   <div
                     style={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: "#d4d4d8",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: "#CC0000",
+                      marginBottom: 6,
+                      letterSpacing: "0.02em",
                     }}
                   >
                     {label}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      color: "#71717a",
+                      lineHeight: 1.6,
+                      maxWidth: 320,
+                    }}
+                  >
+                    {sub}
                   </div>
                 </div>
               ))}
