@@ -718,7 +718,7 @@ function ScanLineDivider({
   );
 }
 
-// ── Dot-row divider — shifting dot matrix ─────────────────────────────────────
+// ── Dot-row divider — wave of light travels across static dots ────────────────
 function DotRowDivider({
   topColor = "#09090b",
   bottomColor = "#09090b",
@@ -726,27 +726,29 @@ function DotRowDivider({
   topColor?: string;
   bottomColor?: string;
 }) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  // GAP drives the seamless loop: SVG is 2×GAP wider than needed,
-  // offset wraps at GAP so the dot pattern tiles seamlessly
+  const gradRef = useRef<SVGLinearGradientElement>(null);
   const COLS = 70;
   const ROWS = 5;
   const GAP = 28;
   const H = 88;
-  const W = (COLS + 2) * GAP;
+  const W = (COLS + 2) * GAP; // 2016px
 
   useEffect(() => {
     const handle = () => {
-      if (!svgRef.current) return;
-      const off = (window.scrollY * 0.35) % GAP;
-      svgRef.current.style.transform = `translateX(${-off}px)`;
+      if (!gradRef.current) return;
+      // Bright zone travels rightward as user scrolls — dots stay static
+      const x1 = window.scrollY * 0.45 - 300;
+      const x2 = x1 + 1000;
+      gradRef.current.setAttribute("x1", String(x1));
+      gradRef.current.setAttribute("x2", String(x2));
     };
     window.addEventListener("scroll", handle, { passive: true });
     handle();
     return () => window.removeEventListener("scroll", handle);
   }, []);
 
-  const dots: React.ReactNode[] = [];
+  type DotDatum = { x: number; y: number; fill: string; r: number };
+  const dotData: DotDatum[] = [];
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS + 2; col++) {
       const x = col * GAP;
@@ -755,17 +757,18 @@ function DotRowDivider({
       const isRed = sum % 7 === 0;
       const isGold = sum % 13 === 0;
       const isBright = sum % 19 === 0;
-      const fill = isRed
-        ? "rgba(204,0,0,0.75)"
-        : isGold
-          ? "rgba(255,204,0,0.50)"
-          : isBright
-            ? "rgba(255,255,255,0.28)"
-            : "rgba(255,255,255,0.09)";
-      const r = isRed ? 3 : isGold ? 2.5 : isBright ? 2 : 1.5;
-      dots.push(
-        <circle key={`${row}-${col}`} cx={x} cy={y} r={r} fill={fill} />,
-      );
+      dotData.push({
+        x,
+        y,
+        fill: isRed
+          ? "#CC0000"
+          : isGold
+            ? "#FFCC00"
+            : isBright
+              ? "#fff"
+              : "rgba(255,255,255,0.55)",
+        r: isRed ? 3 : isGold ? 2.5 : isBright ? 2 : 1.5,
+      });
     }
   }
 
@@ -781,25 +784,49 @@ function DotRowDivider({
       }}
     >
       <svg
-        ref={svgRef}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          willChange: "transform",
-        }}
         width={W}
         height={H}
         viewBox={`0 0 ${W} ${H}`}
+        style={{ position: "absolute", top: 0, left: 0 }}
       >
-        {dots}
+        <defs>
+          <linearGradient
+            id="dot-wave-grad"
+            ref={gradRef}
+            gradientUnits="userSpaceOnUse"
+            x1="-300"
+            y1="0"
+            x2="700"
+            y2="0"
+          >
+            <stop offset="0%" stopColor="black" />
+            <stop offset="18%" stopColor="white" />
+            <stop offset="82%" stopColor="white" />
+            <stop offset="100%" stopColor="black" />
+          </linearGradient>
+          <mask id="dot-wave-mask">
+            <rect x="0" y="0" width={W} height={H} fill="url(#dot-wave-grad)" />
+          </mask>
+        </defs>
+        {/* Always-visible dim base — dots exist even outside the wave */}
+        <g opacity="0.18">
+          {dotData.map((d, i) => (
+            <circle key={`b${i}`} cx={d.x} cy={d.y} r={d.r} fill={d.fill} />
+          ))}
+        </g>
+        {/* Bright lit layer — only visible where wave mask passes */}
+        <g mask="url(#dot-wave-mask)">
+          {dotData.map((d, i) => (
+            <circle key={`f${i}`} cx={d.x} cy={d.y} r={d.r} fill={d.fill} />
+          ))}
+        </g>
       </svg>
-      {/* Left/right fade so dots dissolve at edges rather than hard-clipping */}
+      {/* Left/right edge fades */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: `linear-gradient(90deg, ${topColor} 0%, transparent 8%, transparent 92%, ${bottomColor} 100%)`,
+          background: `linear-gradient(90deg, ${topColor} 0%, transparent 6%, transparent 94%, ${bottomColor} 100%)`,
           pointerEvents: "none",
         }}
       />
