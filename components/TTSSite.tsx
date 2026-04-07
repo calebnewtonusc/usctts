@@ -915,259 +915,248 @@ export default function TTSSite() {
         }}
       />
 
-      {/* Panel A fixed overlay — slides in from right as tracks exit, then crossfades to reveal Panel A */}
-      {trackExitProg > 0 && (
-        <div
-          aria-hidden="true"
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 200,
-            background: "#0d0d10",
-            display: "flex",
-            alignItems: "center",
-            overflow: "hidden",
-            transform: `translateX(${(1 - trackExitProg) * 100}%)`,
-            opacity: Math.max(0, 1 - revealProgress / 0.06),
-            pointerEvents: "none",
-          }}
-        >
-          {/* Floating icons — frozen at the revealProgress=0 position of the real Panel A
+      {/* Panel A fixed overlay — always in DOM (no mount flash), slides in from right as tracks exit */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 200,
+          background: "#0d0d10",
+          display: "flex",
+          alignItems: "center",
+          overflow: "hidden",
+          transform: `translateX(${(1 - trackExitProg) * 100}%)`,
+          opacity:
+            trackExitProg > 0 ? Math.max(0, 1 - revealProgress / 0.15) : 0,
+          pointerEvents: "none",
+          willChange: "transform, opacity",
+        }}
+      >
+        {/* Floating icons — frozen at the revealProgress=0 position of the real Panel A
               drift = 0 - 0.3 = -0.3; yOff = drift * speed * 800; xOff = drift * speedx * 800 */}
-          {(
-            [
-              {
-                Icon: Rocket,
-                top: "12%",
-                right: "5%",
-                size: 80,
-                rotate: 20,
-                color: "rgba(204,0,0,0.65)",
-                yOff: -24,
-                xOff: 7.2,
-              },
-              {
-                Icon: GitBranch,
-                bottom: "18%",
-                left: "5%",
-                size: 64,
-                rotate: -14,
-                color: "rgba(255,255,255,0.40)",
-                yOff: -16.8,
-                xOff: -4.8,
-              },
-              {
-                Icon: Trophy,
-                top: "55%",
-                right: "5%",
-                size: 52,
-                rotate: 8,
-                color: "rgba(255,204,0,0.50)",
-                yOff: -16.8,
-                xOff: 4.8,
-              },
-              {
-                Icon: Globe,
-                top: "25%",
-                left: "5%",
-                size: 44,
-                rotate: 30,
-                color: "rgba(255,255,255,0.28)",
-                yOff: -12,
-                xOff: -4.8,
-              },
-              {
-                Icon: Layers,
-                bottom: "10%",
-                right: "12%",
-                size: 38,
-                rotate: -22,
-                color: "rgba(204,0,0,0.35)",
-                yOff: -12,
-                xOff: 4.8,
-              },
-            ] as {
-              Icon: React.FC<{ size: number }>;
-              top?: string;
-              left?: string;
-              right?: string;
-              bottom?: string;
-              size: number;
-              rotate: number;
-              color: string;
-              yOff: number;
-              xOff: number;
-            }[]
-          ).map(
-            (
-              {
-                Icon,
+        {(
+          [
+            {
+              Icon: Rocket,
+              top: "12%",
+              right: "5%",
+              size: 80,
+              rotate: 20,
+              color: "rgba(204,0,0,0.65)",
+              yOff: -24,
+              xOff: 7.2,
+            },
+            {
+              Icon: GitBranch,
+              bottom: "18%",
+              left: "5%",
+              size: 64,
+              rotate: -14,
+              color: "rgba(255,255,255,0.40)",
+              yOff: -16.8,
+              xOff: -4.8,
+            },
+            {
+              Icon: Trophy,
+              top: "55%",
+              right: "5%",
+              size: 52,
+              rotate: 8,
+              color: "rgba(255,204,0,0.50)",
+              yOff: -16.8,
+              xOff: 4.8,
+            },
+            {
+              Icon: Globe,
+              top: "25%",
+              left: "5%",
+              size: 44,
+              rotate: 30,
+              color: "rgba(255,255,255,0.28)",
+              yOff: -12,
+              xOff: -4.8,
+            },
+            {
+              Icon: Layers,
+              bottom: "10%",
+              right: "12%",
+              size: 38,
+              rotate: -22,
+              color: "rgba(204,0,0,0.35)",
+              yOff: -12,
+              xOff: 4.8,
+            },
+          ] as {
+            Icon: React.FC<{ size: number }>;
+            top?: string;
+            left?: string;
+            right?: string;
+            bottom?: string;
+            size: number;
+            rotate: number;
+            color: string;
+            yOff: number;
+            xOff: number;
+          }[]
+        ).map(
+          (
+            { Icon, top, left, right, bottom, size, rotate, color, yOff, xOff },
+            idx,
+          ) => (
+            <div
+              key={`ov-icon-${idx}`}
+              className="tts-float-icon"
+              aria-hidden="true"
+              style={{
                 top,
                 left,
                 right,
                 bottom,
-                size,
-                rotate,
                 color,
-                yOff,
-                xOff,
-              },
-              idx,
-            ) => (
-              <div
-                key={`ov-icon-${idx}`}
-                className="tts-float-icon"
-                aria-hidden="true"
-                style={{
-                  top,
-                  left,
-                  right,
-                  bottom,
-                  color,
-                  transform: `translateY(${yOff}px) translateX(${xOff}px) rotate(${rotate}deg)`,
-                }}
-              >
-                <Icon size={size} />
-              </div>
-            ),
-          )}
-          <div
-            className="tts-panel-b-grid tts-panel-b-inner"
-            style={{
-              maxWidth: 1200,
-              margin: "0 auto",
-              width: "100%",
-              padding: "0 40px",
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 80,
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <p
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#CC0000",
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  marginBottom: 20,
-                }}
-              >
-                Why it works
-              </p>
-              <h2
-                style={{
-                  fontSize: "clamp(32px, 4vw, 60px)",
-                  fontWeight: 900,
-                  color: "#fff",
-                  letterSpacing: "-0.03em",
-                  lineHeight: 1.0,
-                  marginBottom: 24,
-                }}
-              >
-                Real work.
-                <br />
-                <span style={{ color: "#CC0000" }}>
-                  Not{" "}
-                  <span
-                    style={{
-                      color: "transparent",
-                      WebkitTextStroke: "2px #fff",
-                    }}
-                  >
-                    just
-                  </span>{" "}
-                  classes.
-                </span>
-              </h2>
-              <p
-                style={{
-                  fontSize: 15,
-                  color: "#71717a",
-                  lineHeight: 1.8,
-                  maxWidth: 400,
-                }}
-              >
-                Build the portfolio and skills here, then use them to land SEP,
-                BTG, BPX, or whatever comes next. TTS is the rep room those
-                clubs assume you already have.
-              </p>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 0,
-                borderLeft: "1px solid rgba(255,255,255,0.12)",
-                paddingLeft: 48,
+                transform: `translateY(${yOff}px) translateX(${xOff}px) rotate(${rotate}deg)`,
               }}
             >
-              {[
-                {
-                  stat: "Week 1",
-                  label: "You ship something",
-                  sub: "Building track members deploy a live product in the first session. Not the end of the semester.",
-                },
-                {
-                  stat: "Real",
-                  label: "Client work every semester",
-                  sub: "Live engagements with actual organizations. Consulting track delivers real decks.",
-                },
-                {
-                  stat: "Yours",
-                  label: "Everything you build",
-                  sub: "Goes on your resume. Never stays in a classroom.",
-                },
-              ].map(({ stat, label, sub }, i) => (
-                <div
-                  key={label}
+              <Icon size={size} />
+            </div>
+          ),
+        )}
+        <div
+          className="tts-panel-b-grid tts-panel-b-inner"
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+            width: "100%",
+            padding: "0 40px",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 80,
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <p
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#CC0000",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                marginBottom: 20,
+              }}
+            >
+              Why it works
+            </p>
+            <h2
+              style={{
+                fontSize: "clamp(32px, 4vw, 60px)",
+                fontWeight: 900,
+                color: "#fff",
+                letterSpacing: "-0.03em",
+                lineHeight: 1.0,
+                marginBottom: 24,
+              }}
+            >
+              Real work.
+              <br />
+              <span style={{ color: "#CC0000" }}>
+                Not{" "}
+                <span
                   style={{
-                    padding: "28px 0",
-                    borderBottom:
-                      i < 2 ? "1px solid rgba(255,255,255,0.1)" : "none",
+                    color: "transparent",
+                    WebkitTextStroke: "2px #fff",
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: "clamp(40px, 5vw, 64px)",
-                      fontWeight: 900,
-                      color: "#fff",
-                      letterSpacing: "-0.04em",
-                      lineHeight: 1,
-                      marginBottom: 6,
-                    }}
-                  >
-                    {stat}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: "#CC0000",
-                      marginBottom: 6,
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    {label}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      color: "#71717a",
-                      lineHeight: 1.6,
-                      maxWidth: 320,
-                    }}
-                  >
-                    {sub}
-                  </div>
+                  just
+                </span>{" "}
+                classes.
+              </span>
+            </h2>
+            <p
+              style={{
+                fontSize: 15,
+                color: "#71717a",
+                lineHeight: 1.8,
+                maxWidth: 400,
+              }}
+            >
+              Build the portfolio and skills here, then use them to land SEP,
+              BTG, BPX, or whatever comes next. TTS is the rep room those clubs
+              assume you already have.
+            </p>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 0,
+              borderLeft: "1px solid rgba(255,255,255,0.12)",
+              paddingLeft: 48,
+            }}
+          >
+            {[
+              {
+                stat: "Week 1",
+                label: "You ship something",
+                sub: "Building track members deploy a live product in the first session. Not the end of the semester.",
+              },
+              {
+                stat: "Real",
+                label: "Client work every semester",
+                sub: "Live engagements with actual organizations. Consulting track delivers real decks.",
+              },
+              {
+                stat: "Yours",
+                label: "Everything you build",
+                sub: "Goes on your resume. Never stays in a classroom.",
+              },
+            ].map(({ stat, label, sub }, i) => (
+              <div
+                key={label}
+                style={{
+                  padding: "28px 0",
+                  borderBottom:
+                    i < 2 ? "1px solid rgba(255,255,255,0.1)" : "none",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "clamp(40px, 5vw, 64px)",
+                    fontWeight: 900,
+                    color: "#fff",
+                    letterSpacing: "-0.04em",
+                    lineHeight: 1,
+                    marginBottom: 6,
+                  }}
+                >
+                  {stat}
                 </div>
-              ))}
-            </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "#CC0000",
+                    marginBottom: 6,
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  {label}
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: "#71717a",
+                    lineHeight: 1.6,
+                    maxWidth: 320,
+                  }}
+                >
+                  {sub}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      )}
+      </div>
 
       <div
         className="tts-main"
