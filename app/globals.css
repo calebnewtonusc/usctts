@@ -677,3 +677,19 @@ video[id^="webgazer"] {
 .tts-page-enter {
   animation: tts-page-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+/* Page transition — fade down out */
+@keyframes tts-page-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+.tts-page-exit {
+  animation: tts-page-out 0.35s cubic-bezier(0.4, 0, 1, 1) both;
+  pointer-events: none;
+}

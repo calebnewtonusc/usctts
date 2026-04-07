@@ -340,7 +340,7 @@ function SplitText({
   );
 }
 
-// ── Ocean wave divider — animated SVG ─────────────────────────────────────────
+// ── Ocean wave divider — scroll-driven SVG ────────────────────────────────────
 function WaveDivider({
   reverse = false,
   speed = 10,
@@ -354,6 +354,20 @@ function WaveDivider({
   topColor?: string;
   bottomColor?: string;
 }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    const scrollRate = (reverse ? -1 : 1) * (0.08 / speed) * 10;
+    const handle = () => {
+      if (!svgRef.current) return;
+      const offset = (((window.scrollY * scrollRate) % 2560) + 2560) % 2560;
+      svgRef.current.style.transform = `translateX(${-offset}px)`;
+    };
+    window.addEventListener("scroll", handle, { passive: true });
+    handle();
+    return () => window.removeEventListener("scroll", handle);
+  }, [reverse, speed]);
+
   const h = 80;
   const cy = 40;
   const A = amplitude;
@@ -387,9 +401,9 @@ function WaveDivider({
       }}
     >
       <svg
-        className={`tts-ocean-track${reverse ? " tts-ocean-reverse" : ""}`}
+        ref={svgRef}
+        className="tts-ocean-track"
         style={{
-          animationDuration: `${speed}s`,
           position: "absolute",
           top: 0,
           left: 0,
@@ -644,17 +658,28 @@ export default function TTSSite() {
     return () => window.removeEventListener("scroll", handle);
   }, []);
 
-  // Floating parallax icons — Y + X drift, preserves rotation
+  // Floating parallax icons — Y + X drift driven by absolute scrollY so icons
+  // animate even during sticky-section scroll phases where getBoundingClientRect
+  // stays constant (viewport position locked).
   useEffect(() => {
     const handle = () => {
+      const scrollY = window.scrollY;
+      const winH = window.innerHeight;
       floatRefs.current.forEach((el) => {
         if (!el) return;
         const speedY = parseFloat(el.dataset.speed ?? "0.08");
         const speedX = parseFloat(el.dataset.speedx ?? "0");
         const rotate = el.dataset.rotate ?? "0";
-        const rect = el.getBoundingClientRect();
+        // Cache each element's absolute page-Y once (at the scroll position of
+        // first render, before any transforms). This makes parallax work even
+        // inside sticky containers where getBoundingClientRect is constant.
+        if (!el.dataset.initialPageY) {
+          const rect = el.getBoundingClientRect();
+          el.dataset.initialPageY = String(rect.top + scrollY);
+        }
+        const initialPageY = parseFloat(el.dataset.initialPageY);
         const centerOffset =
-          rect.top + rect.height / 2 - window.innerHeight / 2;
+          initialPageY + el.offsetHeight / 2 - (scrollY + winH / 2);
         const yShift = centerOffset * speedY;
         const xShift = centerOffset * speedX;
         el.style.transform = `translateY(${yShift}px) translateX(${xShift}px) rotate(${rotate}deg)`;
@@ -723,6 +748,11 @@ export default function TTSSite() {
   );
   const wordsMorphing = heroProgress > 0.62;
   const heroContentShown = heroProgress > 0.76;
+  // After content appears, heading shrinks away as left block grows
+  const heroGrowProgress = Math.max(
+    0,
+    Math.min(1, (heroProgress - 0.86) / 0.14),
+  );
   const h1WrapperW = h1WrapperRef.current?.offsetWidth ?? 0;
   const heroContainerW = heroContentRef.current?.clientWidth ?? 0;
   const slideX =
@@ -1103,7 +1133,13 @@ export default function TTSSite() {
                 ref={h1WrapperRef}
                 style={{
                   display: "inline-block",
-                  transform: `translateX(${slideX}px)`,
+                  transform: `translateX(${slideX + heroGrowProgress * 120}px) scale(${1 - heroGrowProgress * 0.18})`,
+                  opacity: 1 - heroGrowProgress,
+                  transformOrigin: "right center",
+                  transition:
+                    heroGrowProgress > 0
+                      ? "none"
+                      : "opacity 0.55s cubic-bezier(0.16,1,0.3,1)",
                 }}
               >
                 {/* Morph h1 */}
@@ -1125,7 +1161,8 @@ export default function TTSSite() {
                     <span
                       style={{
                         display: "block",
-                        color: "#fff",
+                        color: "transparent",
+                        WebkitTextStroke: "2px #fff",
                         opacity: wordsMorphing ? 0 : 1,
                         transform: wordsMorphing
                           ? "translateY(0.12em) scale(0.96)"
@@ -1199,7 +1236,8 @@ export default function TTSSite() {
                     <span
                       style={{
                         display: "block",
-                        color: "#CC0000",
+                        color: "transparent",
+                        WebkitTextStroke: "2px #fff",
                         opacity: wordsMorphing ? 0 : word3Shown ? 1 : 0,
                         transform: wordsMorphing
                           ? "translateY(-0.12em) scale(0.96)"
@@ -1240,13 +1278,18 @@ export default function TTSSite() {
                   position: "absolute",
                   top: 0,
                   left: 40,
-                  maxWidth: 480,
+                  maxWidth: heroContentShown
+                    ? `${480 + heroGrowProgress * 280}px`
+                    : 480,
                   opacity: heroContentShown ? 1 : 0,
                   transform: heroContentShown
-                    ? "translateY(0)"
+                    ? `translateY(0) scale(${1 + heroGrowProgress * 0.12})`
                     : "translateY(20px)",
+                  transformOrigin: "left top",
                   transition:
-                    "opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1)",
+                    heroGrowProgress > 0
+                      ? "none"
+                      : "opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1)",
                   pointerEvents: heroContentShown ? "auto" : "none",
                 }}
               >
@@ -1485,11 +1528,12 @@ export default function TTSSite() {
               maxWidth: 1200,
               margin: "0 auto",
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 52,
+              gridTemplateColumns: "55fr 45fr",
+              gap: 80,
               alignItems: "start",
             }}
           >
+            {/* Left column: headline + body */}
             <div>
               <h2
                 style={{
@@ -1534,7 +1578,7 @@ export default function TTSSite() {
                   fontSize: 19,
                   color: "#d4d4d8",
                   lineHeight: 1.8,
-                  marginBottom: 36,
+                  marginBottom: 0,
                   transitionDelay: "0.12s",
                 }}
               >
@@ -1543,58 +1587,78 @@ export default function TTSSite() {
                 Show up once and get value. Or join four project teams and go
                 deep. Both work.
               </p>
-              <p
-                className="tts-fade"
-                style={{
-                  fontSize: 17,
-                  color: "#a1a1aa",
-                  lineHeight: 1.85,
-                  marginBottom: 44,
-                  transitionDelay: "0.16s",
-                  fontStyle: "italic",
-                  borderLeft: "3px solid #CC0000",
-                  paddingLeft: 20,
-                }}
-              >
-                &ldquo;Think the international student who can&apos;t land an
-                interview. Or the pre-med with no idea how AI is reshaping their
-                field. We&apos;re here for that student, and building them into
-                someone who lands their dream program.&rdquo;
-              </p>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Right column: pull-quote card + fact pills */}
+            <div
+              className="tts-fade"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 20,
+                transitionDelay: "0.16s",
+              }}
+            >
               <div
-                className="tts-curtain"
                 style={{
-                  position: "relative",
-                  borderRadius: 16,
-                  overflow: "hidden",
-                  aspectRatio: "16/10",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 20,
+                  padding: 32,
                 }}
               >
-                <Image
-                  src="/img/ttsgroup.png"
-                  alt="TTS members at USC"
-                  fill
-                  style={{ objectFit: "cover", objectPosition: "center 30%" }}
-                />
                 <div
                   style={{
-                    position: "absolute",
-                    inset: 0,
-                    background:
-                      "linear-gradient(to top, rgba(9,9,11,0.8) 0%, transparent 50%)",
+                    fontSize: 64,
+                    color: "#CC0000",
+                    lineHeight: 0.8,
+                    fontFamily: "Georgia, serif",
+                    fontWeight: 900,
+                    marginBottom: 16,
+                    userSelect: "none",
                   }}
-                />
-                <div style={{ position: "absolute", bottom: 18, left: 20 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>
-                    TTS · Spring 2025
-                  </div>
-                  <div style={{ fontSize: 12, color: "#a1a1aa", marginTop: 2 }}>
-                    University of Southern California
-                  </div>
+                >
+                  &ldquo;
                 </div>
+                <p
+                  style={{
+                    fontSize: 18,
+                    fontStyle: "italic",
+                    color: "#d4d4d8",
+                    lineHeight: 1.7,
+                    margin: 0,
+                  }}
+                >
+                  Think the international student who can&apos;t land an
+                  interview. Or the pre-med with no idea how AI is reshaping
+                  their field. We&apos;re here for that student, and building
+                  them into someone who lands their dream program.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 8,
+                }}
+              >
+                {["Any major", "Any year", "Zero gatekeeping"].map((fact) => (
+                  <span
+                    key={fact}
+                    style={{
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: 999,
+                      padding: "6px 16px",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "#a1a1aa",
+                    }}
+                  >
+                    {fact}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
@@ -1635,7 +1699,7 @@ export default function TTSSite() {
               position: "sticky",
               top: 0,
               height: "100vh",
-              overflow: "hidden",
+              overflow: "visible",
               willChange: "transform",
             }}
           >
@@ -1683,7 +1747,11 @@ export default function TTSSite() {
                 <SplitText
                   text="track."
                   baseDelay={0.18}
-                  style={{ display: "block", color: "#CC0000" }}
+                  style={{
+                    display: "block",
+                    color: "transparent",
+                    WebkitTextStroke: "3px #fff",
+                  }}
                 />
               </h2>
               <p
@@ -1964,6 +2032,183 @@ export default function TTSSite() {
                 ),
               )}
             </div>
+
+            {/* Panel A proxy — sits at left:100% of the sticky container so it slides into view as trackStickyRef translates left */}
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                left: "100%",
+                top: 0,
+                width: "100%",
+                height: "100%",
+                background: "#0d0d10",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: "12%",
+                  right: "5%",
+                  color: "rgba(204,0,0,0.65)",
+                  transform: "rotate(20deg)",
+                  pointerEvents: "none",
+                }}
+              >
+                <Rocket size={80} />
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "18%",
+                  left: "5%",
+                  color: "rgba(255,255,255,0.40)",
+                  transform: "rotate(-14deg)",
+                  pointerEvents: "none",
+                }}
+              >
+                <GitBranch size={64} />
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  top: "55%",
+                  right: "5%",
+                  color: "rgba(255,204,0,0.50)",
+                  transform: "rotate(8deg)",
+                  pointerEvents: "none",
+                }}
+              >
+                <Trophy size={52} />
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  top: "25%",
+                  left: "5%",
+                  color: "rgba(255,255,255,0.28)",
+                  transform: "rotate(30deg)",
+                  pointerEvents: "none",
+                }}
+              >
+                <Globe size={44} />
+              </div>
+              <div
+                style={{
+                  maxWidth: 1200,
+                  width: "100%",
+                  padding: "0 40px",
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 80,
+                  alignItems: "center",
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              >
+                <div>
+                  <p
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#CC0000",
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      marginBottom: 20,
+                    }}
+                  >
+                    Why it works
+                  </p>
+                  <h2
+                    style={{
+                      fontSize: "clamp(32px, 4vw, 60px)",
+                      fontWeight: 900,
+                      color: "#fff",
+                      letterSpacing: "-0.03em",
+                      lineHeight: 1.0,
+                      marginBottom: 24,
+                    }}
+                  >
+                    Real work.
+                    <br />
+                    <span style={{ color: "#CC0000" }}>
+                      Not{" "}
+                      <span
+                        style={{
+                          color: "transparent",
+                          WebkitTextStroke: "2px #fff",
+                        }}
+                      >
+                        just
+                      </span>{" "}
+                      classes.
+                    </span>
+                  </h2>
+                  <p
+                    style={{
+                      fontSize: 15,
+                      color: "#71717a",
+                      lineHeight: 1.8,
+                      maxWidth: 400,
+                    }}
+                  >
+                    Build the portfolio and skills here, then use them to land
+                    SEP, BTG, BPX, or whatever comes next. TTS is the rep room
+                    those clubs assume you already have.
+                  </p>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0,
+                    borderLeft: "1px solid rgba(255,255,255,0.12)",
+                    paddingLeft: 48,
+                  }}
+                >
+                  {[
+                    { stat: "Week 1", label: "You ship something" },
+                    { stat: "Real", label: "Client work every semester" },
+                    { stat: "Yours", label: "Everything you build" },
+                  ].map(({ stat, label }, i) => (
+                    <div
+                      key={label}
+                      style={{
+                        padding: "28px 0",
+                        borderBottom:
+                          i < 2 ? "1px solid rgba(255,255,255,0.1)" : "none",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "clamp(40px, 5vw, 64px)",
+                          fontWeight: 900,
+                          color: "#fff",
+                          letterSpacing: "-0.04em",
+                          lineHeight: 1,
+                          marginBottom: 6,
+                        }}
+                      >
+                        {stat}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 600,
+                          color: "#d4d4d8",
+                        }}
+                      >
+                        {label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -2137,7 +2382,18 @@ export default function TTSSite() {
                   >
                     Real work.
                     <br />
-                    <span style={{ color: "#CC0000" }}>Not just classes.</span>
+                    <span style={{ color: "#CC0000" }}>
+                      Not{" "}
+                      <span
+                        style={{
+                          color: "transparent",
+                          WebkitTextStroke: "2px #fff",
+                        }}
+                      >
+                        just
+                      </span>{" "}
+                      classes.
+                    </span>
                   </h2>
                   <p
                     style={{
@@ -4262,7 +4518,8 @@ export default function TTSSite() {
                       fontWeight: 900,
                       lineHeight: 1,
                       textAlign: "center",
-                      color: "rgba(255,255,255,0.92)",
+                      color: "transparent",
+                      WebkitTextStroke: "3px rgba(255,255,255,0.85)",
                       letterSpacing: 0,
                     }}
                   >
@@ -4381,216 +4638,157 @@ export default function TTSSite() {
                   <div
                     className="tts-join-phase3-grid"
                     style={{
-                      maxWidth: 1200,
+                      maxWidth: 680,
                       width: "100%",
-                      display: "grid",
-                      gridTemplateColumns: "1fr minmax(300px, 420px)",
-                      gap: 80,
-                      alignItems: "start",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      textAlign: "center",
                     }}
                   >
-                    <div>
-                      <h2
+                    <h2
+                      style={{
+                        fontSize: "clamp(56px, 8vw, 100px)",
+                        fontWeight: 900,
+                        color: "#fff",
+                        letterSpacing: "-0.03em",
+                        lineHeight: 1.05,
+                        marginBottom: 24,
+                      }}
+                    >
+                      <span style={{ display: "block" }}>Start this</span>
+                      <span style={{ display: "block", color: "#CC0000" }}>
+                        semester.
+                      </span>
+                    </h2>
+                    <p
+                      style={{
+                        fontSize: 17,
+                        color: "#d4d4d8",
+                        lineHeight: 1.8,
+                        marginBottom: 40,
+                        maxWidth: 560,
+                        margin: "0 auto 40px",
+                      }}
+                    >
+                      This is the rep room that SEP, BTG, and BPX assume you
+                      already have. Show up with nothing and leave with a
+                      portfolio, a network, and a real deliverable.
+                    </p>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        gap: 12,
+                        marginBottom: 40,
+                        justifyContent: "center",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <a
+                        href="/apply"
                         style={{
-                          fontSize: "clamp(36px, 5vw, 72px)",
-                          fontWeight: 900,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
+                          padding: "14px 28px",
+                          borderRadius: 12,
+                          background: "#CC0000",
                           color: "#fff",
-                          letterSpacing: "-0.03em",
-                          lineHeight: 1.1,
-                          marginBottom: 20,
+                          fontSize: 14,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          transition: "all 0.15s",
+                          boxShadow: "0 4px 20px rgba(204,0,0,0.25)",
+                          textDecoration: "none",
+                          width: "auto",
+                        }}
+                        onMouseEnter={(e) => {
+                          (
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.background = "#aa0000";
+                          (
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.transform = "translateY(-1px)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.background = "#CC0000";
+                          (
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.transform = "translateY(0)";
                         }}
                       >
-                        <span style={{ display: "block" }}>Start this</span>
-                        <span style={{ display: "block", color: "#CC0000" }}>
-                          semester.
-                        </span>
-                      </h2>
-                      <p
-                        style={{
-                          fontSize: 16,
-                          color: "#d4d4d8",
-                          lineHeight: 1.8,
-                          marginBottom: 44,
-                          maxWidth: 480,
-                        }}
-                      >
-                        This is the rep room that SEP, BTG, and BPX assume you
-                        already have. Show up with nothing and leave with a
-                        portfolio, a network, and a real deliverable.
-                      </p>
+                        Join TTS
+                        <ArrowRight size={15} />
+                      </a>
 
-                      <div
+                      <a
+                        href="/partner"
                         style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 12,
-                          marginBottom: 48,
-                          maxWidth: 420,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
+                          padding: "14px 28px",
+                          borderRadius: 12,
+                          background: "transparent",
+                          border: "1px solid rgba(255,255,255,0.2)",
+                          color: "#e4e4e7",
+                          fontSize: 14,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          transition: "all 0.15s",
+                          textDecoration: "none",
+                          width: "auto",
+                        }}
+                        onMouseEnter={(e) => {
+                          (
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.borderColor = "rgba(255,255,255,0.4)";
+                          (e.currentTarget as HTMLAnchorElement).style.color =
+                            "#fff";
+                          (
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.background = "rgba(255,255,255,0.06)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.borderColor = "rgba(255,255,255,0.2)";
+                          (e.currentTarget as HTMLAnchorElement).style.color =
+                            "#e4e4e7";
+                          (
+                            e.currentTarget as HTMLAnchorElement
+                          ).style.background = "transparent";
                         }}
                       >
-                        <a
-                          href="/apply"
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: "16px 20px",
-                            borderRadius: 12,
-                            background: "#CC0000",
-                            color: "#fff",
-                            fontSize: 14,
-                            fontWeight: 600,
-                            cursor: "pointer",
-                            transition: "all 0.15s",
-                            boxShadow: "0 4px 20px rgba(204,0,0,0.25)",
-                            textDecoration: "none",
-                          }}
-                          onMouseEnter={(e) => {
-                            (
-                              e.currentTarget as HTMLAnchorElement
-                            ).style.background = "#aa0000";
-                            (
-                              e.currentTarget as HTMLAnchorElement
-                            ).style.transform = "translateY(-1px)";
-                          }}
-                          onMouseLeave={(e) => {
-                            (
-                              e.currentTarget as HTMLAnchorElement
-                            ).style.background = "#CC0000";
-                            (
-                              e.currentTarget as HTMLAnchorElement
-                            ).style.transform = "translateY(0)";
-                          }}
-                        >
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 700 }}>
-                              Join TTS
-                            </div>
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: "rgba(255,255,255,0.7)",
-                                marginTop: 1,
-                              }}
-                            >
-                              Short form · Any major, any year
-                            </div>
-                          </div>
-                          <ArrowRight size={16} />
-                        </a>
-
-                        <a
-                          href="/partner"
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: "16px 20px",
-                            borderRadius: 12,
-                            background: "transparent",
-                            border: "1px solid rgba(255,255,255,0.15)",
-                            color: "#e4e4e7",
-                            fontSize: 14,
-                            fontWeight: 600,
-                            cursor: "pointer",
-                            transition: "all 0.15s",
-                            textDecoration: "none",
-                          }}
-                          onMouseEnter={(e) => {
-                            (
-                              e.currentTarget as HTMLAnchorElement
-                            ).style.borderColor = "rgba(255,255,255,0.3)";
-                            (e.currentTarget as HTMLAnchorElement).style.color =
-                              "#fff";
-                            (
-                              e.currentTarget as HTMLAnchorElement
-                            ).style.background = "rgba(255,255,255,0.04)";
-                          }}
-                          onMouseLeave={(e) => {
-                            (
-                              e.currentTarget as HTMLAnchorElement
-                            ).style.borderColor = "rgba(255,255,255,0.15)";
-                            (e.currentTarget as HTMLAnchorElement).style.color =
-                              "#e4e4e7";
-                            (
-                              e.currentTarget as HTMLAnchorElement
-                            ).style.background = "transparent";
-                          }}
-                        >
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 700 }}>
-                              Partner with TTS
-                            </div>
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: "#a1a1aa",
-                                marginTop: 1,
-                              }}
-                            >
-                              Clients, sponsors, and organizations
-                            </div>
-                          </div>
-                          <ArrowRight size={16} />
-                        </a>
-                      </div>
+                        Partner with TTS
+                      </a>
                     </div>
 
                     {/* Email capture */}
-                    <div>
+                    <div style={{ width: "100%", maxWidth: 420 }}>
                       <div
                         style={{
-                          background: "#111113",
-                          borderRadius: 16,
-                          border: "1px solid rgba(255,255,255,0.12)",
-                          padding: "32px",
+                          background: "rgba(255,255,255,0.04)",
+                          borderRadius: 20,
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          padding: "24px 28px",
                         }}
                       >
-                        <div
+                        <p
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 10,
-                            marginBottom: 20,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: "#a1a1aa",
+                            marginBottom: 14,
+                            textAlign: "left",
                           }}
                         >
-                          <div
-                            style={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: 10,
-                              background: "rgba(204,0,0,0.1)",
-                              border: "1px solid rgba(204,0,0,0.2)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Mail size={16} color="#CC0000" />
-                          </div>
-                          <div>
-                            <h3
-                              style={{
-                                fontSize: 14,
-                                fontWeight: 700,
-                                color: "#fff",
-                                margin: 0,
-                              }}
-                            >
-                              Get session updates
-                            </h3>
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: "#a1a1aa",
-                                marginTop: 2,
-                              }}
-                            >
-                              We email when a new session opens. That&apos;s it.
-                            </div>
-                          </div>
-                        </div>
+                          Get notified when the next session opens
+                        </p>
 
                         {!emailSubmitted ? (
                           <form

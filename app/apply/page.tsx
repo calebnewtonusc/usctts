@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, ArrowRight, Zap } from "lucide-react";
-import Link from "next/link";
 
 type Track = "Building" | "Consulting" | "Growing" | "Unsure";
 type Year = "Freshman" | "Sophomore" | "Junior" | "Senior" | "Graduate";
@@ -52,15 +52,30 @@ const inputStyle: React.CSSProperties = {
 
 const labelStyle: React.CSSProperties = {
   display: "block",
-  fontSize: 12,
-  fontWeight: 600,
-  color: "#71717a",
+  fontSize: 11,
+  fontWeight: 700,
+  color: "#52525b",
   textTransform: "uppercase",
-  letterSpacing: "0.06em",
+  letterSpacing: "0.08em",
   marginBottom: 8,
 };
 
+const pillBase: React.CSSProperties = {
+  padding: "8px 16px",
+  borderRadius: 999,
+  border: "1px solid rgba(255,255,255,0.1)",
+  background: "rgba(255,255,255,0.03)",
+  color: "#71717a",
+  fontSize: 13,
+  fontWeight: 400,
+  cursor: "pointer",
+  transition: "all 0.15s",
+  letterSpacing: "-0.01em",
+};
+
 export default function ApplyPage() {
+  const router = useRouter();
+  const [exiting, setExiting] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -72,6 +87,11 @@ export default function ApplyPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const navigateHome = useCallback(() => {
+    setExiting(true);
+    setTimeout(() => router.push("/"), 360);
+  }, [router]);
 
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -102,7 +122,7 @@ export default function ApplyPage() {
 
   return (
     <div
-      className="tts-page-enter"
+      className={exiting ? "tts-page-exit" : "tts-page-enter"}
       style={{
         minHeight: "100vh",
         background: "#09090b",
@@ -116,25 +136,23 @@ export default function ApplyPage() {
           to { opacity: 1; transform: translateY(0); }
         }
         .form-animate { animation: slideUp 0.5s cubic-bezier(0.16,1,0.3,1) both; }
-        .form-animate-delay { animation: slideUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
         @media (max-width: 768px) {
           .apply-split { flex-direction: column !important; }
-          .apply-left { position: relative !important; height: auto !important; min-height: 260px !important; padding: 40px 24px !important; }
-          .apply-right { padding: 40px 24px !important; }
+          .apply-left { position: relative !important; height: auto !important; min-height: 240px !important; padding: 36px 24px !important; width: 100% !important; }
+          .apply-right { padding: 36px 24px !important; }
         }
-        select option { background: #111113; }
       `}</style>
 
       {/* Left column */}
       <div
-        className="apply-left"
+        className="apply-split apply-left"
         style={{
-          width: "42%",
+          width: "40%",
           position: "sticky",
           top: 0,
           height: "100vh",
           background:
-            "radial-gradient(ellipse at 20% 80%, rgba(204,0,0,0.12) 0%, transparent 60%), #09090b",
+            "radial-gradient(ellipse at 20% 80%, rgba(204,0,0,0.13) 0%, transparent 58%), #09090b",
           borderRight: "1px solid rgba(255,255,255,0.06)",
           padding: "56px 48px",
           display: "flex",
@@ -144,16 +162,19 @@ export default function ApplyPage() {
           flexShrink: 0,
         }}
       >
-        {/* Logo */}
         <div>
-          <Link
-            href="/"
+          {/* Logo */}
+          <button
+            onClick={navigateHome}
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: 10,
-              textDecoration: "none",
-              marginBottom: 56,
+              marginBottom: 64,
+              background: "none",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
             }}
           >
             <div
@@ -179,7 +200,7 @@ export default function ApplyPage() {
             >
               TTS
             </span>
-          </Link>
+          </button>
 
           {/* Headline */}
           <h1
@@ -196,31 +217,42 @@ export default function ApplyPage() {
           </h1>
           <p
             style={{
-              fontSize: 16,
-              color: "#a1a1aa",
-              lineHeight: 1.6,
-              marginBottom: 48,
-              maxWidth: 320,
+              fontSize: 15,
+              color: "#71717a",
+              lineHeight: 1.7,
+              marginBottom: 52,
+              maxWidth: 300,
             }}
           >
             USC&apos;s AI builder club. No prerequisites. No gatekeeping.
           </p>
 
-          {/* Reason pills */}
+          {/* Value props — clean separator list */}
           <div style={{ display: "flex", flexDirection: "column" }}>
             {[
-              "Ship a live product in Week 1",
-              "Real client work with Consulting track",
-              "Access to YC founders and operators",
-            ].map((reason) => (
+              {
+                headline: "Ship in Week 1",
+                sub: "Not the end of the semester",
+              },
+              {
+                headline: "Real client work",
+                sub: "Consulting track does live engagements",
+              },
+              {
+                headline: "YC founders + operators",
+                sub: "Speaker nights every month",
+              },
+            ].map(({ headline, sub }, i) => (
               <div
-                key={reason}
+                key={headline}
                 style={{
                   display: "flex",
-                  gap: 10,
-                  alignItems: "center",
-                  padding: "12px 0",
-                  borderBottom: "1px solid rgba(255,255,255,0.06)",
+                  alignItems: "flex-start",
+                  gap: 14,
+                  padding: "16px 0",
+                  borderTop:
+                    i === 0 ? "1px solid rgba(255,255,255,0.07)" : "none",
+                  borderBottom: "1px solid rgba(255,255,255,0.07)",
                 }}
               >
                 <div
@@ -234,22 +266,35 @@ export default function ApplyPage() {
                     alignItems: "center",
                     justifyContent: "center",
                     flexShrink: 0,
+                    marginTop: 1,
                   }}
                 >
                   <Check size={11} color="#CC0000" />
                 </div>
-                <span
-                  style={{ fontSize: 14, color: "#d4d4d8", lineHeight: 1.4 }}
-                >
-                  {reason}
-                </span>
+                <div>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      color: "#e4e4e7",
+                      fontWeight: 600,
+                      lineHeight: 1.3,
+                      marginBottom: 2,
+                    }}
+                  >
+                    {headline}
+                  </div>
+                  <div
+                    style={{ fontSize: 12, color: "#52525b", lineHeight: 1.4 }}
+                  >
+                    {sub}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Footer */}
-        <p style={{ fontSize: 13, color: "#52525b", marginTop: 40 }}>
+        <p style={{ fontSize: 12, color: "#3f3f46", letterSpacing: "0.02em" }}>
           Spring 2026 · Open enrollment
         </p>
       </div>
@@ -259,40 +304,43 @@ export default function ApplyPage() {
         className="apply-right"
         style={{
           flex: 1,
-          padding: "60px 48px",
+          padding: "56px 52px",
           overflowY: "auto",
           boxSizing: "border-box",
         }}
       >
         {/* Back link */}
-        <Link
-          href="/"
+        <button
+          onClick={navigateHome}
           style={{
             display: "inline-flex",
             alignItems: "center",
             gap: 6,
             fontSize: 13,
-            color: "#52525b",
-            textDecoration: "none",
-            marginBottom: 48,
+            color: "#3f3f46",
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            marginBottom: 52,
             transition: "color 0.15s",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLAnchorElement).style.color = "#a1a1aa";
+            (e.currentTarget as HTMLButtonElement).style.color = "#a1a1aa";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLAnchorElement).style.color = "#52525b";
+            (e.currentTarget as HTMLButtonElement).style.color = "#3f3f46";
           }}
         >
           <ArrowLeft size={14} /> Back to TTS
-        </Link>
+        </button>
 
         {submitted ? (
           <div
             className="form-animate"
             style={{
               textAlign: "center",
-              paddingTop: 40,
+              paddingTop: 60,
               maxWidth: 480,
               margin: "0 auto",
             }}
@@ -321,18 +369,17 @@ export default function ApplyPage() {
                 marginBottom: 12,
               }}
             >
-              We got it.
+              You&apos;re in.
             </h2>
             <p
               style={{
                 fontSize: 15,
-                color: "#a1a1aa",
+                color: "#71717a",
                 lineHeight: 1.7,
                 marginBottom: 32,
               }}
             >
-              We&apos;ll follow up at your email within a few days. In the
-              meantime, follow us on Instagram{" "}
+              We&apos;ll follow up within a few days. Follow us on Instagram{" "}
               <a
                 href="https://instagram.com/trojantechsolutions"
                 target="_blank"
@@ -343,8 +390,8 @@ export default function ApplyPage() {
               </a>{" "}
               to see what we&apos;re building.
             </p>
-            <Link
-              href="/"
+            <button
+              onClick={navigateHome}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -356,58 +403,44 @@ export default function ApplyPage() {
                 color: "#e4e4e7",
                 fontSize: 13,
                 fontWeight: 600,
-                textDecoration: "none",
+                cursor: "pointer",
                 transition: "all 0.15s",
               }}
             >
               Back to home
-            </Link>
+            </button>
           </div>
         ) : (
-          <div className="form-animate" style={{ maxWidth: 540 }}>
-            {/* Form header */}
-            <p
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: "#52525b",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                marginBottom: 16,
-              }}
-            >
-              No application required — just submit your interest
-            </p>
+          <div className="form-animate" style={{ maxWidth: 520 }}>
             <h2
               style={{
-                fontSize: "clamp(24px, 4vw, 36px)",
+                fontSize: "clamp(26px, 3.5vw, 40px)",
                 fontWeight: 900,
                 color: "#fff",
-                letterSpacing: "-0.03em",
+                letterSpacing: "-0.04em",
                 lineHeight: 1.1,
-                marginBottom: 10,
+                marginBottom: 8,
               }}
             >
-              Tell us about yourself
+              Tell us about yourself.
             </h2>
             <p
               style={{
                 fontSize: 14,
-                color: "#71717a",
+                color: "#52525b",
                 lineHeight: 1.6,
-                marginBottom: 36,
+                marginBottom: 40,
               }}
             >
-              Show up, pick a track, and ship something real.
+              No application, no waitlist. Just show up.
             </p>
 
             <form
               onSubmit={handleSubmit}
-              style={{ display: "flex", flexDirection: "column", gap: 22 }}
+              style={{ display: "flex", flexDirection: "column", gap: 24 }}
             >
               {/* Name + Email */}
               <div
-                className="form-animate-delay apply-two-col"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr",
@@ -453,70 +486,77 @@ export default function ApplyPage() {
                 </div>
               </div>
 
-              {/* Major + Year */}
-              <div
-                className="apply-two-col"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 14,
-                }}
-              >
-                <div>
-                  <label style={labelStyle}>Major</label>
-                  <input
-                    required
-                    value={form.major}
-                    onChange={(e) => set("major", e.target.value)}
-                    placeholder="Computer Science"
-                    style={inputStyle}
-                    onFocus={(e) => {
-                      (e.currentTarget as HTMLInputElement).style.borderColor =
-                        "rgba(204,0,0,0.5)";
-                    }}
-                    onBlur={(e) => {
-                      (e.currentTarget as HTMLInputElement).style.borderColor =
-                        "rgba(255,255,255,0.1)";
-                    }}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle}>Year</label>
-                  <select
-                    required
-                    value={form.year}
-                    onChange={(e) => set("year", e.target.value)}
-                    style={{ ...inputStyle, cursor: "pointer" }}
-                    onFocus={(e) => {
-                      (e.currentTarget as HTMLSelectElement).style.borderColor =
-                        "rgba(204,0,0,0.5)";
-                    }}
-                    onBlur={(e) => {
-                      (e.currentTarget as HTMLSelectElement).style.borderColor =
-                        "rgba(255,255,255,0.1)";
-                    }}
-                  >
-                    <option value="" disabled>
-                      Select year
-                    </option>
-                    {YEARS.map((y) => (
-                      <option key={y} value={y}>
+              {/* Major */}
+              <div>
+                <label style={labelStyle}>Major</label>
+                <input
+                  required
+                  value={form.major}
+                  onChange={(e) => set("major", e.target.value)}
+                  placeholder="Any major welcome"
+                  style={inputStyle}
+                  onFocus={(e) => {
+                    (e.currentTarget as HTMLInputElement).style.borderColor =
+                      "rgba(204,0,0,0.5)";
+                  }}
+                  onBlur={(e) => {
+                    (e.currentTarget as HTMLInputElement).style.borderColor =
+                      "rgba(255,255,255,0.1)";
+                  }}
+                />
+              </div>
+
+              {/* Year — pills instead of native select */}
+              <div>
+                <label style={labelStyle}>Year</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {YEARS.map((y) => {
+                    const selected = form.year === y;
+                    return (
+                      <button
+                        key={y}
+                        type="button"
+                        onClick={() => set("year", y)}
+                        aria-pressed={selected}
+                        style={{
+                          ...pillBase,
+                          background: selected
+                            ? "rgba(204,0,0,0.12)"
+                            : pillBase.background,
+                          border: selected
+                            ? "1px solid rgba(204,0,0,0.45)"
+                            : pillBase.border,
+                          color: selected ? "#fff" : pillBase.color,
+                          fontWeight: selected ? 600 : pillBase.fontWeight,
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!selected)
+                            (
+                              e.currentTarget as HTMLButtonElement
+                            ).style.borderColor = "rgba(255,255,255,0.2)";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!selected)
+                            (
+                              e.currentTarget as HTMLButtonElement
+                            ).style.borderColor = "rgba(255,255,255,0.1)";
+                        }}
+                      >
                         {y}
-                      </option>
-                    ))}
-                  </select>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Track picker */}
+              {/* Track — 2x2 compact cards (4 items = clean grid, no orphan) */}
               <div>
                 <label style={labelStyle}>Which track interests you?</label>
                 <div
-                  className="apply-two-col"
                   style={{
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr",
-                    gap: 10,
+                    gap: 8,
                   }}
                 >
                   {TRACKS.map(({ id, label, sub, color }) => {
@@ -528,26 +568,39 @@ export default function ApplyPage() {
                         aria-pressed={selected}
                         onClick={() => set("track", id)}
                         style={{
-                          padding: "20px",
-                          borderRadius: 14,
+                          padding: "14px 16px",
+                          borderRadius: 12,
                           background: selected
-                            ? `${color}13`
+                            ? `${color}12`
                             : "rgba(255,255,255,0.02)",
                           border: selected
-                            ? `1px solid ${color}50`
-                            : "1px solid rgba(255,255,255,0.07)",
-                          borderLeft: `4px solid ${selected ? color : "transparent"}`,
+                            ? `1px solid ${color}45`
+                            : "1px solid rgba(255,255,255,0.08)",
+                          borderLeft: `3px solid ${selected ? color : "transparent"}`,
                           cursor: "pointer",
                           textAlign: "left",
                           transition: "all 0.15s",
                         }}
+                        onMouseEnter={(e) => {
+                          if (!selected)
+                            (
+                              e.currentTarget as HTMLButtonElement
+                            ).style.borderColor = "rgba(255,255,255,0.15)";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!selected)
+                            (
+                              e.currentTarget as HTMLButtonElement
+                            ).style.cssText +=
+                              `border: 1px solid rgba(255,255,255,0.08); border-left: 3px solid transparent;`;
+                        }}
                       >
                         <div
                           style={{
-                            fontSize: 14,
+                            fontSize: 13,
                             fontWeight: 700,
                             color: selected ? color : "#e4e4e7",
-                            marginBottom: 4,
+                            marginBottom: 2,
                             letterSpacing: "-0.01em",
                           }}
                         >
@@ -555,7 +608,7 @@ export default function ApplyPage() {
                         </div>
                         <div
                           style={{
-                            fontSize: 12,
+                            fontSize: 11,
                             color: selected ? "#a1a1aa" : "#52525b",
                           }}
                         >
@@ -570,7 +623,7 @@ export default function ApplyPage() {
               {/* Why */}
               <div>
                 <label style={labelStyle}>
-                  Why do you want to join TTS?{" "}
+                  Why do you want to join?{" "}
                   <span
                     style={{
                       color: "#3f3f46",
@@ -579,16 +632,15 @@ export default function ApplyPage() {
                       letterSpacing: 0,
                     }}
                   >
-                    (min 10 characters)
+                    (optional but helps)
                   </span>
                 </label>
                 <textarea
-                  required
                   value={form.why}
                   onChange={(e) => set("why", e.target.value)}
                   placeholder="What are you trying to build, learn, or do before you graduate?"
-                  rows={4}
-                  style={{ ...inputStyle, resize: "vertical", minHeight: 110 }}
+                  rows={3}
+                  style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
                   onFocus={(e) => {
                     (e.currentTarget as HTMLTextAreaElement).style.borderColor =
                       "rgba(204,0,0,0.5)";
@@ -633,30 +685,28 @@ export default function ApplyPage() {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 8,
-                  transition: "background 0.15s, transform 0.1s",
+                  transition: "background 0.15s",
                   boxShadow:
                     loading || !form.track || !form.year
                       ? "none"
-                      : "0 4px 24px rgba(204,0,0,0.28)",
+                      : "0 4px 24px rgba(204,0,0,0.25)",
                 }}
                 onMouseEnter={(e) => {
-                  if (!loading && form.track && form.year) {
+                  if (!loading && form.track && form.year)
                     (e.currentTarget as HTMLButtonElement).style.background =
                       "#aa0000";
-                  }
                 }}
                 onMouseLeave={(e) => {
-                  if (!loading && form.track && form.year) {
+                  if (!loading && form.track && form.year)
                     (e.currentTarget as HTMLButtonElement).style.background =
                       "#CC0000";
-                  }
                 }}
               >
                 {loading ? (
                   "Submitting..."
                 ) : (
                   <>
-                    Submit application <ArrowRight size={16} />
+                    Submit interest <ArrowRight size={16} />
                   </>
                 )}
               </button>
@@ -666,10 +716,10 @@ export default function ApplyPage() {
                   fontSize: 12,
                   color: "#3f3f46",
                   textAlign: "center",
-                  margin: 0,
+                  margin: "-8px 0 0",
                 }}
               >
-                We&apos;ll get back to you within a few days. No spam, ever.
+                No spam. We&apos;ll only follow up about TTS sessions.
               </p>
             </form>
           </div>
