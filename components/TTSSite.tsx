@@ -577,14 +577,19 @@ function DiagonalSlashDivider({
   const svgRef = useRef<SVGSVGElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handle = () => {
-      const y = window.scrollY;
-      // Shift the SVG horizontally so the line scrolls across
+      if (!containerRef.current) return;
+      // Use viewport-relative top — always a small number regardless of page depth.
+      // scrollY * coefficient breaks when the divider is far down the page.
+      const rect = containerRef.current.getBoundingClientRect();
+      const vt = rect.top; // +winH (not yet on screen) → 0 (top of viewport) → negative (scrolled past)
       if (svgRef.current)
-        svgRef.current.style.transform = `translateX(${y * 0.65}px)`;
+        svgRef.current.style.transform = `translateX(${-vt * 1.8}px)`;
       if (glowRef.current)
-        glowRef.current.style.transform = `translateX(${-y * 0.38}px)`;
+        glowRef.current.style.transform = `translateX(${vt * 1.1}px)`;
     };
     window.addEventListener("scroll", handle, { passive: true });
     handle();
@@ -593,6 +598,7 @@ function DiagonalSlashDivider({
 
   return (
     <div
+      ref={containerRef}
       aria-hidden="true"
       style={{
         position: "relative",
@@ -702,16 +708,21 @@ function ScanLineDivider({
     { top: "84%", speed: 0.5, color: "255,204,0", opacity: 0.35, h: 1.5 },
   ];
 
+  const containerRef = useRef<HTMLDivElement>(null);
   const lineRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   useEffect(() => {
-    const dir = reverse ? -1 : 1;
+    const flip = reverse ? -1 : 1;
     const handle = () => {
+      if (!containerRef.current) return;
+      const vt = containerRef.current.getBoundingClientRect().top;
+      // viewport-relative: +winH when entering, 0 when at top, negative when past.
+      // Lines stream in from opposite directions — alternating even/odd.
       LINES.forEach((line, i) => {
         const el = lineRefs.current[i];
         if (!el) return;
         const alt = i % 2 === 0 ? 1 : -1;
-        el.style.transform = `translateX(${dir * alt * window.scrollY * line.speed}px)`;
+        el.style.transform = `translateX(${flip * alt * vt * line.speed * 3.5}px)`;
       });
     };
     window.addEventListener("scroll", handle, { passive: true });
@@ -720,18 +731,9 @@ function ScanLineDivider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reverse]);
 
-  // CSS keyframes — scroll-driven translateX fails at large scrollY values
-  // (lines end up hundreds of px off-screen). Always-animating keyframes fix this.
-  const ANIMS = [
-    { name: "scanA", dur: "1.6s", dir: reverse ? "reverse" : "normal" },
-    { name: "scanB", dur: "1.2s", dir: reverse ? "normal" : "reverse" },
-    { name: "scanA", dur: "1.9s", dir: reverse ? "reverse" : "normal" },
-    { name: "scanB", dur: "1.1s", dir: reverse ? "normal" : "reverse" },
-    { name: "scanA", dur: "1.4s", dir: reverse ? "reverse" : "normal" },
-  ];
-
   return (
     <div
+      ref={containerRef}
       aria-hidden="true"
       style={{
         position: "relative",
@@ -741,16 +743,6 @@ function ScanLineDivider({
         flexShrink: 0,
       }}
     >
-      <style>{`
-        @keyframes scanA {
-          0%   { transform: translateX(-55%); }
-          100% { transform: translateX(55%); }
-        }
-        @keyframes scanB {
-          0%   { transform: translateX(55%); }
-          100% { transform: translateX(-55%); }
-        }
-      `}</style>
       {/* Red center glow */}
       <div
         style={{
@@ -764,6 +756,9 @@ function ScanLineDivider({
       {LINES.map((line, i) => (
         <div
           key={i}
+          ref={(el) => {
+            lineRefs.current[i] = el;
+          }}
           style={{
             position: "absolute",
             top: line.top,
@@ -772,7 +767,6 @@ function ScanLineDivider({
             height: line.h,
             background: `linear-gradient(90deg, transparent 0%, rgba(${line.color},${line.opacity}) 10%, rgba(${line.color},${line.opacity}) 90%, transparent 100%)`,
             borderRadius: 2,
-            animation: `${ANIMS[i].name} ${ANIMS[i].dur} linear infinite ${ANIMS[i].dir}`,
             willChange: "transform",
             boxShadow:
               line.color === "204,0,0"
@@ -822,8 +816,27 @@ function DotRowDivider({
     }
   }
 
+  const dotContainerRef = useRef<HTMLDivElement>(null);
+  const dotGlowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handle = () => {
+      if (!dotContainerRef.current || !dotGlowRef.current) return;
+      const vt = dotContainerRef.current.getBoundingClientRect().top;
+      const winH = window.innerHeight;
+      // Map vt from +winH (entering) → -H (exited) to translateX -700 → W+500
+      const factor = (W + 1200) / (winH + H);
+      const tx = (winH - vt) * factor - 700;
+      dotGlowRef.current.style.transform = `translateX(${tx}px)`;
+    };
+    window.addEventListener("scroll", handle, { passive: true });
+    handle();
+    return () => window.removeEventListener("scroll", handle);
+  }, [H, W]);
+
   return (
     <div
+      ref={dotContainerRef}
       aria-hidden="true"
       style={{
         position: "relative",
@@ -833,12 +846,6 @@ function DotRowDivider({
         flexShrink: 0,
       }}
     >
-      <style>{`
-        @keyframes dotWave {
-          0%   { transform: translateX(-700px); }
-          100% { transform: translateX(${W + 500}px); }
-        }
-      `}</style>
       {/* Static dot grid — high-opacity so they're always clearly visible */}
       <svg
         width={W}
@@ -848,8 +855,9 @@ function DotRowDivider({
       >
         {dots}
       </svg>
-      {/* Animated warm light sweep — passes over dots giving the "changing lights" effect */}
+      {/* Scroll-driven warm light sweep */}
       <div
+        ref={dotGlowRef}
         style={{
           position: "absolute",
           top: 0,
@@ -858,7 +866,6 @@ function DotRowDivider({
           height: "100%",
           background:
             "linear-gradient(90deg, transparent 0%, rgba(220,60,0,0.22) 20%, rgba(255,120,0,0.38) 50%, rgba(220,60,0,0.22) 80%, transparent 100%)",
-          animation: "dotWave 1.0s linear infinite",
           pointerEvents: "none",
           willChange: "transform",
         }}
@@ -1402,7 +1409,7 @@ export default function TTSSite() {
               top: "12%",
               right: "5%",
               size: 80,
-              rotate: 7,
+              rotate: -73,
               color: "rgba(204,0,0,0.65)",
               yOff: -24,
               xOff: 7.2,
@@ -1412,7 +1419,7 @@ export default function TTSSite() {
               bottom: "18%",
               left: "5%",
               size: 64,
-              rotate: -37,
+              rotate: -79,
               color: "rgba(255,255,255,0.40)",
               yOff: -16.8,
               xOff: -4.8,
@@ -1422,7 +1429,7 @@ export default function TTSSite() {
               top: "55%",
               right: "5%",
               size: 52,
-              rotate: 23,
+              rotate: 31,
               color: "rgba(255,204,0,0.50)",
               yOff: -16.8,
               xOff: 4.8,
@@ -1432,7 +1439,7 @@ export default function TTSSite() {
               top: "25%",
               left: "5%",
               size: 44,
-              rotate: 53,
+              rotate: -73,
               color: "rgba(255,255,255,0.28)",
               yOff: -12,
               xOff: -4.8,
@@ -1442,7 +1449,7 @@ export default function TTSSite() {
               bottom: "10%",
               right: "12%",
               size: 38,
-              rotate: -11,
+              rotate: 59,
               color: "rgba(204,0,0,0.35)",
               yOff: -12,
               xOff: 4.8,
@@ -1712,7 +1719,7 @@ export default function TTSSite() {
                 size: 120,
                 speed: "0.28",
                 speedx: "0.126",
-                rotate: 41,
+                rotate: -39,
                 color: "#CC0000",
               },
               {
@@ -1722,7 +1729,7 @@ export default function TTSSite() {
                 size: 100,
                 speed: "0.28",
                 speedx: "-0.126",
-                rotate: -19,
+                rotate: -31,
                 color: "#FFCC00",
               },
               {
@@ -1732,7 +1739,7 @@ export default function TTSSite() {
                 size: 90,
                 speed: "0.28",
                 speedx: "0.108",
-                rotate: 67,
+                rotate: -79,
                 color: "#CC0000",
               },
               // MIDGROUND — medium icons
@@ -1743,7 +1750,7 @@ export default function TTSSite() {
                 size: 70,
                 speed: "0.20",
                 speedx: "-0.072",
-                rotate: -5,
+                rotate: -69,
                 color: "rgba(255,255,255,0.65)",
               },
               {
@@ -1753,7 +1760,7 @@ export default function TTSSite() {
                 size: 65,
                 speed: "0.14",
                 speedx: "0.072",
-                rotate: 29,
+                rotate: 79,
                 color: "rgba(255,204,0,0.7)",
               },
               {
@@ -1763,7 +1770,7 @@ export default function TTSSite() {
                 size: 60,
                 speed: "0.14",
                 speedx: "-0.054",
-                rotate: -47,
+                rotate: -65,
                 color: "rgba(255,255,255,0.55)",
               },
               // BACKGROUND — small icons
@@ -1774,7 +1781,7 @@ export default function TTSSite() {
                 size: 40,
                 speed: "0.10",
                 speedx: "-0.054",
-                rotate: 13,
+                rotate: -45,
                 color: "rgba(204,0,0,0.45)",
               },
               {
@@ -1784,7 +1791,7 @@ export default function TTSSite() {
                 size: 35,
                 speed: "0.10",
                 speedx: "0.054",
-                rotate: -61,
+                rotate: 43,
                 color: "rgba(255,255,255,0.25)",
               },
               {
@@ -1794,7 +1801,7 @@ export default function TTSSite() {
                 size: 30,
                 speed: "0.06",
                 speedx: "-0.018",
-                rotate: 33,
+                rotate: 55,
                 color: "rgba(255,204,0,0.35)",
               },
               {
@@ -1804,7 +1811,7 @@ export default function TTSSite() {
                 size: 28,
                 speed: "0.06",
                 speedx: "0.018",
-                rotate: -7,
+                rotate: 47,
                 color: "rgba(255,255,255,0.2)",
               },
               // Additional hero icons
@@ -1815,7 +1822,7 @@ export default function TTSSite() {
                 size: 36,
                 speed: "0.10",
                 speedx: "0.054",
-                rotate: 51,
+                rotate: 15,
                 color: "rgba(204,0,0,0.38)",
               },
               {
@@ -1825,7 +1832,7 @@ export default function TTSSite() {
                 size: 32,
                 speed: "0.10",
                 speedx: "-0.054",
-                rotate: -23,
+                rotate: -3,
                 color: "rgba(255,255,255,0.22)",
               },
               {
@@ -1835,7 +1842,7 @@ export default function TTSSite() {
                 size: 34,
                 speed: "0.06",
                 speedx: "-0.018",
-                rotate: 17,
+                rotate: 43,
                 color: "rgba(99,102,241,0.35)",
               },
               {
@@ -1845,7 +1852,7 @@ export default function TTSSite() {
                 size: 28,
                 speed: "0.06",
                 speedx: "-0.018",
-                rotate: -43,
+                rotate: 47,
                 color: "rgba(255,204,0,0.28)",
               },
             ].map(
@@ -2308,7 +2315,7 @@ export default function TTSSite() {
                 size: 110,
                 speed: "0.28",
                 speedx: "-0.126",
-                rotate: 71,
+                rotate: -73,
                 color: "#FFCC00",
               },
               {
@@ -2318,7 +2325,7 @@ export default function TTSSite() {
                 size: 95,
                 speed: "0.28",
                 speedx: "0.108",
-                rotate: -3,
+                rotate: -25,
                 color: "#CC0000",
               },
               // MIDGROUND — medium icons
@@ -2329,7 +2336,7 @@ export default function TTSSite() {
                 size: 68,
                 speed: "0.20",
                 speedx: "0.072",
-                rotate: 39,
+                rotate: 31,
                 color: "rgba(255,255,255,0.6)",
               },
               {
@@ -2339,7 +2346,7 @@ export default function TTSSite() {
                 size: 62,
                 speed: "0.14",
                 speedx: "-0.054",
-                rotate: -27,
+                rotate: 51,
                 color: "rgba(255,255,255,0.5)",
               },
               {
@@ -2349,7 +2356,7 @@ export default function TTSSite() {
                 size: 58,
                 speed: "0.14",
                 speedx: "-0.054",
-                rotate: 57,
+                rotate: -19,
                 color: "rgba(255,204,0,0.65)",
               },
               // BACKGROUND — small icons
@@ -2360,7 +2367,7 @@ export default function TTSSite() {
                 size: 38,
                 speed: "0.10",
                 speedx: "0.054",
-                rotate: 11,
+                rotate: -7,
                 color: "rgba(255,255,255,0.22)",
               },
               {
@@ -2370,7 +2377,7 @@ export default function TTSSite() {
                 size: 32,
                 speed: "0.06",
                 speedx: "-0.018",
-                rotate: -53,
+                rotate: -13,
                 color: "rgba(204,0,0,0.35)",
               },
               // Additional mission icons
@@ -2381,7 +2388,7 @@ export default function TTSSite() {
                 size: 44,
                 speed: "0.14",
                 speedx: "0.072",
-                rotate: 31,
+                rotate: 27,
                 color: "rgba(255,204,0,0.45)",
               },
               {
@@ -2391,7 +2398,7 @@ export default function TTSSite() {
                 size: 36,
                 speed: "0.10",
                 speedx: "-0.054",
-                rotate: -9,
+                rotate: -53,
                 color: "rgba(204,0,0,0.42)",
               },
               {
@@ -2401,7 +2408,7 @@ export default function TTSSite() {
                 size: 30,
                 speed: "0.06",
                 speedx: "-0.018",
-                rotate: 47,
+                rotate: -23,
                 color: "rgba(255,255,255,0.22)",
               },
             ].map(
@@ -3016,7 +3023,7 @@ export default function TTSSite() {
                     size: 80,
                     speed: "0.20",
                     speedx: "-0.072",
-                    rotate: -17,
+                    rotate: 25,
                     color: "rgba(204,0,0,0.65)",
                   },
                   {
@@ -3026,7 +3033,7 @@ export default function TTSSite() {
                     size: 64,
                     speed: "0.14",
                     speedx: "0.054",
-                    rotate: 63,
+                    rotate: 31,
                     color: "rgba(255,255,255,0.40)",
                   },
                   {
@@ -3036,7 +3043,7 @@ export default function TTSSite() {
                     size: 52,
                     speed: "0.14",
                     speedx: "-0.054",
-                    rotate: -33,
+                    rotate: -51,
                     color: "rgba(255,204,0,0.50)",
                   },
                   {
@@ -3046,7 +3053,7 @@ export default function TTSSite() {
                     size: 44,
                     speed: "0.10",
                     speedx: "0.054",
-                    rotate: 5,
+                    rotate: -23,
                     color: "rgba(255,255,255,0.28)",
                   },
                   {
@@ -3056,7 +3063,7 @@ export default function TTSSite() {
                     size: 38,
                     speed: "0.10",
                     speedx: "-0.054",
-                    rotate: -71,
+                    rotate: -53,
                     color: "rgba(204,0,0,0.35)",
                   },
                 ] as {
@@ -3622,7 +3629,7 @@ export default function TTSSite() {
                 size: 84,
                 speed: "0.20",
                 speedx: "0.072",
-                rotate: 25,
+                rotate: -17,
                 color: "rgba(255,204,0,0.68)",
               },
               {
@@ -3632,7 +3639,7 @@ export default function TTSSite() {
                 size: 58,
                 speed: "0.14",
                 speedx: "-0.054",
-                rotate: -41,
+                rotate: -69,
                 color: "rgba(255,204,0,0.52)",
               },
               {
@@ -3642,7 +3649,7 @@ export default function TTSSite() {
                 size: 46,
                 speed: "0.10",
                 speedx: "0.054",
-                rotate: 15,
+                rotate: -77,
                 color: "rgba(255,204,0,0.42)",
               },
               {
@@ -3652,7 +3659,7 @@ export default function TTSSite() {
                 size: 36,
                 speed: "0.10",
                 speedx: "-0.054",
-                rotate: -57,
+                rotate: -41,
                 color: "rgba(255,204,0,0.28)",
               },
               {
@@ -3662,7 +3669,7 @@ export default function TTSSite() {
                 size: 40,
                 speed: "0.14",
                 speedx: "0.054",
-                rotate: 43,
+                rotate: -15,
                 color: "rgba(255,204,0,0.35)",
               },
               {
@@ -3672,7 +3679,7 @@ export default function TTSSite() {
                 size: 44,
                 speed: "0.10",
                 speedx: "0.054",
-                rotate: -13,
+                rotate: 43,
                 color: "rgba(255,255,255,0.20)",
               },
               {
@@ -3682,7 +3689,7 @@ export default function TTSSite() {
                 size: 30,
                 speed: "0.06",
                 speedx: "-0.018",
-                rotate: 59,
+                rotate: 53,
                 color: "rgba(255,204,0,0.25)",
               },
             ] as {
@@ -3728,7 +3735,7 @@ export default function TTSSite() {
                 size: 92,
                 speed: "0.28",
                 speedx: "-0.126",
-                rotate: -21,
+                rotate: -83,
                 color: "rgba(204,0,0,0.72)",
               },
               {
@@ -3738,7 +3745,7 @@ export default function TTSSite() {
                 size: 62,
                 speed: "0.14",
                 speedx: "0.054",
-                rotate: 37,
+                rotate: 55,
                 color: "rgba(204,0,0,0.58)",
               },
               {
@@ -3748,7 +3755,7 @@ export default function TTSSite() {
                 size: 50,
                 speed: "0.14",
                 speedx: "-0.054",
-                rotate: -49,
+                rotate: 47,
                 color: "rgba(204,0,0,0.44)",
               },
               {
@@ -3758,7 +3765,7 @@ export default function TTSSite() {
                 size: 38,
                 speed: "0.10",
                 speedx: "0.054",
-                rotate: 9,
+                rotate: -35,
                 color: "rgba(204,0,0,0.30)",
               },
               {
@@ -3768,7 +3775,7 @@ export default function TTSSite() {
                 size: 42,
                 speed: "0.14",
                 speedx: "-0.054",
-                rotate: -65,
+                rotate: -17,
                 color: "rgba(204,0,0,0.38)",
               },
               {
@@ -3778,7 +3785,7 @@ export default function TTSSite() {
                 size: 36,
                 speed: "0.10",
                 speedx: "0.054",
-                rotate: 27,
+                rotate: 61,
                 color: "rgba(99,102,241,0.38)",
               },
               {
@@ -3788,7 +3795,7 @@ export default function TTSSite() {
                 size: 30,
                 speed: "0.06",
                 speedx: "-0.018",
-                rotate: -15,
+                rotate: -59,
                 color: "rgba(255,255,255,0.18)",
               },
             ] as {
@@ -4133,7 +4140,7 @@ export default function TTSSite() {
               size: 105,
               speed: "0.28",
               speedx: "-0.126",
-              rotate: 55,
+              rotate: -63,
               color: "#CC0000",
             },
             {
@@ -4143,7 +4150,7 @@ export default function TTSSite() {
               size: 95,
               speed: "0.28",
               speedx: "0.108",
-              rotate: -31,
+              rotate: -61,
               color: "#FFCC00",
             },
             // MIDGROUND — medium icons
@@ -4154,7 +4161,7 @@ export default function TTSSite() {
               size: 70,
               speed: "0.20",
               speedx: "-0.072",
-              rotate: 7,
+              rotate: -13,
               color: "rgba(204,0,0,0.65)",
             },
             {
@@ -4164,7 +4171,7 @@ export default function TTSSite() {
               size: 64,
               speed: "0.14",
               speedx: "0.054",
-              rotate: -37,
+              rotate: 5,
               color: "rgba(255,204,0,0.65)",
             },
             {
@@ -4174,7 +4181,7 @@ export default function TTSSite() {
               size: 60,
               speed: "0.14",
               speedx: "-0.054",
-              rotate: 23,
+              rotate: 43,
               color: "rgba(255,204,0,0.6)",
             },
             // BACKGROUND — small icons
@@ -4185,7 +4192,7 @@ export default function TTSSite() {
               size: 38,
               speed: "0.10",
               speedx: "-0.054",
-              rotate: 53,
+              rotate: 57,
               color: "rgba(255,255,255,0.25)",
             },
             {
@@ -4195,7 +4202,7 @@ export default function TTSSite() {
               size: 32,
               speed: "0.06",
               speedx: "0.018",
-              rotate: -11,
+              rotate: 49,
               color: "rgba(255,204,0,0.3)",
             },
             {
@@ -4205,7 +4212,7 @@ export default function TTSSite() {
               size: 56,
               speed: "0.13",
               speedx: "0.072",
-              rotate: 41,
+              rotate: -77,
               color: "rgba(255,204,0,0.4)",
             },
             {
@@ -4215,7 +4222,7 @@ export default function TTSSite() {
               size: 48,
               speed: "0.14",
               speedx: "-0.054",
-              rotate: -19,
+              rotate: -51,
               color: "rgba(16,185,129,0.4)",
             },
             // Role-matched icons
@@ -4226,7 +4233,7 @@ export default function TTSSite() {
               size: 44,
               speed: "0.10",
               speedx: "-0.054",
-              rotate: 67,
+              rotate: -35,
               color: "rgba(255,204,0,0.35)",
             },
             {
@@ -4236,7 +4243,7 @@ export default function TTSSite() {
               size: 40,
               speed: "0.10",
               speedx: "0.054",
-              rotate: -5,
+              rotate: -45,
               color: "rgba(168,85,247,0.40)",
             },
             {
@@ -4246,7 +4253,7 @@ export default function TTSSite() {
               size: 38,
               speed: "0.06",
               speedx: "-0.018",
-              rotate: 29,
+              rotate: -19,
               color: "rgba(16,185,129,0.35)",
             },
             {
@@ -4256,7 +4263,7 @@ export default function TTSSite() {
               size: 36,
               speed: "0.06",
               speedx: "0.018",
-              rotate: -47,
+              rotate: -85,
               color: "rgba(99,102,241,0.40)",
             },
             {
@@ -4266,7 +4273,7 @@ export default function TTSSite() {
               size: 30,
               speed: "0.06",
               speedx: "-0.018",
-              rotate: 13,
+              rotate: 43,
               color: "rgba(255,255,255,0.22)",
             },
             {
@@ -4276,7 +4283,7 @@ export default function TTSSite() {
               size: 34,
               speed: "0.06",
               speedx: "0.018",
-              rotate: -61,
+              rotate: 17,
               color: "rgba(255,204,0,0.28)",
             },
             {
@@ -4286,7 +4293,7 @@ export default function TTSSite() {
               size: 32,
               speed: "0.06",
               speedx: "0.018",
-              rotate: 33,
+              rotate: -49,
               color: "rgba(16,185,129,0.28)",
             },
             {
@@ -4296,7 +4303,7 @@ export default function TTSSite() {
               size: 30,
               speed: "0.06",
               speedx: "-0.018",
-              rotate: -7,
+              rotate: 9,
               color: "rgba(255,255,255,0.18)",
             },
           ].map(
@@ -4563,15 +4570,152 @@ export default function TTSSite() {
           </div>
         </section>
 
-        {/* Gradient: Cabinet → Alumni */}
+        {/* ── TRANSITION BRIDGE: Cabinet → Alumni — floating icon cluster ── */}
         <div
           aria-hidden="true"
           style={{
-            height: 60,
-            background: "linear-gradient(to bottom, #09090b 0%, #0c0c0f 100%)",
-            pointerEvents: "none",
+            position: "relative",
+            height: 220,
+            background:
+              "linear-gradient(to bottom, #09090b 0%, #0b0b0e 50%, #0c0c0f 100%)",
+            overflow: "visible",
+            flexShrink: 0,
           }}
-        />
+        >
+          {[
+            {
+              Icon: Trophy,
+              top: "18%",
+              left: "8%",
+              size: 72,
+              speed: "0.20",
+              speedx: "0.072",
+              rotate: -19,
+              color: "rgba(255,204,0,0.55)",
+            },
+            {
+              Icon: GraduationCap,
+              top: "12%",
+              left: "22%",
+              size: 48,
+              speed: "0.14",
+              speedx: "0.054",
+              rotate: 17,
+              color: "rgba(255,255,255,0.20)",
+            },
+            {
+              Icon: Star,
+              top: "55%",
+              left: "14%",
+              size: 38,
+              speed: "0.10",
+              speedx: "0.036",
+              rotate: -57,
+              color: "rgba(255,204,0,0.30)",
+            },
+            {
+              Icon: Handshake,
+              top: "30%",
+              left: "38%",
+              size: 56,
+              speed: "0.14",
+              speedx: "-0.054",
+              rotate: -37,
+              color: "rgba(255,255,255,0.14)",
+            },
+            {
+              Icon: Rocket,
+              top: "10%",
+              right: "18%",
+              size: 62,
+              speed: "0.20",
+              speedx: "-0.072",
+              rotate: -65,
+              color: "rgba(204,0,0,0.45)",
+            },
+            {
+              Icon: Lightbulb,
+              top: "48%",
+              right: "28%",
+              size: 44,
+              speed: "0.14",
+              speedx: "-0.054",
+              rotate: -11,
+              color: "rgba(255,204,0,0.40)",
+            },
+            {
+              Icon: Award,
+              top: "22%",
+              right: "8%",
+              size: 80,
+              speed: "0.20",
+              speedx: "-0.072",
+              rotate: 59,
+              color: "rgba(255,255,255,0.12)",
+            },
+            {
+              Icon: Brain,
+              bottom: "15%",
+              right: "14%",
+              size: 40,
+              speed: "0.10",
+              speedx: "-0.036",
+              rotate: 29,
+              color: "rgba(204,0,0,0.32)",
+            },
+            {
+              Icon: Zap,
+              bottom: "20%",
+              left: "32%",
+              size: 32,
+              speed: "0.07",
+              speedx: "0.025",
+              rotate: 29,
+              color: "rgba(255,204,0,0.28)",
+            },
+            {
+              Icon: Globe,
+              top: "60%",
+              right: "38%",
+              size: 36,
+              speed: "0.07",
+              speedx: "-0.025",
+              rotate: 17,
+              color: "rgba(255,255,255,0.10)",
+            },
+          ].map(
+            (
+              {
+                Icon,
+                top,
+                left,
+                right,
+                bottom,
+                size,
+                speed,
+                speedx,
+                rotate,
+                color,
+              },
+              idx,
+            ) => (
+              <div
+                key={`bridge-float-${idx}`}
+                ref={(el) => {
+                  if (el) floatRefs.current[idx + 160] = el;
+                }}
+                className="tts-float-icon"
+                data-speed={speed}
+                data-speedx={speedx}
+                data-rotate={rotate}
+                aria-hidden="true"
+                style={{ top, left, right, bottom, color }}
+              >
+                <Icon size={size} />
+              </div>
+            ),
+          )}
+        </div>
 
         {/* ── ALUMNI / BOARD ── */}
         <section
@@ -4593,7 +4737,7 @@ export default function TTSSite() {
               size: 56,
               speed: "0.11",
               speedx: "-0.054",
-              rotate: 51,
+              rotate: 37,
               color: "rgba(255,204,0,0.35)",
             },
             {
@@ -4603,7 +4747,7 @@ export default function TTSSite() {
               size: 72,
               speed: "0.20",
               speedx: "0.072",
-              rotate: -23,
+              rotate: -5,
               color: "rgba(255,255,255,0.15)",
             },
             {
@@ -4613,7 +4757,7 @@ export default function TTSSite() {
               size: 48,
               speed: "0.08",
               speedx: "-0.054",
-              rotate: 17,
+              rotate: 3,
               color: "rgba(204,0,0,0.35)",
             },
             {
@@ -4623,7 +4767,7 @@ export default function TTSSite() {
               size: 38,
               speed: "0.10",
               speedx: "0.054",
-              rotate: -43,
+              rotate: 47,
               color: "rgba(255,255,255,0.18)",
             },
             {
@@ -4633,7 +4777,7 @@ export default function TTSSite() {
               size: 32,
               speed: "0.06",
               speedx: "-0.018",
-              rotate: 71,
+              rotate: 39,
               color: "rgba(255,204,0,0.25)",
             },
             // Additional alumni icons
@@ -4644,7 +4788,7 @@ export default function TTSSite() {
               size: 52,
               speed: "0.14",
               speedx: "0.072",
-              rotate: -3,
+              rotate: -67,
               color: "rgba(255,204,0,0.40)",
             },
             {
@@ -4654,7 +4798,7 @@ export default function TTSSite() {
               size: 44,
               speed: "0.10",
               speedx: "-0.054",
-              rotate: 39,
+              rotate: -79,
               color: "rgba(255,204,0,0.32)",
             },
             {
@@ -4664,7 +4808,7 @@ export default function TTSSite() {
               size: 36,
               speed: "0.10",
               speedx: "0.054",
-              rotate: -27,
+              rotate: 3,
               color: "rgba(255,204,0,0.28)",
             },
             {
@@ -4674,7 +4818,7 @@ export default function TTSSite() {
               size: 30,
               speed: "0.06",
               speedx: "-0.018",
-              rotate: 57,
+              rotate: -41,
               color: "rgba(204,0,0,0.35)",
             },
             {
@@ -4684,7 +4828,7 @@ export default function TTSSite() {
               size: 28,
               speed: "0.06",
               speedx: "0.018",
-              rotate: 11,
+              rotate: -39,
               color: "rgba(255,255,255,0.18)",
             },
           ].map(
@@ -5157,7 +5301,7 @@ export default function TTSSite() {
               size: 108,
               speed: "0.28",
               speedx: "0.126",
-              rotate: -53,
+              rotate: -67,
               color: "rgba(255,255,255,0.55)",
             },
             {
@@ -5167,7 +5311,7 @@ export default function TTSSite() {
               size: 96,
               speed: "0.28",
               speedx: "-0.072",
-              rotate: 31,
+              rotate: -19,
               color: "rgba(255,204,0,0.65)",
             },
             // MIDGROUND — medium icons
@@ -5178,7 +5322,7 @@ export default function TTSSite() {
               size: 70,
               speed: "0.20",
               speedx: "-0.072",
-              rotate: -9,
+              rotate: -27,
               color: "rgba(204,0,0,0.65)",
             },
             {
@@ -5188,7 +5332,7 @@ export default function TTSSite() {
               size: 64,
               speed: "0.14",
               speedx: "0.054",
-              rotate: 47,
+              rotate: 69,
               color: "rgba(255,255,255,0.5)",
             },
             // BACKGROUND — small icons
@@ -5199,7 +5343,7 @@ export default function TTSSite() {
               size: 38,
               speed: "0.10",
               speedx: "0.054",
-              rotate: -17,
+              rotate: -13,
               color: "rgba(255,255,255,0.22)",
             },
             {
@@ -5209,7 +5353,7 @@ export default function TTSSite() {
               size: 30,
               speed: "0.06",
               speedx: "-0.018",
-              rotate: 63,
+              rotate: 23,
               color: "rgba(204,0,0,0.3)",
             },
             // Variety icons for FAQ
@@ -5220,7 +5364,7 @@ export default function TTSSite() {
               size: 40,
               speed: "0.10",
               speedx: "0.054",
-              rotate: -33,
+              rotate: 77,
               color: "rgba(255,255,255,0.25)",
             },
             {
@@ -5230,7 +5374,7 @@ export default function TTSSite() {
               size: 36,
               speed: "0.10",
               speedx: "0.054",
-              rotate: 5,
+              rotate: 73,
               color: "rgba(255,204,0,0.32)",
             },
             {
@@ -5240,7 +5384,7 @@ export default function TTSSite() {
               size: 32,
               speed: "0.06",
               speedx: "-0.018",
-              rotate: -71,
+              rotate: -43,
               color: "rgba(16,185,129,0.35)",
             },
           ].map(
@@ -5629,7 +5773,7 @@ export default function TTSSite() {
                 size: 118,
                 speed: "0.28",
                 speedx: "0.126",
-                rotate: 25,
+                rotate: 13,
                 color: "#CC0000",
               },
               {
@@ -5639,7 +5783,7 @@ export default function TTSSite() {
                 size: 104,
                 speed: "0.18",
                 speedx: "0.108",
-                rotate: -41,
+                rotate: -57,
                 color: "#FFCC00",
               },
               {
@@ -5649,7 +5793,7 @@ export default function TTSSite() {
                 size: 80,
                 speed: "0.20",
                 speedx: "0.072",
-                rotate: 15,
+                rotate: 11,
                 color: "rgba(204,0,0,0.5)",
               },
               {
@@ -5659,7 +5803,7 @@ export default function TTSSite() {
                 size: 92,
                 speed: "0.17",
                 speedx: "-0.072",
-                rotate: -57,
+                rotate: 17,
                 color: "#CC0000",
               },
               {
@@ -5669,7 +5813,7 @@ export default function TTSSite() {
                 size: 70,
                 speed: "0.13",
                 speedx: "-0.072",
-                rotate: 43,
+                rotate: 41,
                 color: "rgba(255,255,255,0.6)",
               },
               {
@@ -5679,7 +5823,7 @@ export default function TTSSite() {
                 size: 64,
                 speed: "0.14",
                 speedx: "-0.045",
-                rotate: -13,
+                rotate: 11,
                 color: "rgba(255,204,0,0.65)",
               },
               {
@@ -5689,7 +5833,7 @@ export default function TTSSite() {
                 size: 60,
                 speed: "0.11",
                 speedx: "0.045",
-                rotate: 59,
+                rotate: -73,
                 color: "rgba(204,0,0,0.65)",
               },
               {
@@ -5699,7 +5843,7 @@ export default function TTSSite() {
                 size: 36,
                 speed: "0.06",
                 speedx: "0.027",
-                rotate: -21,
+                rotate: 73,
                 color: "rgba(255,255,255,0.25)",
               },
               {
@@ -5709,7 +5853,7 @@ export default function TTSSite() {
                 size: 30,
                 speed: "0.06",
                 speedx: "-0.018",
-                rotate: 37,
+                rotate: 63,
                 color: "rgba(255,255,255,0.2)",
               },
               // Additional join icons
@@ -5720,7 +5864,7 @@ export default function TTSSite() {
                 size: 44,
                 speed: "0.14",
                 speedx: "0.072",
-                rotate: -49,
+                rotate: 11,
                 color: "rgba(204,0,0,0.45)",
               },
               {
@@ -5730,7 +5874,7 @@ export default function TTSSite() {
                 size: 38,
                 speed: "0.10",
                 speedx: "0.054",
-                rotate: 9,
+                rotate: -9,
                 color: "rgba(255,204,0,0.38)",
               },
               {
@@ -5740,7 +5884,7 @@ export default function TTSSite() {
                 size: 34,
                 speed: "0.10",
                 speedx: "-0.054",
-                rotate: -65,
+                rotate: 35,
                 color: "rgba(16,185,129,0.40)",
               },
               {
@@ -5750,7 +5894,7 @@ export default function TTSSite() {
                 size: 28,
                 speed: "0.06",
                 speedx: "-0.018",
-                rotate: 27,
+                rotate: 11,
                 color: "rgba(255,255,255,0.18)",
               },
             ].map(
