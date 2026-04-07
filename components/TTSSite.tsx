@@ -555,9 +555,9 @@ function DiagonalSlashDivider({
       const y = window.scrollY;
       // Shift the SVG horizontally so the line scrolls across
       if (svgRef.current)
-        svgRef.current.style.transform = `translateX(${y * 0.07}px)`;
+        svgRef.current.style.transform = `translateX(${y * 0.28}px)`;
       if (glowRef.current)
-        glowRef.current.style.transform = `translateX(${-y * 0.04}px)`;
+        glowRef.current.style.transform = `translateX(${-y * 0.16}px)`;
     };
     window.addEventListener("scroll", handle, { passive: true });
     handle();
@@ -590,8 +590,8 @@ function DiagonalSlashDivider({
         style={{
           position: "absolute",
           top: 0,
-          left: "-10%",
-          width: "120%",
+          left: "-50%",
+          width: "200%",
           height: "100%",
           background:
             "linear-gradient(180deg, transparent 20%, rgba(204,0,0,0.08) 44%, rgba(204,0,0,0.08) 56%, transparent 80%)",
@@ -599,14 +599,14 @@ function DiagonalSlashDivider({
           willChange: "transform",
         }}
       />
-      {/* SVG diagonal line — spans 120% width so it never clips while shifting */}
+      {/* SVG diagonal line — spans 200% width so it stays visible when shifted */}
       <svg
         ref={svgRef}
         style={{
           position: "absolute",
           top: 0,
-          left: "-10%",
-          width: "120%",
+          left: "-50%",
+          width: "200%",
           height: "100%",
           overflow: "visible",
           willChange: "transform",
@@ -660,11 +660,11 @@ function ScanLineDivider({
   // Lines span 140% width with edge-fading gradient so translateX never reveals
   // a raw endpoint. Each bar shifts at a different speed, alternating direction.
   const LINES = [
-    { top: "14%", speed: 0.1, color: "255,255,255", opacity: 0.14, h: 1 },
-    { top: "32%", speed: 0.07, color: "204,0,0", opacity: 0.7, h: 2 },
-    { top: "50%", speed: 0.13, color: "255,255,255", opacity: 0.08, h: 1 },
-    { top: "68%", speed: 0.06, color: "204,0,0", opacity: 0.45, h: 1.5 },
-    { top: "84%", speed: 0.09, color: "255,255,255", opacity: 0.1, h: 1 },
+    { top: "14%", speed: 0.5, color: "255,255,255", opacity: 0.18, h: 1 },
+    { top: "32%", speed: 0.35, color: "204,0,0", opacity: 0.75, h: 2 },
+    { top: "50%", speed: 0.65, color: "255,255,255", opacity: 0.1, h: 1 },
+    { top: "68%", speed: 0.3, color: "204,0,0", opacity: 0.5, h: 1.5 },
+    { top: "84%", speed: 0.45, color: "255,255,255", opacity: 0.12, h: 1 },
   ];
 
   const lineRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -738,7 +738,7 @@ function DotRowDivider({
   useEffect(() => {
     const handle = () => {
       if (!svgRef.current) return;
-      const off = (window.scrollY * 0.09) % GAP;
+      const off = (window.scrollY * 0.35) % GAP;
       svgRef.current.style.transform = `translateX(${-off}px)`;
     };
     window.addEventListener("scroll", handle, { passive: true });
@@ -1467,9 +1467,11 @@ export default function TTSSite() {
                 revealStart: 0.22,
               },
             ].map(({ stat, label, sub, revealStart }, i) => {
+              // Base stagger on trackExitProg (overlay slide-in) so stats appear
+              // as the overlay enters — prevents blank right side during tracks exit
               const itemP = Math.max(
                 0,
-                Math.min(1, (revealProgress - revealStart) / 0.09),
+                Math.min(1, (trackExitProg - revealStart) / 0.09),
               );
               return (
                 <div
@@ -1920,7 +1922,7 @@ export default function TTSSite() {
                   <span
                     style={{
                       color: "transparent",
-                      WebkitTextStroke: "1.5px #fff",
+                      WebkitTextStroke: `${Math.max(1.5, (18 + heroScaleEased * 54) * 0.04).toFixed(1)}px #fff`,
                     }}
                   >
                     actually
@@ -1930,7 +1932,7 @@ export default function TTSSite() {
                   <span
                     style={{
                       color: "transparent",
-                      WebkitTextStroke: "1.5px #d4d4d8",
+                      WebkitTextStroke: `${Math.max(1.5, (18 + heroScaleEased * 54) * 0.04).toFixed(1)}px #d4d4d8`,
                     }}
                   >
                     real
