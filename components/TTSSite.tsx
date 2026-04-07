@@ -4616,128 +4616,128 @@ export default function TTSSite() {
               );
             })()}
           </div>
-        </section>
 
-        {/* ── FOOTER ── */}
-        <footer
-          style={{
-            background: "transparent",
-            padding: "32px 40px 24px",
-            position: "relative",
-            zIndex: 2,
-          }}
-        >
-          {/* Floating nav pills */}
-          <div
+          {/* ── FOOTER — inside join section so it sits flush ── */}
+          <footer
             style={{
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              marginBottom: 28,
+              background: "transparent",
+              padding: "32px 40px 28px",
+              position: "relative",
+              zIndex: 2,
             }}
           >
-            {[
-              { label: "Mission", id: "mission" },
-              { label: "Tracks", id: "tracks" },
-              { label: "Team", id: "leadership" },
-              { label: "E-Board", id: "cabinet" },
-              { label: "Alumni", id: "alumni" },
-              { label: "FAQ", id: "faq" },
-              { label: "Join", id: "join" },
-            ].map(({ label, id }) => (
-              <button
-                key={label}
-                onClick={() => scrollTo(id)}
+            {/* Floating nav pills */}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                marginBottom: 28,
+              }}
+            >
+              {[
+                { label: "Mission", id: "mission" },
+                { label: "Tracks", id: "tracks" },
+                { label: "Team", id: "leadership" },
+                { label: "E-Board", id: "cabinet" },
+                { label: "Alumni", id: "alumni" },
+                { label: "FAQ", id: "faq" },
+                { label: "Join", id: "join" },
+              ].map(({ label, id }) => (
+                <button
+                  key={label}
+                  onClick={() => scrollTo(id)}
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 100,
+                    padding: "8px 18px",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#a1a1aa",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    whiteSpace: "nowrap",
+                    fontFamily: "inherit",
+                    backdropFilter: "blur(8px)",
+                    WebkitBackdropFilter: "blur(8px)",
+                    letterSpacing: "0.02em",
+                  }}
+                  onMouseEnter={(e) => {
+                    const el = e.currentTarget as HTMLButtonElement;
+                    el.style.background = "rgba(255,255,255,0.08)";
+                    el.style.borderColor = "rgba(255,255,255,0.22)";
+                    el.style.color = "#ffffff";
+                    el.style.transform = "translateY(-2px)";
+                    el.style.boxShadow = "0 8px 24px rgba(0,0,0,0.4)";
+                  }}
+                  onMouseLeave={(e) => {
+                    const el = e.currentTarget as HTMLButtonElement;
+                    el.style.background = "rgba(255,255,255,0.04)";
+                    el.style.borderColor = "rgba(255,255,255,0.1)";
+                    el.style.color = "#a1a1aa";
+                    el.style.transform = "translateY(0)";
+                    el.style.boxShadow = "none";
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(204,0,0,0.08)",
+                  border: "1px solid rgba(204,0,0,0.2)",
                   borderRadius: 100,
                   padding: "8px 18px",
                   fontSize: 12,
                   fontWeight: 600,
-                  color: "#a1a1aa",
+                  color: "#CC0000",
                   cursor: "pointer",
                   transition: "all 0.2s ease",
                   whiteSpace: "nowrap",
-                  fontFamily: "inherit",
+                  textDecoration: "none",
                   backdropFilter: "blur(8px)",
                   WebkitBackdropFilter: "blur(8px)",
                   letterSpacing: "0.02em",
+                  display: "inline-flex",
+                  alignItems: "center",
                 }}
                 onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLButtonElement;
-                  el.style.background = "rgba(255,255,255,0.08)";
-                  el.style.borderColor = "rgba(255,255,255,0.22)";
-                  el.style.color = "#ffffff";
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.background = "rgba(204,0,0,0.16)";
                   el.style.transform = "translateY(-2px)";
-                  el.style.boxShadow = "0 8px 24px rgba(0,0,0,0.4)";
+                  el.style.boxShadow = "0 8px 24px rgba(204,0,0,0.2)";
                 }}
                 onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLButtonElement;
-                  el.style.background = "rgba(255,255,255,0.04)";
-                  el.style.borderColor = "rgba(255,255,255,0.1)";
-                  el.style.color = "#a1a1aa";
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.background = "rgba(204,0,0,0.08)";
                   el.style.transform = "translateY(0)";
                   el.style.boxShadow = "none";
                 }}
               >
-                {label}
-              </button>
-            ))}
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+                Instagram
+              </a>
+            </div>
+
+            {/* Copyright */}
+            <p
               style={{
-                background: "rgba(204,0,0,0.08)",
-                border: "1px solid rgba(204,0,0,0.2)",
-                borderRadius: 100,
-                padding: "8px 18px",
-                fontSize: 12,
-                fontWeight: 600,
-                color: "#CC0000",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                whiteSpace: "nowrap",
-                textDecoration: "none",
-                backdropFilter: "blur(8px)",
-                WebkitBackdropFilter: "blur(8px)",
-                letterSpacing: "0.02em",
-                display: "inline-flex",
-                alignItems: "center",
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLAnchorElement;
-                el.style.background = "rgba(204,0,0,0.16)";
-                el.style.transform = "translateY(-2px)";
-                el.style.boxShadow = "0 8px 24px rgba(204,0,0,0.2)";
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLAnchorElement;
-                el.style.background = "rgba(204,0,0,0.08)";
-                el.style.transform = "translateY(0)";
-                el.style.boxShadow = "none";
+                textAlign: "center",
+                fontSize: 11,
+                color: "#3f3f46",
+                margin: 0,
+                letterSpacing: "0.04em",
               }}
             >
-              Instagram
-            </a>
-          </div>
-
-          {/* Copyright */}
-          <p
-            style={{
-              textAlign: "center",
-              fontSize: 11,
-              color: "#3f3f46",
-              margin: 0,
-              letterSpacing: "0.04em",
-            }}
-          >
-            © {new Date().getFullYear()} Trojan Technology Solutions · USC
-          </p>
-        </footer>
+              © {new Date().getFullYear()} Trojan Technology Solutions · USC
+            </p>
+          </footer>
+        </section>
       </div>
     </>
   );
