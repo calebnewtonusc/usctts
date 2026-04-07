@@ -115,7 +115,7 @@ const FOUNDERS = [
     id: "caleb",
     name: "Caleb Newton",
     role: "Co-President",
-    focus: "USC Innovation · Iovine & Young",
+    focus: "Innovation & Entrepreneurship",
     headshot: "/img/caleb_shot.jpg",
     position: "center 15%",
     link: "https://calebnewton.me/",
@@ -4706,13 +4706,21 @@ export default function TTSSite() {
           </div>
         </section>
 
-        {/* ── FOOTER ── */}
+        {/* ── FOOTER — fixed floating pills, appear near page bottom ── */}
         <footer
           style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: "20px 40px 28px",
+            zIndex: 100,
             background: "transparent",
-            padding: "32px 40px 28px",
-            position: "relative",
-            zIndex: 2,
+            transform: footerVisible ? "translateY(0)" : "translateY(120%)",
+            opacity: footerVisible ? 1 : 0,
+            transition:
+              "transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.4s ease",
+            pointerEvents: footerVisible ? "auto" : "none",
           }}
         >
           {/* Floating nav pills */}
