@@ -759,12 +759,17 @@ export default function TTSSite() {
   );
   const wordsMorphing = heroProgress > 0.62;
   const heroContentShown = heroProgress > 0.76;
-  // Scale phase: heading grows from its slid position to fill the screen
+  // Phase 1 (0.76→0.87): text slides UP into position + box expands
+  const heroSlideUpP = Math.max(0, Math.min(1, (heroProgress - 0.76) / 0.11));
+  const heroSlideUpEased =
+    heroSlideUpP < 0.5
+      ? 2 * heroSlideUpP * heroSlideUpP
+      : -1 + (4 - 2 * heroSlideUpP) * heroSlideUpP;
+  // Phase 2 (0.87→1.0): TTS heading gone, text grows big
   const heroScaleProgress = Math.max(
     0,
-    Math.min(1, (heroProgress - 0.82) / 0.18),
+    Math.min(1, (heroProgress - 0.87) / 0.13),
   );
-  // Ease in-out for scale
   const heroScaleEased =
     heroScaleProgress < 0.5
       ? 2 * heroScaleProgress * heroScaleProgress
@@ -1549,16 +1554,17 @@ export default function TTSSite() {
                   position: "absolute",
                   top: 0,
                   left: 40,
-                  // Expand right edge during scale so text isn't constrained
-                  maxWidth: heroScaleProgress > 0 ? `calc(100% - 80px)` : 480,
-                  opacity: heroContentShown ? 1 : 0,
-                  transform: heroContentShown
-                    ? "translateY(0)"
-                    : "translateY(20px)",
-                  transition:
+                  // Expands from narrow → full width across both phases
+                  maxWidth:
                     heroScaleProgress > 0
-                      ? "none"
-                      : "opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1)",
+                      ? `calc(100% - 80px)`
+                      : 260 + heroSlideUpEased * 260,
+                  opacity: heroContentShown ? 1 : 0,
+                  // Slides up during phase 1, stays put during phase 2
+                  transform: heroContentShown
+                    ? `translateY(${(1 - heroSlideUpEased) * 90}px)`
+                    : "translateY(90px)",
+                  transition: heroSlideUpP > 0 ? "none" : "opacity 0.6s ease",
                   pointerEvents:
                     heroContentShown && heroScaleProgress < 0.1
                       ? "auto"
