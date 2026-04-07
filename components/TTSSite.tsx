@@ -783,7 +783,8 @@ export default function TTSSite() {
   // Panel A: slides in from RIGHT locked to tracks exit (same exitP = no gap)
   // then exits DOWN (0.42→0.56)
 
-  const transP = Math.max(0, Math.min(1, (revealSlide - 0.42) / 0.14));
+  // Transition starts at 0.56 (exactly when overlay snaps away) so it's fully visible & scroll-driven
+  const transP = Math.max(0, Math.min(1, (revealSlide - 0.56) / 0.18));
   const panelRealWorkY = transP * 100;
   const panelWalkInY = (-1 + transP) * 100;
 
