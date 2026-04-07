@@ -563,9 +563,9 @@ function DiagonalSlashDivider({
       const y = window.scrollY;
       // Shift the SVG horizontally so the line scrolls across
       if (svgRef.current)
-        svgRef.current.style.transform = `translateX(${y * 0.28}px)`;
+        svgRef.current.style.transform = `translateX(${y * 0.65}px)`;
       if (glowRef.current)
-        glowRef.current.style.transform = `translateX(${-y * 0.16}px)`;
+        glowRef.current.style.transform = `translateX(${-y * 0.38}px)`;
     };
     window.addEventListener("scroll", handle, { passive: true });
     handle();
@@ -602,8 +602,8 @@ function DiagonalSlashDivider({
           width: "200%",
           height: "100%",
           background:
-            "linear-gradient(180deg, transparent 20%, rgba(204,0,0,0.08) 44%, rgba(204,0,0,0.08) 56%, transparent 80%)",
-          filter: "blur(6px)",
+            "linear-gradient(180deg, transparent 15%, rgba(204,0,0,0.35) 40%, rgba(255,40,0,0.22) 55%, transparent 80%)",
+          filter: "blur(10px)",
           willChange: "transform",
         }}
       />
@@ -622,14 +622,24 @@ function DiagonalSlashDivider({
         preserveAspectRatio="none"
         viewBox="0 0 1200 80"
       >
-        {/* Red glow stroke */}
+        {/* Outer red glow */}
         <line
           x1="0"
           y1="55"
           x2="1200"
           y2="15"
-          stroke="rgba(204,0,0,0.25)"
-          strokeWidth="12"
+          stroke="rgba(204,0,0,0.50)"
+          strokeWidth="20"
+          strokeLinecap="round"
+        />
+        {/* Inner glow */}
+        <line
+          x1="0"
+          y1="55"
+          x2="1200"
+          y2="15"
+          stroke="rgba(255,60,0,0.45)"
+          strokeWidth="8"
           strokeLinecap="round"
         />
         {/* Sharp red line */}
@@ -638,16 +648,16 @@ function DiagonalSlashDivider({
           y1="55"
           x2="1200"
           y2="15"
-          stroke="rgba(204,0,0,0.90)"
-          strokeWidth="1.5"
+          stroke="rgba(255,80,0,1.0)"
+          strokeWidth="2"
         />
         {/* Faint white parallel line */}
         <line
           x1="0"
-          y1="62"
+          y1="63"
           x2="1200"
-          y2="22"
-          stroke="rgba(255,255,255,0.10)"
+          y2="23"
+          stroke="rgba(255,255,255,0.18)"
           strokeWidth="1"
         />
       </svg>
@@ -665,14 +675,12 @@ function ScanLineDivider({
   topColor?: string;
   bottomColor?: string;
 }) {
-  // Lines span 140% width with edge-fading gradient so translateX never reveals
-  // a raw endpoint. Each bar shifts at a different speed, alternating direction.
   const LINES = [
-    { top: "14%", speed: 0.5, color: "255,255,255", opacity: 0.18, h: 1 },
-    { top: "32%", speed: 0.35, color: "204,0,0", opacity: 0.75, h: 2 },
-    { top: "50%", speed: 0.65, color: "255,255,255", opacity: 0.1, h: 1 },
-    { top: "68%", speed: 0.3, color: "204,0,0", opacity: 0.5, h: 1.5 },
-    { top: "84%", speed: 0.45, color: "255,255,255", opacity: 0.12, h: 1 },
+    { top: "12%", speed: 0.55, color: "255,255,255", opacity: 0.3, h: 1 },
+    { top: "30%", speed: 0.42, color: "204,0,0", opacity: 0.9, h: 3 },
+    { top: "50%", speed: 0.7, color: "255,255,255", opacity: 0.2, h: 1 },
+    { top: "68%", speed: 0.38, color: "204,0,0", opacity: 0.7, h: 2 },
+    { top: "84%", speed: 0.5, color: "255,204,0", opacity: 0.35, h: 1.5 },
   ];
 
   const lineRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -698,12 +706,22 @@ function ScanLineDivider({
       aria-hidden="true"
       style={{
         position: "relative",
-        height: 72,
-        background: `linear-gradient(to bottom, ${topColor}, ${bottomColor})`,
+        height: 100,
+        background: `linear-gradient(to bottom, ${topColor}, #0d0305, ${bottomColor})`,
         overflow: "hidden",
         flexShrink: 0,
       }}
     >
+      {/* Red center glow for depth */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(ellipse 60% 100% at 50% 50%, rgba(204,0,0,0.06) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }}
+      />
       {LINES.map((line, i) => (
         <div
           key={i}
@@ -713,12 +731,16 @@ function ScanLineDivider({
           style={{
             position: "absolute",
             top: line.top,
-            left: "-20%",
-            width: "140%",
+            left: "-30%",
+            width: "160%",
             height: line.h,
-            background: `linear-gradient(90deg, transparent 0%, rgba(${line.color},${line.opacity}) 12%, rgba(${line.color},${line.opacity}) 88%, transparent 100%)`,
-            borderRadius: 1,
+            background: `linear-gradient(90deg, transparent 0%, rgba(${line.color},${line.opacity}) 10%, rgba(${line.color},${line.opacity}) 90%, transparent 100%)`,
+            borderRadius: 2,
             willChange: "transform",
+            boxShadow:
+              line.color === "204,0,0"
+                ? `0 0 8px rgba(204,0,0,${line.opacity * 0.6})`
+                : "none",
           }}
         />
       ))}
@@ -734,41 +756,29 @@ function DotRowDivider({
   topColor?: string;
   bottomColor?: string;
 }) {
-  const waveRef = useRef<HTMLDivElement>(null);
-  const COLS = 70;
+  const COLS = 80;
   const ROWS = 5;
-  const GAP = 28;
-  const H = 88;
-  const W = (COLS + 2) * GAP; // 2016px
-
-  useEffect(() => {
-    const handle = () => {
-      if (!waveRef.current) return;
-      // Spotlight div moves right as user scrolls — dots never move
-      waveRef.current.style.transform = `translateX(${window.scrollY * 0.45 - 500}px)`;
-    };
-    window.addEventListener("scroll", handle, { passive: true });
-    handle();
-    return () => window.removeEventListener("scroll", handle);
-  }, []);
+  const GAP = 26;
+  const H = 96;
+  const W = (COLS + 2) * GAP; // ~2132px
 
   const dots: React.ReactNode[] = [];
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS + 2; col++) {
       const x = col * GAP;
-      const y = 10 + row * ((H - 20) / (ROWS - 1));
+      const y = 12 + row * ((H - 24) / (ROWS - 1));
       const sum = row + col;
       const isRed = sum % 7 === 0;
       const isGold = sum % 13 === 0;
       const isBright = sum % 19 === 0;
       const fill = isRed
-        ? "rgba(204,0,0,0.55)"
+        ? "rgba(204,0,0,0.85)"
         : isGold
-          ? "rgba(255,204,0,0.40)"
+          ? "rgba(255,204,0,0.72)"
           : isBright
-            ? "rgba(255,255,255,0.22)"
-            : "rgba(255,255,255,0.10)";
-      const r = isRed ? 3 : isGold ? 2.5 : isBright ? 2 : 1.5;
+            ? "rgba(255,255,255,0.55)"
+            : "rgba(255,255,255,0.28)";
+      const r = isRed ? 3.5 : isGold ? 3 : isBright ? 2.5 : 2;
       dots.push(
         <circle key={`${row}-${col}`} cx={x} cy={y} r={r} fill={fill} />,
       );
@@ -786,7 +796,13 @@ function DotRowDivider({
         flexShrink: 0,
       }}
     >
-      {/* Static dot grid */}
+      <style>{`
+        @keyframes dotWave {
+          0%   { transform: translateX(-700px); }
+          100% { transform: translateX(${W + 500}px); }
+        }
+      `}</style>
+      {/* Static dot grid — high-opacity so they're always clearly visible */}
       <svg
         width={W}
         height={H}
@@ -795,18 +811,17 @@ function DotRowDivider({
       >
         {dots}
       </svg>
-      {/* Moving spotlight — screen blend illuminates dots as it passes without moving them */}
+      {/* Animated warm light sweep — passes over dots giving the "changing lights" effect */}
       <div
-        ref={waveRef}
         style={{
           position: "absolute",
-          top: "-10%",
+          top: 0,
           left: 0,
-          width: 900,
-          height: "120%",
+          width: 700,
+          height: "100%",
           background:
-            "radial-gradient(ellipse 450px 80px at center, rgba(204,0,0,0.55) 0%, rgba(220,80,0,0.30) 45%, transparent 100%)",
-          mixBlendMode: "screen",
+            "linear-gradient(90deg, transparent 0%, rgba(220,60,0,0.22) 20%, rgba(255,120,0,0.38) 50%, rgba(220,60,0,0.22) 80%, transparent 100%)",
+          animation: "dotWave 2.8s linear infinite",
           pointerEvents: "none",
           willChange: "transform",
         }}
@@ -816,7 +831,7 @@ function DotRowDivider({
         style={{
           position: "absolute",
           inset: 0,
-          background: `linear-gradient(90deg, ${topColor} 0%, transparent 6%, transparent 94%, ${bottomColor} 100%)`,
+          background: `linear-gradient(90deg, ${topColor} 0%, transparent 8%, transparent 92%, ${bottomColor} 100%)`,
           pointerEvents: "none",
         }}
       />
