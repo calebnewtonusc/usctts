@@ -852,10 +852,13 @@ export default function TTSSite() {
   const [joinActive, setJoinActive] = useState(false);
   const [joinScrollProg, setJoinScrollProg] = useState(0);
   const [missionActive, setMissionActive] = useState(false);
+  const [missionProgress, setMissionProgress] = useState(0);
   const [footerVisible, setFooterVisible] = useState(false);
+  const [outlineDims, setOutlineDims] = useState({ w: 800, h: 300 });
   const joinSectionRef = useRef<HTMLElement>(null);
   const joinScrollRef = useRef<HTMLElement>(null);
   const missionSectionRef = useRef<HTMLElement>(null);
+  const heroOutlineRef = useRef<HTMLDivElement>(null);
   const cursorDotRef = useRef<HTMLDivElement>(null);
   const cursorRingRef = useRef<HTMLDivElement>(null);
   const heroSectionRef = useRef<HTMLDivElement>(null);
@@ -916,6 +919,15 @@ export default function TTSSite() {
         const scrolled = scrollY - sect.offsetTop;
         const maxScroll = sect.offsetHeight - winH;
         setJoinScrollProg(Math.max(0, Math.min(1, scrolled / maxScroll)));
+      }
+      if (missionSectionRef.current) {
+        const rect = missionSectionRef.current.getBoundingClientRect();
+        // 0 when section top at viewport bottom, 1 when ~70% of section has entered
+        const p = Math.max(
+          0,
+          Math.min(1, (winH - rect.top) / (rect.height * 0.65)),
+        );
+        setMissionProgress(p);
       }
       const docH = document.documentElement.scrollHeight;
       const nearBottom = scrollY + winH >= docH - 160;
@@ -1068,6 +1080,22 @@ export default function TTSSite() {
     return () => window.removeEventListener("scroll", handle);
   }, []);
 
+  // Hero outline: measure the text block dimensions for the SVG stroke
+  useEffect(() => {
+    if (!heroOutlineRef.current) return;
+    const update = () => {
+      if (!heroOutlineRef.current) return;
+      setOutlineDims({
+        w: heroOutlineRef.current.offsetWidth,
+        h: heroOutlineRef.current.offsetHeight,
+      });
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(heroOutlineRef.current);
+    return () => ro.disconnect();
+  }, []);
+
   // Epic section entrances — join rings + mission flash
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -1118,30 +1146,43 @@ export default function TTSSite() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  const word2Shown = heroProgress > 0.16;
-  const word3Shown = heroProgress > 0.28;
+  // All heroProgress thresholds rescaled for 400vh (was 260vh).
+  // Physical scroll pixels preserved: old_threshold * (160/300) gives same pixel distance.
+  const word2Shown = heroProgress > 0.09;
+  const word3Shown = heroProgress > 0.15;
   const heroSlideProgress = Math.max(
     0,
-    Math.min(1, (heroProgress - 0.36) / (0.57 - 0.36)),
+    Math.min(1, (heroProgress - 0.19) / (0.3 - 0.19)),
   );
-  const wordsMorphing = heroProgress > 0.62;
-  const heroContentShown = heroProgress > 0.76;
-  // Phase 1 (0.76→0.87): text slides UP into position + box expands
-  const heroSlideUpP = Math.max(0, Math.min(1, (heroProgress - 0.76) / 0.11));
+  const wordsMorphing = heroProgress > 0.33;
+  const heroContentShown = heroProgress > 0.41;
+  // Phase 1 (0.41→0.46): text slides UP into position + box expands
+  const heroSlideUpP = Math.max(0, Math.min(1, (heroProgress - 0.41) / 0.05));
   const heroSlideUpEased =
     heroSlideUpP < 0.5
       ? 2 * heroSlideUpP * heroSlideUpP
       : -1 + (4 - 2 * heroSlideUpP) * heroSlideUpP;
-  // Phase 2 (0.87→1.0): TTS heading gone, text grows big
+  // Phase 2 (0.46→0.53): TTS heading gone, text grows big
   const heroScaleProgress = Math.max(
     0,
-    Math.min(1, (heroProgress - 0.87) / 0.13),
+    Math.min(1, (heroProgress - 0.46) / 0.07),
   );
   const heroScaleEased =
     heroScaleProgress < 0.5
       ? 2 * heroScaleProgress * heroScaleProgress
       : -1 + (4 - 2 * heroScaleProgress) * heroScaleProgress;
   const heroScaleVal = 1 + heroScaleEased * 3.5;
+  // Phase 3 (0.53→0.67): red outline draws in around text block
+  const heroOutlineDrawP = Math.max(
+    0,
+    Math.min(1, (heroProgress - 0.53) / 0.14),
+  );
+  // Phase 4 (0.67→0.82): outline holds, text frozen
+  // Phase 5 (0.82→1.0): outline erases
+  const heroOutlineEraseP = Math.max(
+    0,
+    Math.min(1, (heroProgress - 0.82) / 0.18),
+  );
   const h1WrapperW = h1WrapperRef.current?.offsetWidth ?? 0;
   const heroContainerW = heroContentRef.current?.clientWidth ?? 0;
   const slideX =
@@ -1568,7 +1609,7 @@ export default function TTSSite() {
         <section
           id="hero"
           ref={heroSectionRef}
-          style={{ height: "260vh", position: "relative" }}
+          style={{ height: "400vh", position: "relative" }}
         >
           <div
             style={{
@@ -1938,38 +1979,96 @@ export default function TTSSite() {
                       : "none",
                 }}
               >
-                <p
-                  style={{
-                    fontSize: 18 + heroScaleEased * 54,
-                    fontWeight: 700,
-                    color: "#fff",
-                    lineHeight: 1.65 - heroScaleEased * 0.55,
-                    marginBottom: 8,
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  A USC builder club where you{" "}
-                  <span
+                {/* Wrapper for the outline SVG measurement */}
+                <div ref={heroOutlineRef} style={{ position: "relative" }}>
+                  <p
                     style={{
-                      color: "transparent",
-                      WebkitTextStroke: `${Math.max(1.5, (18 + heroScaleEased * 54) * 0.04).toFixed(1)}px #fff`,
+                      fontSize: 18 + heroScaleEased * 54,
+                      fontWeight: 700,
+                      color: "#fff",
+                      lineHeight: 1.65 - heroScaleEased * 0.55,
+                      marginBottom: 8,
+                      letterSpacing: "-0.01em",
                     }}
                   >
-                    actually
-                  </span>{" "}
-                  use <span style={{ color: "#CC0000" }}>AI:</span> ship
-                  products, solve{" "}
-                  <span
-                    style={{
-                      color: "transparent",
-                      WebkitTextStroke: `${Math.max(1.5, (18 + heroScaleEased * 54) * 0.04).toFixed(1)}px #d4d4d8`,
-                    }}
-                  >
-                    real
-                  </span>{" "}
-                  problems, and{" "}
-                  <span style={{ color: "#FFCC00" }}>get ahead.</span>
-                </p>
+                    A USC builder club where you{" "}
+                    <span
+                      style={{
+                        color: "transparent",
+                        WebkitTextStroke: `${Math.max(1.5, (18 + heroScaleEased * 54) * 0.04).toFixed(1)}px #fff`,
+                      }}
+                    >
+                      actually
+                    </span>{" "}
+                    use <span style={{ color: "#CC0000" }}>AI:</span> ship
+                    products, solve{" "}
+                    <span
+                      style={{
+                        color: "transparent",
+                        WebkitTextStroke: `${Math.max(1.5, (18 + heroScaleEased * 54) * 0.04).toFixed(1)}px #d4d4d8`,
+                      }}
+                    >
+                      real
+                    </span>{" "}
+                    problems, and{" "}
+                    <span style={{ color: "#FFCC00" }}>get ahead.</span>
+                  </p>
+                  {/* Red outline — draws in when text reaches full size, holds, then erases */}
+                  {heroOutlineDrawP > 0 &&
+                    (() => {
+                      const PAD = 20;
+                      const rw = outlineDims.w + PAD * 2;
+                      const rh = outlineDims.h + PAD * 2;
+                      const perimeter = 2 * (rw + rh);
+                      const dashOffset =
+                        heroOutlineEraseP > 0
+                          ? -perimeter * heroOutlineEraseP
+                          : perimeter * (1 - heroOutlineDrawP);
+                      return (
+                        <svg
+                          style={{
+                            position: "absolute",
+                            top: -PAD,
+                            left: -PAD,
+                            width: rw,
+                            height: rh,
+                            overflow: "visible",
+                            pointerEvents: "none",
+                          }}
+                          viewBox={`0 0 ${rw} ${rh}`}
+                        >
+                          {/* Glow halo */}
+                          <rect
+                            x={1}
+                            y={1}
+                            width={rw - 2}
+                            height={rh - 2}
+                            rx={16}
+                            ry={16}
+                            fill="none"
+                            stroke="rgba(204,0,0,0.30)"
+                            strokeWidth={16}
+                            strokeDasharray={perimeter}
+                            strokeDashoffset={dashOffset}
+                          />
+                          {/* Sharp line */}
+                          <rect
+                            x={1}
+                            y={1}
+                            width={rw - 2}
+                            height={rh - 2}
+                            rx={16}
+                            ry={16}
+                            fill="none"
+                            stroke="rgba(255,50,0,0.95)"
+                            strokeWidth={2}
+                            strokeDasharray={perimeter}
+                            strokeDashoffset={dashOffset}
+                          />
+                        </svg>
+                      );
+                    })()}
+                </div>
                 <div
                   style={{
                     display: "flex",
@@ -2190,146 +2289,171 @@ export default function TTSSite() {
             ),
           )}
 
-          <div
-            className="tts-mission-grid"
-            style={{
-              maxWidth: 1200,
-              margin: "0 auto",
-              display: "grid",
-              gridTemplateColumns: "55fr 45fr",
-              gap: 80,
-              alignItems: "start",
-            }}
-          >
-            {/* Left column: headline + body */}
-            <div>
-              <h2
-                style={{
-                  fontSize: "clamp(42px, 5.5vw, 76px)",
-                  fontWeight: 900,
-                  color: "#fff",
-                  letterSpacing: "-0.04em",
-                  lineHeight: 1.05,
-                  marginBottom: 40,
-                }}
-              >
-                <span className="tts-line-reveal">
-                  <span>The club that</span>
-                </span>
-                <span
-                  className="tts-line-reveal"
-                  style={{ transitionDelay: "0.12s" }}
-                >
-                  <span style={{ color: "#CC0000" }}>
-                    actually lets you in.
-                  </span>
-                </span>
-              </h2>
-              <p
-                className="tts-fade"
-                style={{
-                  fontSize: 19,
-                  color: "#d4d4d8",
-                  lineHeight: 1.8,
-                  marginBottom: 20,
-                  transitionDelay: "0.08s",
-                }}
-              >
-                SEP, BTG, BPX: great clubs. All have applications, waitlists,
-                and cuts. TTS has{" "}
-                <span className="tts-highlight">none of that</span>. Walk in any
-                week. No application, no interview, no rejection email.
-              </p>
-              <p
-                className="tts-fade"
-                style={{
-                  fontSize: 19,
-                  color: "#d4d4d8",
-                  lineHeight: 1.8,
-                  marginBottom: 0,
-                  transitionDelay: "0.12s",
-                }}
-              >
-                We run tracks across consulting, engineering, biotech, music
-                tech, and Web3. AI is reshaping every field, not just software.
-                Show up once and get value. Or join four project teams and go
-                deep. Both work.
-              </p>
-            </div>
-
-            {/* Right column: pull-quote card + fact pills */}
-            <div
-              className="tts-fade"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 20,
-                transitionDelay: "0.16s",
-              }}
-            >
+          {/* Scroll-driven stagger — each element reveals at a different threshold */}
+          {(() => {
+            const mP = missionProgress;
+            const ease = (t: number) =>
+              t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+            const clamp = (v: number, s: number, len: number) =>
+              ease(Math.max(0, Math.min(1, (v - s) / len)));
+            const h1P = clamp(mP, 0, 0.22);
+            const h2P = clamp(mP, 0.14, 0.22);
+            const p1P = clamp(mP, 0.3, 0.22);
+            const p2P = clamp(mP, 0.48, 0.22);
+            const quoteP = clamp(mP, 0.38, 0.26);
+            const badgesP = clamp(mP, 0.64, 0.22);
+            const fadeStyle = (p: number, extraY = 32) => ({
+              opacity: p,
+              transform: `translateY(${(1 - p) * extraY}px)`,
+            });
+            return (
               <div
+                className="tts-mission-grid"
                 style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 20,
-                  padding: 32,
+                  maxWidth: 1200,
+                  margin: "0 auto",
+                  display: "grid",
+                  gridTemplateColumns: "55fr 45fr",
+                  gap: 80,
+                  alignItems: "start",
                 }}
               >
-                <div
-                  style={{
-                    fontSize: 64,
-                    color: "#CC0000",
-                    lineHeight: 0.8,
-                    fontFamily: "Georgia, serif",
-                    fontWeight: 900,
-                    marginBottom: 16,
-                    userSelect: "none",
-                  }}
-                >
-                  &ldquo;
-                </div>
-                <p
-                  style={{
-                    fontSize: 18,
-                    fontStyle: "italic",
-                    color: "#d4d4d8",
-                    lineHeight: 1.7,
-                    margin: 0,
-                  }}
-                >
-                  Think the international student who can&apos;t land an
-                  interview. Or the pre-med with no idea how AI is reshaping
-                  their field. We&apos;re here for that student, and building
-                  them into someone who lands their dream program.
-                </p>
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 8,
-                }}
-              >
-                {["Any major", "Any year", "Zero gatekeeping"].map((fact) => (
-                  <span
-                    key={fact}
+                {/* Left column */}
+                <div>
+                  <h2
                     style={{
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: 999,
-                      padding: "6px 16px",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "#a1a1aa",
+                      fontSize: "clamp(42px, 5.5vw, 76px)",
+                      fontWeight: 900,
+                      color: "#fff",
+                      letterSpacing: "-0.04em",
+                      lineHeight: 1.05,
+                      marginBottom: 40,
+                      overflow: "hidden",
                     }}
                   >
-                    {fact}
-                  </span>
-                ))}
+                    <div style={{ ...fadeStyle(h1P, 24), display: "block" }}>
+                      The club that
+                    </div>
+                    <div
+                      style={{
+                        ...fadeStyle(h2P, 28),
+                        display: "block",
+                        color: "#CC0000",
+                      }}
+                    >
+                      actually lets you in.
+                    </div>
+                  </h2>
+                  <p
+                    style={{
+                      ...fadeStyle(p1P),
+                      fontSize: 19,
+                      color: "#d4d4d8",
+                      lineHeight: 1.8,
+                      marginBottom: 20,
+                    }}
+                  >
+                    SEP, BTG, BPX: great clubs. All have applications,
+                    waitlists, and cuts. TTS has{" "}
+                    <span className="tts-highlight">none of that</span>. Walk in
+                    any week. No application, no interview, no rejection email.
+                  </p>
+                  <p
+                    style={{
+                      ...fadeStyle(p2P),
+                      fontSize: 19,
+                      color: "#d4d4d8",
+                      lineHeight: 1.8,
+                      marginBottom: 0,
+                    }}
+                  >
+                    We run tracks across consulting, engineering, biotech, music
+                    tech, and Web3. AI is reshaping every field, not just
+                    software. Show up once and get value. Or join four project
+                    teams and go deep. Both work.
+                  </p>
+                </div>
+
+                {/* Right column */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 20,
+                  }}
+                >
+                  <div
+                    style={{
+                      ...fadeStyle(quoteP),
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: 20,
+                      padding: 32,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 64,
+                        color: "#CC0000",
+                        lineHeight: 0.8,
+                        fontFamily: "Georgia, serif",
+                        fontWeight: 900,
+                        marginBottom: 16,
+                        userSelect: "none",
+                      }}
+                    >
+                      &ldquo;
+                    </div>
+                    <p
+                      style={{
+                        fontSize: 18,
+                        fontStyle: "italic",
+                        color: "#d4d4d8",
+                        lineHeight: 1.7,
+                        margin: 0,
+                      }}
+                    >
+                      Think the international student who can&apos;t land an
+                      interview. Or the pre-med with no idea how AI is reshaping
+                      their field. We&apos;re here for that student, and
+                      building them into someone who lands their dream program.
+                    </p>
+                  </div>
+
+                  <div
+                    style={{
+                      ...fadeStyle(badgesP, 20),
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 8,
+                    }}
+                  >
+                    {["Any major", "Any year", "Zero gatekeeping"].map(
+                      (fact, i) => (
+                        <span
+                          key={fact}
+                          style={{
+                            opacity: clamp(mP, 0.64 + i * 0.06, 0.16),
+                            transform: `translateY(${(1 - clamp(mP, 0.64 + i * 0.06, 0.16)) * 16}px)`,
+                            background: "rgba(255,255,255,0.05)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            borderRadius: 999,
+                            padding: "6px 16px",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: "#a1a1aa",
+                            display: "inline-block",
+                          }}
+                        >
+                          {fact}
+                        </span>
+                      ),
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
         </section>
 
         {/* Gradient: Mission → Tracks */}
