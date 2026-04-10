@@ -80,7 +80,7 @@ const TRACKS = [
     title: "Building",
     sub: "Engineering, Product & Community Impact",
     tagline:
-      "Come in with an idea. Leave with something real — code, hardware, or a live link.",
+      "Come in with an idea. Leave with something real: code, hardware, or a live link.",
     featured: false,
     items: [
       "Software and hardware engineering projects, not just apps",
@@ -377,7 +377,7 @@ function SplitText({
   );
 }
 
-// ── Ocean wave divider — scroll-driven SVG ────────────────────────────────────
+// ── Ocean wave divider - scroll-driven SVG ────────────────────────────────────
 function WaveDivider({
   reverse = false,
   speed = 10,
@@ -500,7 +500,7 @@ function WaveDivider({
   );
 }
 
-// ── Marquee divider — dual-row ticker, scroll-driven ──────────────────────────
+// ── Marquee divider - dual-row ticker, scroll-driven ──────────────────────────
 function MarqueeDivider({
   topColor = "#09090b",
   bottomColor = "#09090b",
@@ -510,7 +510,7 @@ function MarqueeDivider({
 }) {
   const row1Ref = useRef<HTMLDivElement>(null);
   const row2Ref = useRef<HTMLDivElement>(null);
-  // Strip is ~6000px at 13px font — no fixed tile width, just direct scrollY drive
+  // Strip is ~6000px at 13px font - no fixed tile width, just direct scrollY drive
   const TEXT = "BUILD · SHIP · CONSULT · DEPLOY · TROJAN TECH SOLUTIONS · ";
   const strip = TEXT.repeat(10);
 
@@ -520,7 +520,7 @@ function MarqueeDivider({
       // Row 1 slides left with scroll
       if (row1Ref.current)
         row1Ref.current.style.transform = `translateX(${-y * 0.16}px)`;
-      // Row 2 starts 2800px into the strip, slides right — always visible
+      // Row 2 starts 2800px into the strip, slides right - always visible
       if (row2Ref.current)
         row2Ref.current.style.transform = `translateX(${-2800 + y * 0.1}px)`;
     };
@@ -567,7 +567,7 @@ function MarqueeDivider({
   );
 }
 
-// ── Diagonal slash divider — SVG diagonal line with scroll parallax ───────────
+// ── Diagonal slash divider - SVG diagonal line with scroll parallax ───────────
 function DiagonalSlashDivider({
   topColor = "#09090b",
   bottomColor = "#09090b",
@@ -617,7 +617,7 @@ function DiagonalSlashDivider({
         flexShrink: 0,
       }}
     >
-      {/* bottomColor wedge — diagonal cut */}
+      {/* bottomColor wedge - diagonal cut */}
       <div
         style={{
           position: "absolute",
@@ -641,7 +641,7 @@ function DiagonalSlashDivider({
           willChange: "transform",
         }}
       />
-      {/* SVG diagonal line — spans 200% width so it stays visible when shifted */}
+      {/* SVG diagonal line - spans 200% width so it stays visible when shifted */}
       <svg
         ref={svgRef}
         style={{
@@ -699,7 +699,7 @@ function DiagonalSlashDivider({
   );
 }
 
-// ── Scan-line divider — horizontal bars that shift on scroll ──────────────────
+// ── Scan-line divider - horizontal bars that shift on scroll ──────────────────
 function ScanLineDivider({
   reverse = false,
   topColor = "#09090b",
@@ -726,7 +726,7 @@ function ScanLineDivider({
       if (!containerRef.current) return;
       const vt = containerRef.current.getBoundingClientRect().top;
       // viewport-relative: +winH when entering, 0 when at top, negative when past.
-      // Lines stream in from opposite directions — alternating even/odd.
+      // Lines stream in from opposite directions - alternating even/odd.
       LINES.forEach((line, i) => {
         const el = lineRefs.current[i];
         if (!el) return;
@@ -788,7 +788,7 @@ function ScanLineDivider({
   );
 }
 
-// ── Dot-row divider — wave of light travels across static dots ────────────────
+// ── Dot-row divider - wave of light travels across static dots ────────────────
 function DotRowDivider({
   topColor = "#09090b",
   bottomColor = "#09090b",
@@ -800,7 +800,7 @@ function DotRowDivider({
   const ROWS = 5;
   const GAP = 26;
   const H = 96;
-  const W = (COLS + 2) * GAP; // ~5772px — wider than any realistic viewport
+  const W = (COLS + 2) * GAP; // ~5772px - wider than any realistic viewport
 
   const dots: React.ReactNode[] = [];
   for (let row = 0; row < ROWS; row++) {
@@ -855,7 +855,7 @@ function DotRowDivider({
         flexShrink: 0,
       }}
     >
-      {/* Static dot grid — high-opacity so they're always clearly visible */}
+      {/* Static dot grid - high-opacity so they're always clearly visible */}
       <svg
         width={W}
         height={H}
@@ -1028,7 +1028,7 @@ export default function TTSSite() {
               obs.unobserve(e.target);
             }
           } else {
-            // Reverse on scroll back — remove class so CSS transitions play in reverse
+            // Reverse on scroll back - remove class so CSS transitions play in reverse
             if (!e.target.classList.contains("tts-scramble")) {
               e.target.classList.remove("tts-visible");
             }
@@ -1084,7 +1084,7 @@ export default function TTSSite() {
           );
       }
 
-      // Cards: stagger arc in — rise as they fly from right, slam landing with intense bounce
+      // Cards: stagger arc in - rise as they fly from right, slam landing with intense bounce
       if (trackInnerRef.current) {
         const cards =
           trackInnerRef.current.querySelectorAll<HTMLElement>(".track-card");
@@ -1111,7 +1111,7 @@ export default function TTSSite() {
     return () => window.removeEventListener("scroll", handle);
   }, []);
 
-  // Floating parallax icons — Y + X drift driven by absolute scrollY so icons
+  // Floating parallax icons - Y + X drift driven by absolute scrollY so icons
   // animate even during sticky-section scroll phases where getBoundingClientRect
   // stays constant (viewport position locked).
   useEffect(() => {
@@ -1175,7 +1175,7 @@ export default function TTSSite() {
     return () => ro.disconnect();
   }, []);
 
-  // Epic section entrances — join rings + mission flash
+  // Epic section entrances - join rings + mission flash
   useEffect(() => {
     const obs = new IntersectionObserver(
       (entries) => {
@@ -1267,9 +1267,9 @@ export default function TTSSite() {
   const slideX =
     heroSlideProgress * Math.max(0, heroContainerW - 80 - h1WrapperW);
 
-  // Reveal section: two-phase choreography (no enter animation — Panel A is immediate)
-  // Phase 1 (0→0.42):  Panel A DWELLS — visible from the very first pixel
-  // Phase 2 (0.42→0.56): simultaneous swap — A exits down, B enters from top (touching)
+  // Reveal section: two-phase choreography (no enter animation - Panel A is immediate)
+  // Phase 1 (0→0.42):  Panel A DWELLS - visible from the very first pixel
+  // Phase 2 (0.42→0.56): simultaneous swap - A exits down, B enters from top (touching)
   // Phase 3 (0.56→1.0): Panel B DWELLS
   const revealSlide = revealProgress;
   // Panel A: slides in from RIGHT locked to tracks exit (same exitP = no gap)
@@ -1342,7 +1342,7 @@ export default function TTSSite() {
           /* Track cards: shrink left offset so cards aren't microscopic */
           .tts-track-cards { left: clamp(110px, 24vw, 460px) !important; right: 12px !important; }
           .track-card { min-width: 220px !important; }
-          /* Hide floating decorative icons — they overlap content at 375px */
+          /* Hide floating decorative icons - they overlap content at 375px */
           .tts-float-icon { display: none !important; }
           /* "Walk out different" reveal section inner padding */
           .tts-panel-b-reveal { padding: 0 20px !important; }
@@ -1434,7 +1434,7 @@ export default function TTSSite() {
         }}
       />
 
-      {/* Panel A fixed overlay — always in DOM (no mount flash), slides in from right as tracks exit */}
+      {/* Panel A fixed overlay - always in DOM (no mount flash), slides in from right as tracks exit */}
       <div
         aria-hidden="true"
         style={{
@@ -1460,7 +1460,7 @@ export default function TTSSite() {
           willChange: "transform, opacity",
         }}
       >
-        {/* Floating icons — frozen at the revealProgress=0 position of the real Panel A
+        {/* Floating icons - frozen at the revealProgress=0 position of the real Panel A
               drift = 0 - 0.3 = -0.3; yOff = drift * speed * 800; xOff = drift * speedx * 800 */}
         {(
           [
@@ -1560,7 +1560,7 @@ export default function TTSSite() {
           const ulScale = eraseP > 0 ? 1 - eraseP : drawP;
           const ulOrigin = eraseP > 0 ? "right" : "left";
           return (
-            /* Overlay: same 2-col grid as real Panel A — left col has underline animation,
+            /* Overlay: same 2-col grid as real Panel A - left col has underline animation,
                right col is empty (stats animate in through the fading overlay beneath).
                Identical grid = identical column width = identical text wrapping. */
             <div
@@ -1576,7 +1576,7 @@ export default function TTSSite() {
                 alignItems: "center",
               }}
             >
-              {/* Left column — mirrors real Panel A exactly */}
+              {/* Left column - mirrors real Panel A exactly */}
               <div>
                 <p
                   style={{
@@ -1645,7 +1645,7 @@ export default function TTSSite() {
                   along the way. TTS is where AI meets community impact.
                 </p>
               </div>
-              {/* Right column — intentionally empty; stats in real Panel A show through */}
+              {/* Right column - intentionally empty; stats in real Panel A show through */}
               <div />
             </div>
           );
@@ -1693,9 +1693,9 @@ export default function TTSSite() {
               }}
             />
 
-            {/* Floating parallax icons — hero (3 depth layers) */}
+            {/* Floating parallax icons - hero (3 depth layers) */}
             {[
-              // FOREGROUND — large, natural parallax
+              // FOREGROUND - large, natural parallax
               {
                 Icon: Code,
                 top: "8%",
@@ -1726,7 +1726,7 @@ export default function TTSSite() {
                 rotate: -79,
                 color: "#CC0000",
               },
-              // MIDGROUND — medium icons
+              // MIDGROUND - medium icons
               {
                 Icon: Rocket,
                 top: "12%",
@@ -1757,7 +1757,7 @@ export default function TTSSite() {
                 rotate: -65,
                 color: "rgba(255,255,255,0.55)",
               },
-              // BACKGROUND — small icons
+              // BACKGROUND - small icons
               {
                 Icon: Cpu,
                 top: "52%",
@@ -1914,7 +1914,7 @@ export default function TTSSite() {
                 minHeight: "3em",
               }}
             >
-              {/* Slide wrapper — tracks scroll right before morph */}
+              {/* Slide wrapper - tracks scroll right before morph */}
               <div
                 ref={h1WrapperRef}
                 style={{
@@ -2054,7 +2054,7 @@ export default function TTSSite() {
               </div>
               {/* end slide wrapper */}
 
-              {/* Content block — absolutely positioned at top so it aligns with first line of heading */}
+              {/* Content block - absolutely positioned at top so it aligns with first line of heading */}
               <div
                 style={{
                   position: "absolute",
@@ -2112,7 +2112,7 @@ export default function TTSSite() {
                     orgs, and{" "}
                     <span style={{ color: "#FFCC00" }}>make an impact.</span>
                   </p>
-                  {/* Red outline — draws in when text reaches full size, holds, then erases */}
+                  {/* Red outline - draws in when text reaches full size, holds, then erases */}
                   {heroOutlineDrawP > 0 &&
                     (() => {
                       const PAD = 20;
@@ -2289,9 +2289,9 @@ export default function TTSSite() {
               <div className="tts-mission-flash" aria-hidden="true" />
             )}
 
-            {/* Floating parallax icons — mission section (3 depth layers) */}
+            {/* Floating parallax icons - mission section (3 depth layers) */}
             {[
-              // FOREGROUND — large, natural parallax
+              // FOREGROUND - large, natural parallax
               {
                 Icon: Lightbulb,
                 top: "10%",
@@ -2312,7 +2312,7 @@ export default function TTSSite() {
                 rotate: -25,
                 color: "#CC0000",
               },
-              // MIDGROUND — medium icons
+              // MIDGROUND - medium icons
               {
                 Icon: BookOpen,
                 top: "8%",
@@ -2343,7 +2343,7 @@ export default function TTSSite() {
                 rotate: -19,
                 color: "rgba(255,204,0,0.65)",
               },
-              // BACKGROUND — small icons
+              // BACKGROUND - small icons
               {
                 Icon: Globe,
                 top: "48%",
@@ -2428,7 +2428,7 @@ export default function TTSSite() {
               ),
             )}
 
-            {/* Scroll-driven stagger — each element reveals at a different threshold */}
+            {/* Scroll-driven stagger - each element reveals at a different threshold */}
             {(() => {
               const mP = missionProgress;
               const ease = (t: number) =>
@@ -2607,14 +2607,14 @@ export default function TTSSite() {
             flexShrink: 0,
           }}
         />
-        {/* Wave 1 — before tracks */}
+        {/* Wave 1 - before tracks */}
         <WaveDivider
           amplitude={24}
           speed={10}
           topColor="#09090b"
           bottomColor="#09090b"
         />
-        {/* ── TRACKS — center-to-left title + gravity card reveal ── */}
+        {/* ── TRACKS - center-to-left title + gravity card reveal ── */}
         {/* Mobile: simple stacked layout. Desktop: full scroll animation. */}
         {isMobile ? (
           <section
@@ -2829,7 +2829,7 @@ export default function TTSSite() {
                 }}
               />
 
-              {/* Title — absolutely positioned, JS shifts it center → left */}
+              {/* Title - absolutely positioned, JS shifts it center → left */}
               <div
                 ref={trackTitleRef}
                 className="tts-track-title"
@@ -2883,7 +2883,7 @@ export default function TTSSite() {
                 </p>
               </div>
 
-              {/* Cards — flex row, each slides in from right with gravity bounce */}
+              {/* Cards - flex row, each slides in from right with gravity bounce */}
               <div
                 ref={trackInnerRef}
                 className="tts-track-cards"
@@ -2936,7 +2936,7 @@ export default function TTSSite() {
                           : "0 16px 48px rgba(0,0,0,0.4)",
                       }}
                     >
-                      {/* Giant ghost number — outlined with accent color */}
+                      {/* Giant ghost number - outlined with accent color */}
                       <div
                         aria-hidden="true"
                         style={{
@@ -3164,7 +3164,7 @@ export default function TTSSite() {
               overflow: "hidden",
             }}
           >
-            {/* Panel A: "Real work" — fixed overlay handles slide-in, this crossfades in as overlay fades out */}
+            {/* Panel A: "Real work" - fixed overlay handles slide-in, this crossfades in as overlay fades out */}
             <div
               style={{
                 position: "absolute",
@@ -3179,7 +3179,7 @@ export default function TTSSite() {
                 willChange: "transform",
               }}
             >
-              {/* Floating icons — Panel A */}
+              {/* Floating icons - Panel A */}
               {(
                 [
                   {
@@ -3310,7 +3310,7 @@ export default function TTSSite() {
                       alignItems: "center",
                     }}
                   >
-                    {/* Left column always at full opacity — overlay left column is
+                    {/* Left column always at full opacity - overlay left column is
                         pixel-identical (same grid), so the overlay fade is invisible. */}
                     <div>
                       <p
@@ -3472,7 +3472,7 @@ export default function TTSSite() {
               })()}
             </div>
 
-            {/* Panel B: "Walk in. Walk out different." — enters from TOP */}
+            {/* Panel B: "Walk in. Walk out different." - enters from TOP */}
             <div
               aria-hidden={panelWalkInY < -5}
               style={{
@@ -3499,7 +3499,7 @@ export default function TTSSite() {
                   opacity: 0.6,
                 }}
               />
-              {/* Strong red bloom — intensifies as user dwells */}
+              {/* Strong red bloom - intensifies as user dwells */}
               <div
                 style={{
                   position: "absolute",
@@ -3526,7 +3526,7 @@ export default function TTSSite() {
                   pointerEvents: "none",
                 }}
               />
-              {/* Content — staggered by transP + dwell parallax */}
+              {/* Content - staggered by transP + dwell parallax */}
               {(() => {
                 const ease = (t: number) =>
                   t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
@@ -3545,7 +3545,7 @@ export default function TTSSite() {
                 const sp = (start: number, len: number) =>
                   spring(Math.max(0, Math.min(1, (transP - start) / len)));
 
-                // Entrance stagger — tighter timing so impact hits faster
+                // Entrance stagger - tighter timing so impact hits faster
                 const eyebrowP = ep(0.04, 0.18);
                 const walkInP = sp(0.16, 0.2);
                 const dividerP = ep(0.28, 0.18);
@@ -3560,7 +3560,7 @@ export default function TTSSite() {
                 const pill2 = ep(0.82, 0.15);
                 const pillPs = [pill0, pill1, pill2];
 
-                // Dwell parallax — each element gets its OWN Y velocity so they
+                // Dwell parallax - each element gets its OWN Y velocity so they
                 // disperse vertically. Upper elements rocket up, lower elements fall down.
                 const dwellP = Math.max(
                   0,
@@ -3581,10 +3581,10 @@ export default function TTSSite() {
                       position: "relative",
                       zIndex: 1,
                       textAlign: "center",
-                      // No container-level drift — each element disperses independently
+                      // No container-level drift - each element disperses independently
                     }}
                   >
-                    {/* Eyebrow — rockets up farthest */}
+                    {/* Eyebrow - rockets up farthest */}
                     <div
                       style={{
                         opacity: eyebrowP * (1 - d * 0.9),
@@ -3622,7 +3622,7 @@ export default function TTSSite() {
                       </span>
                     </div>
 
-                    {/* "Walk in." — shoots up fast, disappears on dwell */}
+                    {/* "Walk in." - shoots up fast, disappears on dwell */}
                     <p
                       style={{
                         opacity: walkInP * (1 - d * 0.95),
@@ -3638,7 +3638,7 @@ export default function TTSSite() {
                       Walk in.
                     </p>
 
-                    {/* Red divider — draws from center outward, thicker glow */}
+                    {/* Red divider - draws from center outward, thicker glow */}
                     <div
                       style={{
                         position: "relative",
@@ -3674,7 +3674,7 @@ export default function TTSSite() {
                       />
                     </div>
 
-                    {/* "Walk out different." — dramatic word-split */}
+                    {/* "Walk out different." - dramatic word-split */}
                     <h2
                       style={{
                         fontSize: "clamp(64px, 12vw, 150px)",
@@ -3689,7 +3689,7 @@ export default function TTSSite() {
                         overflow: "visible",
                       }}
                     >
-                      {/* "Walk out" — screams in from far left, rises from below */}
+                      {/* "Walk out" - screams in from far left, rises from below */}
                       <span
                         style={{
                           color: "#fff",
@@ -3700,7 +3700,7 @@ export default function TTSSite() {
                       >
                         Walk out
                       </span>
-                      {/* "different." — slams in from far right, rises from below */}
+                      {/* "different." - slams in from far right, rises from below */}
                       <span
                         style={{
                           color: "#CC0000",
@@ -3731,7 +3731,7 @@ export default function TTSSite() {
                       of.
                     </p>
 
-                    {/* Fact pills — individual stagger */}
+                    {/* Fact pills - individual stagger */}
                     <div
                       style={{
                         display: "flex",
@@ -3770,7 +3770,7 @@ export default function TTSSite() {
             </div>
           </div>
         </div>
-        {/* Divider 2 — marquee ticker */}
+        {/* Divider 2 - marquee ticker */}
         <MarqueeDivider topColor="#09090b" bottomColor="#000" />
         {/* ── LEADERSHIP ── */}
         <section
@@ -3783,7 +3783,7 @@ export default function TTSSite() {
             overflow: "visible",
           }}
         >
-          {/* Tyler floating icons — consulting */}
+          {/* Tyler floating icons - consulting */}
           {(
             [
               {
@@ -3889,7 +3889,7 @@ export default function TTSSite() {
             ),
           )}
 
-          {/* Caleb floating icons — tech */}
+          {/* Caleb floating icons - tech */}
           {(
             [
               {
@@ -4070,7 +4070,7 @@ export default function TTSSite() {
                     href={f.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`${f.name}, ${f.role} — ${f.linkLabel} (opens in new tab)`}
+                    aria-label={`${f.name}, ${f.role} - ${f.linkLabel} (opens in new tab)`}
                     style={{ display: "block", textDecoration: "none" }}
                   >
                     <div
@@ -4132,7 +4132,7 @@ export default function TTSSite() {
                             background: `linear-gradient(to top, ${hexToRgba(accentHex, 0.14)} 0%, transparent 100%)`,
                           }}
                         />
-                        {/* Name + focus — bottom */}
+                        {/* Name + focus - bottom */}
                         <div
                           style={{
                             position: "absolute",
@@ -4253,7 +4253,7 @@ export default function TTSSite() {
             </p>
           </div>
         </section>
-        {/* Divider 3 — diagonal slash */}
+        {/* Divider 3 - diagonal slash */}
         <DiagonalSlashDivider topColor="#000" bottomColor="#09090b" />
         {/* ── CABINET ── */}
         <section
@@ -4293,9 +4293,9 @@ export default function TTSSite() {
               pointerEvents: "none",
             }}
           />
-          {/* Floating parallax icons — cabinet section (3 depth layers) */}
+          {/* Floating parallax icons - cabinet section (3 depth layers) */}
           {[
-            // FOREGROUND — large, natural parallax
+            // FOREGROUND - large, natural parallax
             {
               Icon: Zap,
               top: "52%",
@@ -4316,7 +4316,7 @@ export default function TTSSite() {
               rotate: -61,
               color: "#FFCC00",
             },
-            // MIDGROUND — medium icons
+            // MIDGROUND - medium icons
             {
               Icon: Hammer,
               top: "12%",
@@ -4347,7 +4347,7 @@ export default function TTSSite() {
               rotate: 43,
               color: "rgba(255,204,0,0.6)",
             },
-            // BACKGROUND — small icons
+            // BACKGROUND - small icons
             {
               Icon: TrendingUp,
               bottom: "18%",
@@ -4732,7 +4732,7 @@ export default function TTSSite() {
             </div>
           </div>
         </section>
-        {/* ── TRANSITION BRIDGE: Cabinet → Alumni — floating icon cluster ── */}
+        {/* ── TRANSITION BRIDGE: Cabinet → Alumni - floating icon cluster ── */}
         <div
           aria-hidden="true"
           style={{
@@ -4970,7 +4970,7 @@ export default function TTSSite() {
             overflow: "visible",
           }}
         >
-          {/* Floating parallax icons — alumni section */}
+          {/* Floating parallax icons - alumni section */}
           {[
             {
               Icon: Star,
@@ -5200,7 +5200,7 @@ export default function TTSSite() {
               </p>
             </div>
 
-            {/* Board of Advisors + Alumni — side by side */}
+            {/* Board of Advisors + Alumni - side by side */}
             <div
               className="tts-advisors-alumni-grid"
               style={{
@@ -5518,7 +5518,7 @@ export default function TTSSite() {
             </div>
           </div>
         </section>
-        {/* Divider 4 — dot matrix */}
+        {/* Divider 4 - dot matrix */}
         <DotRowDivider topColor="#0c0c0f" bottomColor="#09090b" />
         {/* ── FAQ ── */}
         <section
@@ -5531,9 +5531,9 @@ export default function TTSSite() {
             overflow: "visible",
           }}
         >
-          {/* Floating parallax icons — FAQ section (3 depth layers) */}
+          {/* Floating parallax icons - FAQ section (3 depth layers) */}
           {[
-            // FOREGROUND — large, natural parallax
+            // FOREGROUND - large, natural parallax
             {
               Icon: HelpCircle,
               top: "8%",
@@ -5554,7 +5554,7 @@ export default function TTSSite() {
               rotate: -19,
               color: "rgba(255,204,0,0.65)",
             },
-            // MIDGROUND — medium icons
+            // MIDGROUND - medium icons
             {
               Icon: HelpCircle,
               top: "16%",
@@ -5575,7 +5575,7 @@ export default function TTSSite() {
               rotate: 69,
               color: "rgba(255,255,255,0.5)",
             },
-            // BACKGROUND — small icons
+            // BACKGROUND - small icons
             {
               Icon: HelpCircle,
               top: "48%",
@@ -5926,9 +5926,9 @@ export default function TTSSite() {
             </div>
           </div>
         </section>
-        {/* Divider 5 — scan lines */}
+        {/* Divider 5 - scan lines */}
         <ScanLineDivider topColor="#09090b" bottomColor="#0a0508" />
-        {/* ── JOIN — scroll-driven cinematic ── */}
+        {/* ── JOIN - scroll-driven cinematic ── */}
         <section
           ref={joinScrollRef}
           id="join"
@@ -5946,7 +5946,7 @@ export default function TTSSite() {
               overflow: "visible",
             }}
           >
-            {/* Deep red glow — intensifies through scroll */}
+            {/* Deep red glow - intensifies through scroll */}
             <div
               aria-hidden="true"
               style={{
@@ -5963,7 +5963,7 @@ export default function TTSSite() {
                 transition: "none",
               }}
             />
-            {/* Entrance rings — scroll-driven via joinScrollProg so they reverse on scroll back */}
+            {/* Entrance rings - scroll-driven via joinScrollProg so they reverse on scroll back */}
             <div
               ref={joinSectionRef as React.RefObject<HTMLDivElement>}
               aria-hidden="true"
@@ -6002,7 +6002,7 @@ export default function TTSSite() {
               })}
             </div>
 
-            {/* Floating parallax icons — join section */}
+            {/* Floating parallax icons - join section */}
             {[
               {
                 Icon: Zap,
@@ -6379,7 +6379,7 @@ export default function TTSSite() {
               const p = joinScrollProg;
               const inP = Math.max(0, Math.min(1, (p - 0.54) / 0.09));
               const inEased = 1 - Math.pow(1 - inP, 3);
-              // Last item fully visible at 0.73 — hold until 0.76 before fading
+              // Last item fully visible at 0.73 - hold until 0.76 before fading
               const outP = Math.max(0, Math.min(1, (p - 0.76) / 0.08));
               const outEased = 1 - Math.pow(1 - outP, 3);
               const op = inEased * (1 - outEased);
@@ -6867,7 +6867,7 @@ export default function TTSSite() {
             })()}
           </div>
         </section>
-        {/* ── FOOTER — fixed floating pills, appear near page bottom ── */}
+        {/* ── FOOTER - fixed floating pills, appear near page bottom ── */}
         <footer
           className="tts-footer-pills"
           style={{
