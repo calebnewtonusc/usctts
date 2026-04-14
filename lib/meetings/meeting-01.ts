@@ -655,68 +655,78 @@ export const meeting01: Meeting = {
         },
         {
           label: "03",
-          heading: "Compete",
-          body: "Demo Day at the end of the semester. New member startups pitch for funding in front of investors, operators, and founders.",
+          heading: "Ship",
+          body: "Every cohort member ships a working startup. Pitches land in front of peers, mentors, and the TTS advisor network, not a slide deck in a drawer.",
           accent: COLOR.emerald,
         },
       ],
     },
     {
-      kind: "bullets",
+      kind: "split-bullets",
       eyebrow: "Spring cohort · Optional summer pathway",
-      title: "From vibe coding to Demo Day",
-      body: "Weeks 1 through 4 run during our four spring meetings. Every Building member starts here. Weeks 5 through 10 are an optional summer pathway for members who want to keep shipping toward Demo Day. No one is forced into summer; the door is open if you want it.",
-      items: [
+      title: "From vibe coding to a shipped startup",
+      body: "Weeks 1 through 4 run during our four spring meetings. Every Building member starts here. Weeks 5 through 10 are an optional summer pathway for members who want to keep shipping. No one is forced into summer. The door is open if you want it.",
+      columns: [
         {
-          label: "Week 1 · Vibe coding foundations",
-          detail:
-            "Claude, Cursor, and the modern AI stack. Ship your first working app in one session, no CS required.",
+          eyebrow: "Required · Spring meetings",
+          title: "Weeks 1 to 4",
+          accent: COLOR.red,
+          items: [
+            {
+              label: "Vibe coding foundations",
+              detail:
+                "Claude, Cursor, and the modern AI stack. Ship your first working app in one session, no CS required.",
+            },
+            {
+              label: "Vibe coding II",
+              detail:
+                "Prototype to production: auth, data, deploy. Ship something real users can actually touch.",
+            },
+            {
+              label: "Customer and problem discovery",
+              detail:
+                "Identify and validate the real customer problem worth solving.",
+            },
+            {
+              label: "Ideation and team formation",
+              detail:
+                "Turn validated problems into concrete solutions and lock in founding teams.",
+            },
+          ],
         },
         {
-          label: "Week 2 · Vibe coding II",
-          detail:
-            "Prototype to production: auth, data, deploy. Ship something real users can actually touch.",
-        },
-        {
-          label: "Week 3 · Customer and problem discovery",
-          detail:
-            "Identify and validate the real customer problem worth solving.",
-        },
-        {
-          label: "Week 4 · Ideation and team formation",
-          detail:
-            "Turn validated problems into concrete solutions and lock in founding teams.",
-        },
-        {
-          label: "Summer pathway · Optional · Weeks 5 to 10",
-          detail:
-            "Everything below is the summer continuation. Stay in if you want to ship your startup to Demo Day. Step out after Week 4 and you still finish the spring cohort in good standing.",
-        },
-        {
-          label: "Week 5 · MVPs",
-          detail:
-            "Apply your vibe coding stack to ship your team's MVP in a single session.",
-        },
-        {
-          label: "Week 6 · Product iteration",
-          detail: "Refine the MVP with real user feedback.",
-        },
-        {
-          label: "Week 7 · Guest speaker and Demo Night",
-          detail: "Industry insights plus an internal progress demo.",
-        },
-        {
-          label: "Week 8 · GTM, growth, distribution, and pitch design",
-          detail: "Go-to-market strategy and pitch craft.",
-        },
-        {
-          label: "Week 9 · Pitch Night",
-          detail: "Present the pitch to peers and mentors for hard feedback.",
-        },
-        {
-          label: "Week 10 · Demo Day",
-          detail:
-            "Final pitch in front of investors and founders for real funding.",
+          eyebrow: "Optional · Summer pathway",
+          title: "Weeks 5 to 10",
+          accent: COLOR.gold,
+          items: [
+            {
+              label: "MVPs",
+              detail:
+                "Apply your vibe coding stack to ship your team's MVP in a single session.",
+            },
+            {
+              label: "Product iteration",
+              detail: "Refine the MVP with real user feedback.",
+            },
+            {
+              label: "Guest speaker and Demo Night",
+              detail: "Industry insights plus an internal progress demo.",
+            },
+            {
+              label: "GTM, growth, and pitch design",
+              detail: "Go-to-market strategy and pitch craft.",
+            },
+            {
+              label: "Pitch Night",
+              detail:
+                "Present the pitch to peers and mentors for hard feedback.",
+            },
+            {
+              label: "Final founder pitches",
+              detail:
+                "Present your startup to mentors, advisors, and the TTS network.",
+            },
+          ],
         },
       ],
     },
@@ -724,11 +734,11 @@ export const meeting01: Meeting = {
       kind: "cta",
       eyebrow: "The Building Team ask",
       title: "Build the future, today.",
-      body: "Ten weeks. Real founders. Real funding on the line.",
+      body: "Four spring weeks. An optional summer pathway. Real founders. Real product.",
       actions: [
         { label: "Join USC's premier builder track" },
         { label: "Ship something users touch by Week 5" },
-        { label: "Pitch on Demo Day by Week 10" },
+        { label: "Pitch your startup to mentors and advisors by Week 10" },
       ],
     },
 

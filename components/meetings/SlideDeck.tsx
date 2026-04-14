@@ -499,6 +499,95 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
     );
   }
 
+  if (slide.kind === "split-bullets") {
+    return (
+      <div className={wrap}>
+        <div className={`${innerFill} max-w-6xl`}>
+          {slide.eyebrow && (
+            <div
+              className="text-xs uppercase tracking-[0.25em] font-semibold mb-3"
+              style={{ color: accent }}
+            >
+              {slide.eyebrow}
+            </div>
+          )}
+          <h2
+            className="font-semibold tracking-tight leading-tight"
+            style={{ fontSize: "clamp(1.75rem, 5cqw, 3rem)" }}
+          >
+            {slide.title}
+          </h2>
+          {slide.body && (
+            <p
+              className="mt-4 sm:mt-6 text-zinc-400 leading-relaxed max-w-4xl"
+              style={{ fontSize: "clamp(0.95rem, 1.5cqw, 1.125rem)" }}
+            >
+              {slide.body}
+            </p>
+          )}
+          <div className="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 flex-1 min-h-0">
+            {slide.columns.map((col, colIdx) => {
+              const colAccent = col.accent ?? accent;
+              return (
+                <div
+                  key={colIdx}
+                  className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:p-6 min-h-0"
+                >
+                  {col.eyebrow && (
+                    <div
+                      className="text-[10px] sm:text-xs uppercase tracking-[0.25em] font-semibold mb-1.5"
+                      style={{ color: colAccent }}
+                    >
+                      {col.eyebrow}
+                    </div>
+                  )}
+                  <h3
+                    className="font-semibold tracking-tight leading-tight mb-4 sm:mb-5"
+                    style={{ fontSize: "clamp(1.125rem, 2.2cqw, 1.5rem)" }}
+                  >
+                    {col.title}
+                  </h3>
+                  <ul className="flex flex-col gap-3 sm:gap-4 min-h-0 overflow-auto">
+                    {col.items.map((item, i) => (
+                      <li key={i} className="flex gap-3">
+                        <span
+                          className="font-mono text-[11px] shrink-0 pt-1 w-6"
+                          style={{ color: colAccent }}
+                        >
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <div className="min-w-0">
+                          <div
+                            className="font-semibold text-white leading-snug"
+                            style={{
+                              fontSize: "clamp(0.95rem, 1.4cqw, 1.0625rem)",
+                            }}
+                          >
+                            {item.label}
+                          </div>
+                          {item.detail && (
+                            <div
+                              className="text-zinc-400 leading-snug mt-1"
+                              style={{
+                                fontSize: "clamp(0.85rem, 1.15cqw, 0.95rem)",
+                              }}
+                            >
+                              {item.detail}
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (slide.kind === "video") {
     return (
       <div className={wrap}>
@@ -1170,6 +1259,7 @@ function slideLabel(s: Slide): string {
     case "section":
       return `${s.number} · ${s.title}`;
     case "bullets":
+    case "split-bullets":
     case "three-up":
     case "people":
     case "cabinet":

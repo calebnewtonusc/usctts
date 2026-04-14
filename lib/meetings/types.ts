@@ -96,6 +96,13 @@ export type Slide =
       center: { label: string; sub?: string };
     }
   | {
+      kind: "split-bullets";
+      eyebrow?: string;
+      title: string;
+      body?: string;
+      columns: [SplitColumn, SplitColumn];
+    }
+  | {
       kind: "video";
       eyebrow?: string;
       title?: string;
@@ -106,6 +113,13 @@ export type Slide =
       // Start muted so autoplay is allowed by browsers. Default true.
       autoplay?: boolean;
     };
+
+export type SplitColumn = {
+  eyebrow?: string;
+  title: string;
+  accent?: string;
+  items: { label: string; detail?: string }[];
+};
 
 export type VennCircle = {
   label: string; // short label like "Advisors", "Tools", "Knowledge"
