@@ -336,6 +336,112 @@ export const meeting01: Meeting = {
     {
       kind: "section",
       number: "04",
+      title: "TTS Alumni",
+      blurb:
+        "Where TTS members land. Engineers, consultants, bankers, and founders shipping at the companies setting the pace for the industry.",
+    },
+    {
+      kind: "cabinet",
+      eyebrow: "Where they are now",
+      title: "The TTS alumni network",
+      body: "Proof that the work done here compounds. Every name below started in this club.",
+      people: [
+        {
+          name: "Elizabeth Abbey",
+          role: "SWE, Reddit · ex-Microsoft",
+          initials: "EA",
+          accent: COLOR.red,
+        },
+        {
+          name: "Susan Nyirenda",
+          role: "SWE, Apple",
+          initials: "SN",
+          accent: COLOR.emerald,
+        },
+        {
+          name: "Senai Assefa",
+          role: "SWE, Bloomberg · ex-Microsoft",
+          initials: "SA",
+          accent: COLOR.blue,
+        },
+        {
+          name: "David Esquivel",
+          role: "Cybersecurity Engineer, Capital One",
+          initials: "DE",
+          accent: COLOR.emerald,
+        },
+        {
+          name: "Anthony Nasser",
+          role: "SWE, NBC Universal",
+          initials: "AN",
+          accent: COLOR.gold,
+        },
+        {
+          name: "Emerson Kahle",
+          role: "SDE, Fastly",
+          initials: "EK",
+          accent: COLOR.red,
+        },
+        {
+          name: "Albert Chung",
+          role: "FDE, Palantir Technologies",
+          initials: "AC",
+          accent: COLOR.gold,
+        },
+        {
+          name: "Kelly Kim",
+          role: "JD Candidate, USC Gould",
+          initials: "KK",
+          accent: COLOR.red,
+        },
+        {
+          name: "Akshar Aiyer",
+          role: "Investment Banking, Citi",
+          initials: "AA",
+          accent: COLOR.violet,
+        },
+        {
+          name: "Abhi Shah",
+          role: "Investment Banking, Jefferies",
+          initials: "AS",
+          accent: COLOR.violet,
+        },
+        {
+          name: "Parth Juthani",
+          role: "Investment Banking, Nomura",
+          initials: "PJ",
+          accent: COLOR.violet,
+        },
+        {
+          name: "James La",
+          role: "Technology Consulting, PwC",
+          initials: "JL",
+          accent: COLOR.red,
+        },
+        {
+          name: "Brandon McGowan",
+          role: "Product Manager, Epic",
+          initials: "BM",
+          accent: COLOR.red,
+        },
+        {
+          name: "Rohan Singh",
+          role: "Sales & Analytics, Bloomberg",
+          initials: "RS",
+          accent: COLOR.blue,
+        },
+        {
+          name: "Joshua Kim",
+          role: "Analyst, Roxborough Group",
+          initials: "JK",
+          accent: COLOR.violet,
+        },
+      ],
+    },
+
+    {
+      kind: "section",
+      number: "05",
       title: "The Consulting Team",
       blurb:
         "Consulting work for real nonprofits and charity organizations. Every project serves a real organization.",
@@ -366,7 +472,7 @@ export const meeting01: Meeting = {
 
     {
       kind: "section",
-      number: "05",
+      number: "06",
       title: "Clay",
       blurb:
         "The Consulting Team's secret weapon. A comprehensive data orchestration and AI agent platform.",
@@ -467,7 +573,7 @@ export const meeting01: Meeting = {
 
     {
       kind: "section",
-      number: "06",
+      number: "07",
       title: "The Building Team",
       blurb:
         "Transform individuals into entrepreneurs who follow their passion, develop lasting relationships in the startup ecosystem, and ship ventures that create real impact.",
@@ -570,7 +676,7 @@ export const meeting01: Meeting = {
 
     {
       kind: "section",
-      number: "07",
+      number: "08",
       title: "Collaboration",
       blurb:
         "The verticals are not silos. They back each other, and that is the point.",
