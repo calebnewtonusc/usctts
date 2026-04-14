@@ -414,7 +414,7 @@ const ALUMNI: {
     company: "Apple",
     initials: "SN",
     accent: "#10b981",
-    link: "https://www.linkedin.com/pub/dir/Susan/Nyirenda",
+    link: "https://www.linkedin.com/in/susannyirenda/",
     headshot: "/img/alumni/susannyirenda.jpeg",
     position: "center center",
   },
