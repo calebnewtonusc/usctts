@@ -397,92 +397,57 @@ export function SlideDeck({ meeting }: { meeting: Meeting }) {
   );
 }
 
+// Fixed design canvas. Every slide renders as if it lives inside this box,
+// and SlideStage scales the whole box uniformly to fit the stage. This keeps
+// typography consistent across slides so nothing jumps between zoom levels.
+const CANVAS_W = 1600;
+const CANVAS_H = 900;
+
 function SlideStage({
-  depKey,
+  depKey: _depKey,
   children,
 }: {
   depKey: number | string;
   children: React.ReactNode;
 }) {
-  const rootRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    const target = root.firstElementChild as HTMLElement | null;
-    if (!target) return;
+    const stage = stageRef.current;
+    const canvas = canvasRef.current;
+    if (!stage || !canvas) return;
 
     const apply = () => {
-      target.style.transform = "";
-      target.style.transformOrigin = "center center";
-      const rr = root.getBoundingClientRect();
-      if (!rr.width || !rr.height) return;
-
-      // Measure real ink extent by scanning descendant bounding rects.
-      // scrollWidth/scrollHeight on the flex wrap misses some horizontal
-      // overflow cases (huge display text, etc.), so use the union of all
-      // descendant rects for a tighter bound.
-      let minL = Infinity;
-      let minT = Infinity;
-      let maxR = -Infinity;
-      let maxB = -Infinity;
-      const rects = [target, ...Array.from(target.querySelectorAll("*"))];
-      for (const el of rects) {
-        const r = (el as HTMLElement).getBoundingClientRect();
-        if (r.width === 0 && r.height === 0) continue;
-        if (r.left < minL) minL = r.left;
-        if (r.top < minT) minT = r.top;
-        if (r.right > maxR) maxR = r.right;
-        if (r.bottom > maxB) maxB = r.bottom;
-      }
-      if (!isFinite(minL) || !isFinite(maxR)) return;
-
-      const contentW = maxR - minL;
-      const contentH = maxB - minT;
-      if (!contentW || !contentH) return;
-
-      const sx = rr.width / contentW;
-      const sy = rr.height / contentH;
-      const s = Math.min(1, sx, sy);
-      if (s < 0.999) {
-        target.style.transform = `scale(${s})`;
-      }
+      const sr = stage.getBoundingClientRect();
+      if (!sr.width || !sr.height) return;
+      const s = Math.min(sr.width / CANVAS_W, sr.height / CANVAS_H);
+      canvas.style.transform = `translate(-50%, -50%) scale(${s})`;
     };
 
     apply();
     const ro = new ResizeObserver(apply);
-    ro.observe(root);
-    ro.observe(target);
-
-    // Re-apply after two frames so web fonts and images settle.
-    let raf2 = 0;
-    const raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(apply);
-    });
-
-    // Re-apply once fonts load (big display text measures wrong pre-load).
-    if (typeof document !== "undefined" && document.fonts?.ready) {
-      document.fonts.ready.then(() => apply()).catch(() => {});
-    }
-
-    // Catch late image loads (headshots).
-    const imgs = Array.from(target.querySelectorAll("img"));
-    const onImgLoad = () => apply();
-    imgs.forEach((img) => {
-      if (!img.complete) img.addEventListener("load", onImgLoad);
-    });
-
-    return () => {
-      ro.disconnect();
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
-      imgs.forEach((img) => img.removeEventListener("load", onImgLoad));
-    };
-  }, [depKey]);
+    ro.observe(stage);
+    return () => ro.disconnect();
+  }, []);
 
   return (
-    <div ref={rootRef} className="absolute inset-0 overflow-hidden">
-      {children}
+    <div ref={stageRef} className="absolute inset-0 overflow-hidden">
+      <div
+        ref={canvasRef}
+        className="absolute top-1/2 left-1/2 overflow-hidden"
+        style={{
+          width: `${CANVAS_W}px`,
+          height: `${CANVAS_H}px`,
+          transform: "translate(-50%, -50%) scale(1)",
+          transformOrigin: "center center",
+          // Container queries: cqw/cqh inside resolve relative to this box,
+          // which is always 1600x900, independent of actual viewport.
+          containerType: "size",
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -512,14 +477,14 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
           )}
           <h1
             className="font-bold tracking-tight leading-[0.92]"
-            style={{ fontSize: "clamp(2.5rem, 11vw, 8rem)" }}
+            style={{ fontSize: "clamp(2.5rem, 11cqw, 8rem)" }}
           >
             {slide.title}
           </h1>
           {slide.subtitle && (
             <p
               className="mt-6 sm:mt-10 text-zinc-300 leading-snug max-w-3xl"
-              style={{ fontSize: "clamp(1.125rem, 2.6vw, 1.875rem)" }}
+              style={{ fontSize: "clamp(1.125rem, 2.6cqw, 1.875rem)" }}
             >
               {slide.subtitle}
             </p>
@@ -541,7 +506,7 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
           <div
             className="font-black tracking-tighter leading-none opacity-90"
             style={{
-              fontSize: "clamp(6rem, 26vw, 18rem)",
+              fontSize: "clamp(6rem, 26cqw, 18rem)",
               color: accent,
             }}
           >
@@ -549,14 +514,14 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
           </div>
           <h2
             className="mt-3 sm:mt-6 font-bold tracking-tight leading-tight"
-            style={{ fontSize: "clamp(2rem, 7vw, 5rem)" }}
+            style={{ fontSize: "clamp(2rem, 7cqw, 5rem)" }}
           >
             {slide.title}
           </h2>
           {slide.blurb && (
             <p
               className="mt-5 sm:mt-8 text-zinc-400 leading-relaxed max-w-3xl"
-              style={{ fontSize: "clamp(1rem, 2vw, 1.5rem)" }}
+              style={{ fontSize: "clamp(1rem, 2cqw, 1.5rem)" }}
             >
               {slide.blurb}
             </p>
@@ -580,14 +545,14 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
           )}
           <h2
             className="font-semibold tracking-tight leading-tight"
-            style={{ fontSize: "clamp(2rem, 6vw, 3.75rem)" }}
+            style={{ fontSize: "clamp(2rem, 6cqw, 3.75rem)" }}
           >
             {slide.title}
           </h2>
           {slide.body && (
             <p
               className="mt-4 sm:mt-5 text-zinc-400 leading-relaxed max-w-3xl"
-              style={{ fontSize: "clamp(1rem, 1.8vw, 1.375rem)" }}
+              style={{ fontSize: "clamp(1rem, 1.8cqw, 1.375rem)" }}
             >
               {slide.body}
             </p>
@@ -607,14 +572,14 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
                 <div className="min-w-0 flex-1">
                   <div
                     className="font-semibold text-white leading-snug"
-                    style={{ fontSize: "clamp(1.125rem, 2.2vw, 1.625rem)" }}
+                    style={{ fontSize: "clamp(1.125rem, 2.2cqw, 1.625rem)" }}
                   >
                     {item.label}
                   </div>
                   {item.detail && (
                     <div
                       className="mt-1.5 text-zinc-400 leading-relaxed"
-                      style={{ fontSize: "clamp(0.95rem, 1.5vw, 1.125rem)" }}
+                      style={{ fontSize: "clamp(0.95rem, 1.5cqw, 1.125rem)" }}
                     >
                       {item.detail}
                     </div>
@@ -643,7 +608,7 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
             )}
             <h2
               className="font-semibold tracking-tight leading-tight"
-              style={{ fontSize: "clamp(1.75rem, 5vw, 3.25rem)" }}
+              style={{ fontSize: "clamp(1.75rem, 5cqw, 3.25rem)" }}
             >
               {slide.title}
             </h2>
@@ -666,13 +631,13 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
                 />
                 <div
                   className="font-semibold tracking-tight mb-3"
-                  style={{ fontSize: "clamp(1.375rem, 2.6vw, 1.875rem)" }}
+                  style={{ fontSize: "clamp(1.375rem, 2.6cqw, 1.875rem)" }}
                 >
                   {card.heading}
                 </div>
                 <p
                   className="text-zinc-400 leading-relaxed"
-                  style={{ fontSize: "clamp(0.95rem, 1.5vw, 1.125rem)" }}
+                  style={{ fontSize: "clamp(0.95rem, 1.5cqw, 1.125rem)" }}
                 >
                   {card.body}
                 </p>
@@ -691,13 +656,13 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
           <div
             aria-hidden
             className="font-serif leading-none mb-2 sm:mb-4 opacity-20"
-            style={{ fontSize: "clamp(5rem, 16vw, 12rem)", color: accent }}
+            style={{ fontSize: "clamp(5rem, 16cqw, 12rem)", color: accent }}
           >
             &ldquo;
           </div>
           <blockquote
             className="font-medium tracking-tight leading-[1.12] text-white"
-            style={{ fontSize: "clamp(1.75rem, 6vw, 4rem)" }}
+            style={{ fontSize: "clamp(1.75rem, 6cqw, 4rem)" }}
           >
             {slide.quote}
           </blockquote>
@@ -714,7 +679,9 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
   if (slide.kind === "stat") {
     return (
       <div className={wrap}>
-        <div className={`${innerCentered} max-w-5xl text-center sm:text-left`}>
+        <div
+          className={`${innerCentered} max-w-[78rem] text-center sm:text-left`}
+        >
           {slide.eyebrow && (
             <div
               className="text-xs uppercase tracking-[0.25em] font-semibold mb-4"
@@ -724,27 +691,28 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
             </div>
           )}
           <div
-            className="font-black tracking-tighter leading-none"
+            className="font-black tracking-tighter leading-[0.95]"
             style={{
-              fontSize: "clamp(7rem, 32vw, 22rem)",
+              fontSize: "clamp(5rem, 14cqw, 13rem)",
               background: `linear-gradient(180deg, ${accent}, #FFCC00)`,
               WebkitBackgroundClip: "text",
               backgroundClip: "text",
               color: "transparent",
+              wordBreak: "break-word",
             }}
           >
             {slide.value}
           </div>
           <div
             className="mt-3 sm:mt-5 font-semibold tracking-tight"
-            style={{ fontSize: "clamp(1.5rem, 4.5vw, 2.75rem)" }}
+            style={{ fontSize: "clamp(1.5rem, 3.2cqw, 2.5rem)" }}
           >
             {slide.label}
           </div>
           {slide.context && (
             <p
-              className="mt-5 text-zinc-400 leading-relaxed max-w-2xl mx-auto sm:mx-0"
-              style={{ fontSize: "clamp(1rem, 1.8vw, 1.25rem)" }}
+              className="mt-5 text-zinc-400 leading-relaxed max-w-3xl mx-auto sm:mx-0"
+              style={{ fontSize: "clamp(1rem, 1.4cqw, 1.25rem)" }}
             >
               {slide.context}
             </p>
@@ -780,14 +748,14 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
             )}
             <h2
               className="font-semibold tracking-tight leading-tight"
-              style={{ fontSize: "clamp(1.75rem, 5vw, 3.25rem)" }}
+              style={{ fontSize: "clamp(1.75rem, 5cqw, 3.25rem)" }}
             >
               {slide.title}
             </h2>
             {slide.body && (
               <p
                 className="mt-4 text-zinc-400 leading-relaxed max-w-3xl"
-                style={{ fontSize: "clamp(1rem, 1.8vw, 1.25rem)" }}
+                style={{ fontSize: "clamp(1rem, 1.8cqw, 1.25rem)" }}
               >
                 {slide.body}
               </p>
@@ -826,14 +794,14 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
             )}
             <h2
               className="font-semibold tracking-tight leading-tight"
-              style={{ fontSize: "clamp(1.75rem, 5vw, 3.25rem)" }}
+              style={{ fontSize: "clamp(1.75rem, 5cqw, 3.25rem)" }}
             >
               {slide.title}
             </h2>
             {slide.body && (
               <p
                 className="mt-4 text-zinc-400 leading-relaxed max-w-3xl"
-                style={{ fontSize: "clamp(1rem, 1.8vw, 1.25rem)" }}
+                style={{ fontSize: "clamp(1rem, 1.8cqw, 1.25rem)" }}
               >
                 {slide.body}
               </p>
@@ -865,14 +833,14 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
             )}
             <h2
               className="font-semibold tracking-tight leading-tight"
-              style={{ fontSize: "clamp(1.75rem, 5vw, 3.25rem)" }}
+              style={{ fontSize: "clamp(1.75rem, 5cqw, 3.25rem)" }}
             >
               {slide.title}
             </h2>
             {slide.body && (
               <p
                 className="mt-4 text-zinc-400 leading-relaxed max-w-3xl"
-                style={{ fontSize: "clamp(1rem, 1.8vw, 1.25rem)" }}
+                style={{ fontSize: "clamp(1rem, 1.8cqw, 1.25rem)" }}
               >
                 {slide.body}
               </p>
@@ -921,7 +889,7 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
                 <div
                   className="font-black tracking-tight leading-none"
                   style={{
-                    fontSize: "clamp(1rem, 2.2vw, 1.5rem)",
+                    fontSize: "clamp(1rem, 2.2cqw, 1.5rem)",
                     color: "#ffffff",
                     textShadow: "0 2px 20px rgba(0,0,0,0.8)",
                   }}
@@ -962,14 +930,14 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
                   </div>
                   <div
                     className="font-semibold tracking-tight text-white leading-snug"
-                    style={{ fontSize: "clamp(1.0625rem, 1.7vw, 1.25rem)" }}
+                    style={{ fontSize: "clamp(1.0625rem, 1.7cqw, 1.25rem)" }}
                   >
                     {circle.heading}
                   </div>
                   {circle.body && (
                     <p
                       className="mt-2 text-zinc-400 leading-relaxed"
-                      style={{ fontSize: "clamp(0.875rem, 1.3vw, 1rem)" }}
+                      style={{ fontSize: "clamp(0.875rem, 1.3cqw, 1rem)" }}
                     >
                       {circle.body}
                     </p>
@@ -997,14 +965,14 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
         )}
         <h2
           className="font-bold tracking-tight leading-tight"
-          style={{ fontSize: "clamp(2.25rem, 8vw, 5.5rem)" }}
+          style={{ fontSize: "clamp(2.25rem, 8cqw, 5.5rem)" }}
         >
           {slide.title}
         </h2>
         {slide.body && (
           <p
             className="mt-5 sm:mt-7 text-zinc-300 leading-relaxed"
-            style={{ fontSize: "clamp(1.125rem, 2.2vw, 1.5rem)" }}
+            style={{ fontSize: "clamp(1.125rem, 2.2cqw, 1.5rem)" }}
           >
             {slide.body}
           </p>
@@ -1014,7 +982,7 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
             <li
               key={i}
               className="flex items-center gap-3 sm:gap-4 text-white"
-              style={{ fontSize: "clamp(1.125rem, 2vw, 1.5rem)" }}
+              style={{ fontSize: "clamp(1.125rem, 2cqw, 1.5rem)" }}
             >
               <ArrowRight
                 className="w-5 h-5 sm:w-6 sm:h-6 shrink-0"
@@ -1174,11 +1142,11 @@ function PersonMeta({
   spotlight?: boolean;
 }) {
   const nameSize = spotlight
-    ? "clamp(1.75rem, 3.4vw, 2.75rem)"
-    : "clamp(1.125rem, 2vw, 1.625rem)";
+    ? "clamp(1.75rem, 3.4cqw, 2.75rem)"
+    : "clamp(1.125rem, 2cqw, 1.625rem)";
   const bulletSize = spotlight
-    ? "clamp(1rem, 1.6vw, 1.25rem)"
-    : "clamp(0.9rem, 1.3vw, 1.0625rem)";
+    ? "clamp(1rem, 1.6cqw, 1.25rem)"
+    : "clamp(0.9rem, 1.3cqw, 1.0625rem)";
   return (
     <>
       <div
@@ -1287,7 +1255,7 @@ function PersonCard({
           person={person}
           className="w-full aspect-[4/5] md:w-[42%] md:max-w-[36rem] md:aspect-auto md:h-auto md:self-stretch md:shrink-0"
           sizes="(max-width: 768px) 100vw, 42vw"
-          initialsFontSize="clamp(4rem, 12vw, 8rem)"
+          initialsFontSize="clamp(4rem, 12cqw, 8rem)"
         />
         <div className="p-6 sm:p-10 flex-1 min-w-0 flex flex-col justify-center">
           <PersonMeta person={person} spotlight />
@@ -1302,7 +1270,7 @@ function PersonCard({
         person={person}
         className="w-full aspect-[4/5] shrink-0"
         sizes="(max-width: 768px) 100vw, 33vw"
-        initialsFontSize="clamp(3rem, 7vw, 5rem)"
+        initialsFontSize="clamp(3rem, 7cqw, 5rem)"
       />
       <div className="p-5 sm:p-6 flex-1 min-h-0">
         <PersonMeta person={person} />
@@ -1338,7 +1306,7 @@ function CabinetCard({ person }: { person: Person }) {
               className="font-bold"
               style={{
                 color: person.accent,
-                fontSize: "clamp(2rem, 6vw, 4rem)",
+                fontSize: "clamp(2rem, 6cqw, 4rem)",
               }}
             >
               {person.initials}
@@ -1357,7 +1325,7 @@ function CabinetCard({ person }: { person: Person }) {
       <div className="shrink-0 px-4 py-3 sm:px-5 sm:py-4 border-t border-white/5 bg-white/[0.02]">
         <div
           className="font-semibold text-white leading-tight tracking-tight truncate"
-          style={{ fontSize: "clamp(1rem, 1.4vw, 1.25rem)" }}
+          style={{ fontSize: "clamp(1rem, 1.4cqw, 1.25rem)" }}
         >
           {person.name}
         </div>
@@ -1365,7 +1333,7 @@ function CabinetCard({ person }: { person: Person }) {
           className="uppercase tracking-[0.16em] font-semibold leading-snug mt-1 truncate"
           style={{
             color: person.accent,
-            fontSize: "clamp(0.625rem, 0.85vw, 0.75rem)",
+            fontSize: "clamp(0.625rem, 0.85cqw, 0.75rem)",
           }}
         >
           {person.role}
