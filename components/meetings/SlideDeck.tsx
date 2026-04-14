@@ -1101,7 +1101,7 @@ function PersonPhoto({
   sizes: string;
   initialsFontSize: string;
 }) {
-  const pos = person.position ?? "center 25%";
+  const pos = person.position ?? "center center";
   return (
     <div
       className={`relative ${className} bg-zinc-900`}
@@ -1156,50 +1156,55 @@ function PersonMeta({
         {person.role}
       </div>
       <div
-        className="font-semibold tracking-tight mb-3 leading-tight"
-        style={{ fontSize: nameSize }}
+        className="mb-4 flex items-center gap-3"
+        style={{ justifyContent: "space-between" }}
       >
-        {person.name}
-      </div>
-      {person.affiliation && (
-        <div className="mb-4">
-          <span
-            className="inline-flex items-center gap-2 pr-3 rounded-full text-[11px] sm:text-xs font-medium tracking-wide"
+        <div
+          className="font-semibold tracking-tight leading-tight min-w-0"
+          style={{ fontSize: nameSize }}
+        >
+          {person.name}
+        </div>
+        {person.affiliationLogo ? (
+          <div
+            className="relative shrink-0 rounded-xl overflow-hidden bg-white flex items-center justify-center"
             style={{
-              background: person.affiliationLogo
-                ? "rgba(255,255,255,0.92)"
-                : `${person.accent}1a`,
-              color: person.affiliationLogo ? "#0a0a0a" : person.accent,
-              border: person.affiliationLogo
-                ? "1px solid rgba(255,255,255,0.15)"
-                : `1px solid ${person.accent}33`,
-              paddingLeft: person.affiliationLogo ? "0.375rem" : "0.625rem",
-              paddingTop: person.affiliationLogo ? "0.25rem" : "0.25rem",
-              paddingBottom: person.affiliationLogo ? "0.25rem" : "0.25rem",
+              width: spotlight
+                ? "clamp(3rem, 4.5cqw, 4rem)"
+                : "clamp(2.5rem, 3.5cqw, 3.25rem)",
+              height: spotlight
+                ? "clamp(3rem, 4.5cqw, 4rem)"
+                : "clamp(2.5rem, 3.5cqw, 3.25rem)",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.35)",
+            }}
+            aria-label={person.affiliation}
+          >
+            <Image
+              src={person.affiliationLogo}
+              alt={person.affiliation ?? ""}
+              fill
+              sizes="80px"
+              className="object-contain p-1.5"
+            />
+          </div>
+        ) : person.affiliation ? (
+          <span
+            className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium tracking-wide shrink-0"
+            style={{
+              background: `${person.accent}1a`,
+              color: person.accent,
+              border: `1px solid ${person.accent}33`,
             }}
           >
-            {person.affiliationLogo ? (
-              <span className="relative shrink-0 w-5 h-5 rounded-full overflow-hidden bg-white flex items-center justify-center">
-                <Image
-                  src={person.affiliationLogo}
-                  alt=""
-                  fill
-                  sizes="20px"
-                  className="object-contain p-0.5"
-                  aria-hidden
-                />
-              </span>
-            ) : (
-              <span
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ background: person.accent }}
-                aria-hidden
-              />
-            )}
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: person.accent }}
+              aria-hidden
+            />
             {person.affiliation}
           </span>
-        </div>
-      )}
+        ) : null}
+      </div>
       {person.bullets && person.bullets.length > 0 && (
         <ul className="space-y-2.5 sm:space-y-3">
           {person.bullets.map((b, i) => (
@@ -1302,7 +1307,7 @@ function PersonCard({
 }
 
 function CabinetCard({ person }: { person: Person }) {
-  const pos = person.position ?? "center 25%";
+  const pos = person.position ?? "center center";
   return (
     <div className="h-full min-h-0 bg-white/[0.04] border border-white/10 rounded-2xl overflow-hidden flex flex-col">
       <div
