@@ -365,7 +365,7 @@ const BOARD: {
   },
   {
     name: "Catherine Newton, M.D.",
-    role: "Pediatrician, Kaiser Permanente",
+    role: "Pediatrician",
     title: "Board of Advisors",
     initials: "CN",
     link: "https://healthy.kaiserpermanente.org/southern-california/physicians/catherine-newton-8770136",
@@ -1569,7 +1569,7 @@ export default function TTSSite() {
           /* E-Board cabinet: force 2 columns at mobile */
           .tts-cabinet-grid { grid-template-columns: repeat(2, 1fr) !important; }
           /* Alumni/advisors: keep 2 cols with equal widths at mobile */
-          .tts-advisors-alumni-grid { grid-template-columns: 1fr 1fr !important; gap: 24px !important; }
+          .tts-advisors-alumni-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
           /* FAQ: stack to single column on mobile */
           .tts-faq-split { display: block !important; }
           .tts-faq-split > div:first-child { margin-bottom: 40px; }
@@ -5437,12 +5437,14 @@ export default function TTSSite() {
               </p>
             </div>
 
-            {/* Board of Advisors + Alumni - side by side */}
+            {/* Board of Advisors + Alumni - side by side on wide screens,
+                wraps alumni below advisors when the viewport is narrower than
+                ~1100px so each section gets full width. */}
             <div
               className="tts-advisors-alumni-grid"
               style={{
                 display: "grid",
-                gridTemplateColumns: "minmax(520px, 760px) 1fr",
+                gridTemplateColumns: "repeat(auto-fit, minmax(520px, 1fr))",
                 gap: 64,
                 alignItems: "start",
               }}

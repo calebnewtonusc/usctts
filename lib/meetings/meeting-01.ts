@@ -222,7 +222,7 @@ export const meeting01: Meeting = {
       value: "6",
       label: "advisors behind TTS",
       context:
-        "McKinsey, Reddit, Google, Stanford, Kaiser, and a $100M-revenue founder. All personally committed to making TTS the strongest club on campus.",
+        "McKinsey, Reddit, Google, Stanford, medicine, and a $100M-revenue founder. All personally committed to making TTS the strongest club on campus.",
     },
     {
       kind: "people",
@@ -297,16 +297,16 @@ export const meeting01: Meeting = {
         },
         {
           name: "Catherine Newton, M.D.",
-          role: "Pediatrician, Kaiser Permanente",
+          role: "Pediatrician",
           photo: "/img/catherine_shot.jpg",
           position: "center center",
           initials: "CN",
           accent: COLOR.violet,
-          affiliation: "Kaiser Permanente",
+          affiliation: "Medicine",
           affiliationLogo: "/img/logos/kaiser.png",
           bullets: [
             "Practicing pediatrician in Southern California",
-            "Former member of the Kaiser Med School admission board",
+            "Former member of a med school admission board",
             "Knows exactly what top pre-med students need to stand out",
           ],
         },
