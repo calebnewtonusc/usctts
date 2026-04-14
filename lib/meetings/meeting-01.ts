@@ -204,7 +204,7 @@ export const meeting01: Meeting = {
     {
       kind: "people",
       eyebrow: "Board of Advisors",
-      title: "Four people with real runway to shape this club",
+      title: "Five people with real runway to shape this club",
       people: [
         {
           name: "Matthew Kim",
@@ -258,6 +258,20 @@ export const meeting01: Meeting = {
             "Software engineer at Google",
             "Active mentor to USC students through ACTS2 Fellowship",
             "Deep engineering guidance and a tight line to the Building Team",
+          ],
+        },
+        {
+          name: "Catherine Newton, M.D.",
+          role: "Pediatrician, Kaiser Permanente",
+          photo: "/img/catherine_shot.jpg",
+          position: "center center",
+          initials: "CN",
+          accent: COLOR.violet,
+          affiliation: "Kaiser Permanente",
+          bullets: [
+            "Practicing pediatrician in Southern California",
+            "Former member of the Kaiser Med School admission board",
+            "Knows exactly what it takes for top pre-med students to stand out",
           ],
         },
       ],
