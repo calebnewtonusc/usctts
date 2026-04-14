@@ -1570,6 +1570,9 @@ export default function TTSSite() {
           .tts-cabinet-grid { grid-template-columns: repeat(2, 1fr) !important; }
           /* Alumni/advisors: keep 2 cols with equal widths at mobile */
           .tts-advisors-alumni-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+          /* Alumni cards: collapse to single column on narrow screens so names
+             and companies stop getting truncated mid-word. */
+          .tts-alumni-grid { grid-template-columns: 1fr !important; }
           /* FAQ: stack to single column on mobile */
           .tts-faq-split { display: block !important; }
           .tts-faq-split > div:first-child { margin-bottom: 40px; }
@@ -5661,10 +5664,11 @@ export default function TTSSite() {
                   Alumni
                 </p>
                 <div
+                  className="tts-alumni-grid"
                   style={{
                     display: "grid",
                     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                    gap: 12,
+                    gap: 10,
                   }}
                 >
                   {ALUMNI.map((person, i) => (
@@ -5674,7 +5678,7 @@ export default function TTSSite() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`${person.name}, ${person.role} at ${person.company}`}
-                      className="tts-fade"
+                      className="tts-fade tts-alumni-card"
                       style={{
                         transitionDelay: `${i * 0.03}s`,
                         display: "block",
@@ -5682,7 +5686,7 @@ export default function TTSSite() {
                         background: "rgba(255,255,255,0.04)",
                         borderRadius: 14,
                         border: "1px solid rgba(255,255,255,0.08)",
-                        padding: "16px",
+                        padding: "10px 12px",
                         transition:
                           "transform 0.3s cubic-bezier(0.34,1.56,0.64,1), border-color 0.2s, box-shadow 0.3s ease",
                       }}
@@ -5709,15 +5713,15 @@ export default function TTSSite() {
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: 12,
+                          gap: 10,
                         }}
                       >
                         <div
                           style={{
                             position: "relative",
-                            width: 48,
-                            height: 48,
-                            borderRadius: 12,
+                            width: 56,
+                            height: 56,
+                            borderRadius: 10,
                             overflow: "hidden",
                             background: `${person.accent}22`,
                             flexShrink: 0,
@@ -5727,7 +5731,7 @@ export default function TTSSite() {
                             src={person.headshot}
                             alt={person.name}
                             fill
-                            sizes="48px"
+                            sizes="56px"
                             style={{
                               objectFit: "cover",
                               objectPosition:
