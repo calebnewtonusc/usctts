@@ -742,6 +742,140 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
     );
   }
 
+  if (slide.kind === "venn") {
+    const [a, b, c] = slide.circles;
+    return (
+      <div className={wrap}>
+        <div className={`${innerFill} max-w-7xl`}>
+          <div className="shrink-0">
+            {slide.eyebrow && (
+              <div
+                className="text-xs uppercase tracking-[0.25em] font-semibold mb-3"
+                style={{ color: accent }}
+              >
+                {slide.eyebrow}
+              </div>
+            )}
+            <h2
+              className="font-semibold tracking-tight leading-tight"
+              style={{ fontSize: "clamp(1.75rem, 5vw, 3.25rem)" }}
+            >
+              {slide.title}
+            </h2>
+            {slide.body && (
+              <p
+                className="mt-4 text-zinc-400 leading-relaxed max-w-3xl"
+                style={{ fontSize: "clamp(1rem, 1.8vw, 1.25rem)" }}
+              >
+                {slide.body}
+              </p>
+            )}
+          </div>
+          <div className="mt-6 sm:mt-10 flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr,minmax(0,0.9fr)] gap-6 sm:gap-10 items-center">
+            <div className="relative aspect-square w-full max-w-[32rem] mx-auto">
+              {/* Circle A — top left */}
+              <VennCircleSvg
+                circle={a}
+                style={{
+                  top: "0%",
+                  left: "0%",
+                  width: "62%",
+                  height: "62%",
+                }}
+                labelPos="top-left"
+              />
+              {/* Circle B — top right */}
+              <VennCircleSvg
+                circle={b}
+                style={{
+                  top: "0%",
+                  right: "0%",
+                  width: "62%",
+                  height: "62%",
+                }}
+                labelPos="top-right"
+              />
+              {/* Circle C — bottom center */}
+              <VennCircleSvg
+                circle={c}
+                style={{
+                  bottom: "0%",
+                  left: "19%",
+                  width: "62%",
+                  height: "62%",
+                }}
+                labelPos="bottom"
+              />
+              {/* Center label */}
+              <div
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none"
+                style={{ zIndex: 4 }}
+              >
+                <div
+                  className="font-black tracking-tight leading-none"
+                  style={{
+                    fontSize: "clamp(1rem, 2.2vw, 1.5rem)",
+                    color: "#ffffff",
+                    textShadow: "0 2px 20px rgba(0,0,0,0.8)",
+                  }}
+                >
+                  {slide.center.label}
+                </div>
+                {slide.center.sub && (
+                  <div
+                    className="mt-1 text-[10px] sm:text-xs uppercase tracking-[0.25em] font-semibold"
+                    style={{
+                      color: accent,
+                      textShadow: "0 1px 10px rgba(0,0,0,0.8)",
+                    }}
+                  >
+                    {slide.center.sub}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="space-y-4 sm:space-y-5">
+              {slide.circles.map((circle, i) => (
+                <div
+                  key={i}
+                  className="relative bg-white/[0.04] border border-white/10 rounded-2xl p-5 sm:p-6"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ background: circle.accent }}
+                      aria-hidden
+                    />
+                    <span
+                      className="text-[11px] sm:text-xs uppercase tracking-[0.25em] font-semibold"
+                      style={{ color: circle.accent }}
+                    >
+                      {circle.label}
+                    </span>
+                  </div>
+                  <div
+                    className="font-semibold tracking-tight text-white leading-snug"
+                    style={{ fontSize: "clamp(1.0625rem, 1.7vw, 1.25rem)" }}
+                  >
+                    {circle.heading}
+                  </div>
+                  {circle.body && (
+                    <p
+                      className="mt-2 text-zinc-400 leading-relaxed"
+                      style={{ fontSize: "clamp(0.875rem, 1.3vw, 1rem)" }}
+                    >
+                      {circle.body}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // cta
   return (
     <div className={wrap}>
@@ -870,6 +1004,7 @@ function slideLabel(s: Slide): string {
     case "three-up":
     case "people":
     case "cabinet":
+    case "venn":
       return s.title;
     case "quote":
       return s.quote.length > 80 ? `${s.quote.slice(0, 80)}…` : s.quote;
@@ -946,11 +1081,30 @@ function PersonMeta({
         {person.role}
       </div>
       <div
-        className="font-semibold tracking-tight mb-4 leading-tight"
+        className="font-semibold tracking-tight mb-3 leading-tight"
         style={{ fontSize: nameSize }}
       >
         {person.name}
       </div>
+      {person.affiliation && (
+        <div className="mb-4">
+          <span
+            className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium tracking-wide"
+            style={{
+              background: `${person.accent}1a`,
+              color: person.accent,
+              border: `1px solid ${person.accent}33`,
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: person.accent }}
+              aria-hidden
+            />
+            {person.affiliation}
+          </span>
+        </div>
+      )}
       {person.bullets && person.bullets.length > 0 && (
         <ul className="space-y-2.5 sm:space-y-3">
           {person.bullets.map((b, i) => (
@@ -970,6 +1124,44 @@ function PersonMeta({
         </ul>
       )}
     </>
+  );
+}
+
+function VennCircleSvg({
+  circle,
+  style,
+  labelPos,
+}: {
+  circle: { label: string; accent: string };
+  style: React.CSSProperties;
+  labelPos: "top-left" | "top-right" | "bottom";
+}) {
+  const labelClasses =
+    labelPos === "top-left"
+      ? "absolute top-3 left-3 sm:top-4 sm:left-4"
+      : labelPos === "top-right"
+        ? "absolute top-3 right-3 sm:top-4 sm:right-4 text-right"
+        : "absolute bottom-3 left-1/2 -translate-x-1/2 sm:bottom-4 text-center";
+  return (
+    <div
+      className="absolute rounded-full"
+      style={{
+        ...style,
+        background: `radial-gradient(circle at 30% 30%, ${circle.accent}40, ${circle.accent}14 60%, transparent 75%)`,
+        border: `1.5px solid ${circle.accent}66`,
+        mixBlendMode: "screen",
+      }}
+    >
+      <span
+        className={`${labelClasses} text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] pointer-events-none`}
+        style={{
+          color: circle.accent,
+          textShadow: "0 1px 10px rgba(0,0,0,0.9)",
+        }}
+      >
+        {circle.label}
+      </span>
+    </div>
   );
 }
 

@@ -13,6 +13,9 @@ export type Person = {
   initials: string;
   accent: string;
   bullets?: string[];
+  // Optional affiliation chip (e.g. "McKinsey", "Reddit", "Stanford GSB").
+  // Renders as a subtle pill below the role on people slides.
+  affiliation?: string;
 };
 
 export type Slide =
@@ -76,7 +79,23 @@ export type Slide =
       title: string;
       body?: string;
       actions: { label: string; detail?: string }[];
+    }
+  | {
+      kind: "venn";
+      eyebrow?: string;
+      title: string;
+      body?: string;
+      // Exactly three circles. Rendered as overlapping Venn with TTS in the middle.
+      circles: [VennCircle, VennCircle, VennCircle];
+      center: { label: string; sub?: string };
     };
+
+export type VennCircle = {
+  label: string; // short label like "Advisors", "Tools", "Knowledge"
+  heading: string; // one-line claim
+  body?: string; // supporting sentence
+  accent: string;
+};
 
 export interface Meeting {
   slug: string;
