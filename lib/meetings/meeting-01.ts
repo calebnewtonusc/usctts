@@ -47,6 +47,15 @@ export const meeting01: Meeting = {
     },
 
     {
+      kind: "stat",
+      eyebrow: "Our cadence",
+      value: "4 + Summer",
+      label: "meetings this spring, work continues all summer",
+      context:
+        "We started late, so spring is four focused meetings instead of a dozen. Real work does not stop when the semester ends. Every vertical keeps shipping through summer.",
+    },
+
+    {
       kind: "section",
       number: "01",
       title: "A team-based collective",
@@ -495,9 +504,9 @@ export const meeting01: Meeting = {
     },
     {
       kind: "bullets",
-      eyebrow: "10-week curriculum",
+      eyebrow: "10-week curriculum · spring into summer",
       title: "From idea to Demo Day",
-      body: "Every Building member runs this cohort. Each week has a concrete deliverable that builds on the one before.",
+      body: "Every Building member runs this cohort. It spans our four spring meetings and carries straight into summer, with a concrete deliverable each week that builds on the one before.",
       items: [
         {
           label: "Week 1 · Intro to FE",
@@ -593,11 +602,11 @@ export const meeting01: Meeting = {
       kind: "cta",
       eyebrow: "Next steps",
       title: "Welcome to TTS.",
-      body: "Questions, ideas, or a team you want on? Grab Tyler or Caleb after the meeting.",
+      body: "Three more meetings this spring, then the real work runs all summer. Questions, ideas, or a team you want on? Grab Tyler or Caleb after the meeting.",
       actions: [
         { label: "usctts.com" },
         { label: "@trojantechsolutions on Instagram" },
-        { label: "Pick a team. Show up next week. Build." },
+        { label: "Pick a team. Show up in two weeks. Build." },
       ],
     },
   ],
