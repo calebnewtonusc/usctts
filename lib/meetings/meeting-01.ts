@@ -485,7 +485,7 @@ export const meeting01: Meeting = {
         {
           label: "01",
           heading: "Build",
-          body: "A cohort-style startup accelerator: industry-specific workshops, keynote speakers, and mentorship from the TTS professional network.",
+          body: "A cohort-style startup accelerator that opens with vibe coding. Learn to ship working apps with Claude, Cursor, and the AI tools real founders use today, regardless of your major.",
           accent: COLOR.red,
         },
         {
@@ -505,33 +505,36 @@ export const meeting01: Meeting = {
     {
       kind: "bullets",
       eyebrow: "10-week curriculum · spring into summer",
-      title: "From idea to Demo Day",
-      body: "Every Building member runs this cohort. It spans our four spring meetings and carries straight into summer, with a concrete deliverable each week that builds on the one before.",
+      title: "From vibe coding to Demo Day",
+      body: "Every Building member runs this cohort. It spans our four spring meetings and carries straight into summer. We open with vibe coding so no one is blocked by how to build, then roll straight into shipping real startups.",
       items: [
         {
-          label: "Week 1 · Intro to FE",
-          detail: "Introduction to startups and cohort bonding.",
+          label: "Week 1 · Vibe coding foundations",
+          detail:
+            "Claude, Cursor, and the modern AI stack. Ship your first working app in one session, no CS required.",
         },
         {
-          label: "Week 2 · Customer & problem discovery",
+          label: "Week 2 · Vibe coding II",
+          detail:
+            "Prototype to production: auth, data, deploy. Ship something real users can actually touch.",
+        },
+        {
+          label: "Week 3 · Customer and problem discovery",
           detail:
             "Identify and validate the real customer problem worth solving.",
         },
         {
-          label: "Week 3 · Ideation and solutions",
+          label: "Week 4 · Ideation and team formation",
           detail:
-            "Develop concrete solutions that map to the validated problem.",
-        },
-        {
-          label: "Week 4 · Team formation",
-          detail: "Form founding teams around the strongest ideas.",
+            "Turn validated problems into concrete solutions and lock in founding teams.",
         },
         {
           label: "Week 5 · MVPs",
-          detail: "Ship a minimum viable product users can actually touch.",
+          detail:
+            "Apply your vibe coding stack to ship your team's MVP in a single session.",
         },
         {
-          label: "Week 6 · Product development and iteration",
+          label: "Week 6 · Product iteration",
           detail: "Refine the MVP with real user feedback.",
         },
         {
