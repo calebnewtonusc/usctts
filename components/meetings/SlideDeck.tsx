@@ -53,8 +53,8 @@ const FLOATING_ICONS: FloatingIconSpec[] = [
     left: "4%",
     size: 42,
     rot: -14,
-    color: "rgba(255,204,0,0.45)",
-    dur: "11s",
+    color: "rgba(255,204,0,0.75)",
+    dur: "6s",
     delay: "0s",
   },
   {
@@ -63,8 +63,8 @@ const FLOATING_ICONS: FloatingIconSpec[] = [
     right: "5%",
     size: 54,
     rot: 18,
-    color: "rgba(204,0,0,0.45)",
-    dur: "14s",
+    color: "rgba(204,0,0,0.75)",
+    dur: "8s",
     delay: "1s",
   },
   {
@@ -73,8 +73,8 @@ const FLOATING_ICONS: FloatingIconSpec[] = [
     left: "6%",
     size: 64,
     rot: -24,
-    color: "rgba(204,0,0,0.38)",
-    dur: "12s",
+    color: "rgba(204,0,0,0.68)",
+    dur: "7s",
     delay: "2s",
   },
   {
@@ -83,8 +83,8 @@ const FLOATING_ICONS: FloatingIconSpec[] = [
     right: "11%",
     size: 40,
     rot: 10,
-    color: "rgba(255,204,0,0.45)",
-    dur: "13s",
+    color: "rgba(255,204,0,0.75)",
+    dur: "7.5s",
     delay: "0.5s",
   },
   {
@@ -93,8 +93,8 @@ const FLOATING_ICONS: FloatingIconSpec[] = [
     right: "18%",
     size: 36,
     rot: -30,
-    color: "rgba(16,185,129,0.45)",
-    dur: "10s",
+    color: "rgba(16,185,129,0.75)",
+    dur: "5.5s",
     delay: "1.5s",
   },
   {
@@ -103,8 +103,8 @@ const FLOATING_ICONS: FloatingIconSpec[] = [
     left: "13%",
     size: 32,
     rot: 44,
-    color: "rgba(255,204,0,0.5)",
-    dur: "12s",
+    color: "rgba(255,204,0,0.8)",
+    dur: "7s",
     delay: "2.5s",
   },
   {
@@ -113,8 +113,8 @@ const FLOATING_ICONS: FloatingIconSpec[] = [
     left: "30%",
     size: 38,
     rot: -18,
-    color: "rgba(204,0,0,0.38)",
-    dur: "15s",
+    color: "rgba(204,0,0,0.68)",
+    dur: "8.5s",
     delay: "0.8s",
   },
   {
@@ -123,8 +123,8 @@ const FLOATING_ICONS: FloatingIconSpec[] = [
     right: "26%",
     size: 42,
     rot: 22,
-    color: "rgba(59,130,246,0.45)",
-    dur: "11s",
+    color: "rgba(59,130,246,0.75)",
+    dur: "6s",
     delay: "1.8s",
   },
   {
@@ -133,8 +133,8 @@ const FLOATING_ICONS: FloatingIconSpec[] = [
     right: "4%",
     size: 50,
     rot: -8,
-    color: "rgba(139,92,246,0.42)",
-    dur: "13s",
+    color: "rgba(139,92,246,0.72)",
+    dur: "7.5s",
     delay: "0.3s",
   },
   {
@@ -143,8 +143,8 @@ const FLOATING_ICONS: FloatingIconSpec[] = [
     left: "3%",
     size: 38,
     rot: 0,
-    color: "rgba(16,185,129,0.45)",
-    dur: "14s",
+    color: "rgba(16,185,129,0.75)",
+    dur: "8s",
     delay: "2.2s",
   },
   {
@@ -153,8 +153,8 @@ const FLOATING_ICONS: FloatingIconSpec[] = [
     left: "22%",
     size: 30,
     rot: 30,
-    color: "rgba(255,204,0,0.4)",
-    dur: "10s",
+    color: "rgba(255,204,0,0.7)",
+    dur: "5.5s",
     delay: "1.2s",
   },
   {
@@ -163,8 +163,8 @@ const FLOATING_ICONS: FloatingIconSpec[] = [
     right: "18%",
     size: 28,
     rot: -20,
-    color: "rgba(204,0,0,0.42)",
-    dur: "12s",
+    color: "rgba(204,0,0,0.72)",
+    dur: "7s",
     delay: "0.6s",
   },
 ];
@@ -257,7 +257,7 @@ export function SlideDeck({ meeting }: { meeting: Meeting }) {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(204,0,0,0.42), transparent 55%), radial-gradient(ellipse 60% 40% at 50% 110%, rgba(255,204,0,0.06), transparent 55%)",
+            "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(204,0,0,0.72), transparent 55%), radial-gradient(ellipse 60% 40% at 50% 110%, rgba(255,204,0,0.06), transparent 55%)",
         }}
       />
 
