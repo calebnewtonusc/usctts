@@ -204,7 +204,7 @@ export const meeting01: Meeting = {
     {
       kind: "people",
       eyebrow: "Board of Advisors",
-      title: "Three people with real runway to shape this club",
+      title: "Four people with real runway to shape this club",
       people: [
         {
           name: "Matthew Kim",
@@ -244,6 +244,20 @@ export const meeting01: Meeting = {
             "Helped launch Clay, the AI tool TTS now uses",
             "Current Stanford MBA, one of the most competitive programs in the world",
             "Recognized by senior McKinsey leadership",
+          ],
+        },
+        {
+          name: "Duncan Inganji",
+          role: "Software Engineer, Google",
+          photo: "/img/duncan_shot.jpeg",
+          position: "center center",
+          initials: "DI",
+          accent: COLOR.blue,
+          affiliation: "Google",
+          bullets: [
+            "Software engineer at Google",
+            "Active mentor to USC students through ACTS2 Fellowship",
+            "Deep engineering guidance and a tight line to the Building Team",
           ],
         },
       ],

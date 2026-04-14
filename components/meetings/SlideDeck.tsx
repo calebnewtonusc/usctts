@@ -729,7 +729,13 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
   if (slide.kind === "people") {
     const count = slide.people.length;
     const gridCols =
-      count === 2 ? "sm:grid-cols-2" : count >= 3 ? "md:grid-cols-3" : "";
+      count === 2
+        ? "sm:grid-cols-2"
+        : count === 4
+          ? "sm:grid-cols-2 lg:grid-cols-4"
+          : count >= 3
+            ? "md:grid-cols-3"
+            : "";
     return (
       <div className={wrap}>
         <div className={`${innerFill} max-w-7xl`}>
