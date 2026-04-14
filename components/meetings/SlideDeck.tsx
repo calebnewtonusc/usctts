@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -302,7 +308,9 @@ export function SlideDeck({ meeting }: { meeting: Meeting }) {
               : "tts-slide-enter-prev"
           }`}
         >
-          <SlideBody slide={slide} accent={meeting.accent} />
+          <SlideStage depKey={index}>
+            <SlideBody slide={slide} accent={meeting.accent} />
+          </SlideStage>
         </div>
 
         <button
@@ -389,10 +397,73 @@ export function SlideDeck({ meeting }: { meeting: Meeting }) {
   );
 }
 
+function SlideStage({
+  depKey,
+  children,
+}: {
+  depKey: number | string;
+  children: React.ReactNode;
+}) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const target = root.firstElementChild as HTMLElement | null;
+    if (!target) return;
+
+    const apply = () => {
+      target.style.transform = "";
+      target.style.transformOrigin = "center center";
+      const cw = root.clientWidth;
+      const ch = root.clientHeight;
+      const sw = target.scrollWidth;
+      const sh = target.scrollHeight;
+      if (!cw || !ch || !sw || !sh) return;
+      const s = Math.min(1, cw / sw, ch / sh);
+      if (s < 0.999) {
+        target.style.transform = `scale(${s})`;
+      }
+    };
+
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(root);
+    ro.observe(target);
+
+    // Re-apply after two frames so web fonts and images settle.
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(apply);
+    });
+
+    // Catch late image loads (headshots).
+    const imgs = Array.from(target.querySelectorAll("img"));
+    const onImgLoad = () => apply();
+    imgs.forEach((img) => {
+      if (!img.complete) img.addEventListener("load", onImgLoad);
+    });
+
+    return () => {
+      ro.disconnect();
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      imgs.forEach((img) => img.removeEventListener("load", onImgLoad));
+    };
+  }, [depKey]);
+
+  return (
+    <div ref={rootRef} className="absolute inset-0 overflow-hidden">
+      {children}
+    </div>
+  );
+}
+
 function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
-  // wrap fills the full slide viewport; inner containers control layout.
+  // wrap fills the full slide viewport; SlideStage scales this down if content
+  // overflows so the whole slide fits any viewport size without scrolling.
   const wrap =
-    "absolute inset-0 overflow-y-auto px-5 sm:px-10 lg:px-16 py-6 sm:py-10 flex";
+    "absolute inset-0 overflow-visible px-5 sm:px-10 lg:px-16 py-6 sm:py-10 flex";
   // Centered slides: content is vertically centered in full viewport height.
   const innerCentered =
     "mx-auto w-full min-h-full flex flex-col justify-center";
