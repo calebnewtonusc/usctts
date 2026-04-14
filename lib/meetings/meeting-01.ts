@@ -129,10 +129,11 @@ export const meeting01: Meeting = {
       body: "Every team, every function. If you need something, one of these people owns it.",
       people: [
         {
-          name: "Ephrem Adugna",
+          name: "Shirley Park",
           role: "Co-President, Building Team",
-          photo: "/img/ephrem_shot.jpeg",
-          initials: "EA",
+          photo: "/img/shirley_shot.jpeg",
+          position: "center center",
+          initials: "SP",
           accent: COLOR.red,
         },
         {
