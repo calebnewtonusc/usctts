@@ -45,7 +45,7 @@ export const meeting01: Meeting = {
         {
           label: "The six verticals",
           detail:
-            "How TTS is structured. Deep dives on Consulting, Building, Music, and Web3.",
+            "How TTS is structured. Deep dives on Consulting, Building, Music, Web3, and Biotech.",
         },
         {
           label: "The people behind TTS",
@@ -58,9 +58,9 @@ export const meeting01: Meeting = {
             "The AI platform top companies pay six figures for, in our hands.",
         },
         {
-          label: "Building, Music, and Web3",
+          label: "Building, Music, Web3, and Biotech",
           detail:
-            "The ten-week Builder cohort, 3D Nuos, and on-chain delivery.",
+            "The ten-week Builder cohort, 3D Nuos, on-chain delivery, and biotech prototypes.",
         },
         {
           label: "How it compounds and Q&A",
@@ -901,6 +901,72 @@ export const meeting01: Meeting = {
     {
       kind: "section",
       number: "10",
+      title: "The Biotech Team",
+      blurb:
+        "Real research and real project work across biotech and biomedical engineering. Not a pre-med reading group. A team that ships.",
+    },
+    {
+      kind: "quote",
+      quote: "Research that ships, not posters that gather dust.",
+      attribution: "The Biotech Team thesis",
+    },
+    {
+      kind: "three-up",
+      eyebrow: "Three core pillars",
+      title: "How the Biotech Team operates",
+      cards: [
+        {
+          label: "01",
+          heading: "Research",
+          body: "Weekly literature reviews and lab-aligned deep dives across diagnostics, therapeutics, computational biology, and biomedical devices. Read primary research, critique it, and translate it into product direction.",
+          accent: COLOR.emerald,
+        },
+        {
+          label: "02",
+          heading: "Build",
+          body: "Prototype work across the biotech stack. Lab partnerships where they exist, computational tooling where it ships faster. Every member leaves with hands on something real.",
+          accent: COLOR.red,
+        },
+        {
+          label: "03",
+          heading: "Ship",
+          body: "Publish findings, demo prototypes, and pair with Consulting to deliver clinical and public-health insight to nonprofit partners.",
+          accent: COLOR.gold,
+        },
+      ],
+    },
+    {
+      kind: "bullets",
+      eyebrow: "What you ship as a Biotech member",
+      title: "From lit review to working prototype",
+      body: "Led by Austin Chen, President of the Biotech Team. Members pick an active project and contribute end-to-end across research, design, and build.",
+      items: [
+        {
+          label: "Research onboarding",
+          detail:
+            "PubMed fluency, a primer on today's biotech and biomedical frontiers, and a working map of USC lab and faculty resources.",
+        },
+        {
+          label: "Pick a project",
+          detail:
+            "Join an active Biotech Team project across diagnostics, therapeutics, computational biology, or medical devices.",
+        },
+        {
+          label: "Prototype and validate",
+          detail:
+            "Build something testable: a diagnostic workflow, a device mockup, a computational model, or a protocol that survives peer review.",
+        },
+        {
+          label: "Cross-vertical delivery",
+          detail:
+            "Partner with Engineering on hardware, Building on software, and Consulting on nonprofit health engagements.",
+        },
+      ],
+    },
+
+    {
+      kind: "section",
+      number: "11",
       title: "Collaboration",
       blurb:
         "The verticals are not silos. They back each other, and that is the point.",
