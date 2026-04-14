@@ -60,12 +60,12 @@ export const meeting01: Meeting = {
       number: "01",
       title: "A team-based collective",
       blurb:
-        "TTS is composed of five specialized verticals. Each team focuses on high-level execution within a specific domain.",
+        "TTS is composed of six specialized verticals. Each team focuses on high-level execution within a specific domain.",
     },
     {
       kind: "bullets",
       eyebrow: "Organizational structure",
-      title: "Five verticals, one club",
+      title: "Six verticals, one club",
       items: [
         {
           label: "Consulting",
@@ -90,7 +90,12 @@ export const meeting01: Meeting = {
         {
           label: "Music",
           detail:
-            "Scoring demos, events, and campaigns, and shipping original music tied to every other team.",
+            "Music-tech: inventing the hardware, software, and AI tools that reshape how music gets made.",
+        },
+        {
+          label: "Web3",
+          detail:
+            "Research, build, and ship on-chain products alongside every other TTS vertical.",
         },
       ],
     },
@@ -704,11 +709,12 @@ export const meeting01: Meeting = {
       number: "08",
       title: "The Music Team",
       blurb:
-        "Music that amplifies every TTS project. Score demos and events, ship original releases, and make the audio side of the club pull its own weight.",
+        "Music-tech. Not a production club. The Music Team invents the hardware, software, and AI tools that reshape how music gets made.",
     },
     {
       kind: "quote",
-      quote: "Every great product has a soundtrack. Ours is made in-house.",
+      quote:
+        "We do not just make music. We build the tools that make new music possible.",
       attribution: "The Music Team thesis",
     },
     {
@@ -718,49 +724,87 @@ export const meeting01: Meeting = {
       cards: [
         {
           label: "01",
-          heading: "Score",
-          body: "Original music for TTS demos, campaigns, and events. Every visual we ship has sound designed to match it.",
+          heading: "Research",
+          body: "Find where music creation is bottlenecked and where new primitives unlock real creators. Weekly deep dives into spatial audio, AI engineering, capture hardware, and creator workflows.",
           accent: COLOR.red,
         },
         {
           label: "02",
-          heading: "Ship",
-          body: "Independent releases from Music Team members. Real tracks on DSPs under the TTS banner, not practice files on a hard drive.",
+          heading: "Build",
+          body: "Ship music-tech products: capture hardware, creator software, and AI tooling. The team ships prototypes users can touch, not slide decks.",
           accent: COLOR.gold,
         },
         {
           label: "03",
-          heading: "Collaborate",
-          body: "Cross-team projects with Building and Consulting. Audio-heavy apps, sonic branding, and campaign scoring on client work.",
+          heading: "Ship",
+          body: "Put real products in creator hands. Partner with Building and Engineering on the hardware and software layers, and use Clay to find the right artists to test with.",
           accent: COLOR.emerald,
         },
       ],
     },
     {
       kind: "bullets",
-      eyebrow: "What you ship as a Music member",
-      title: "From studio onboarding to released tracks",
-      body: "Led by Malakai Carey, President of the Music Team. The cohort runs in parallel with the other verticals so the work stacks.",
+      eyebrow: "What you ship as a Music-Tech member",
+      title: "From research to real prototypes",
+      body: "Led by Malakai Carey, President of the Music Team. Members pick an active project and contribute to it end-to-end across research, design, and build.",
       items: [
         {
-          label: "Studio onboarding",
+          label: "Research onboarding",
           detail:
-            "DAW fluency, monitors, and a clean workflow for producing at club speed.",
+            "DAW fluency, a crash course on spatial audio, and a working map of today's music-tech landscape.",
         },
         {
-          label: "Score a TTS demo",
+          label: "Pick a project",
           detail:
-            "Pick a demo video from Building or Consulting and drop original music on it.",
+            "Join an active Music Team project, starting with our flagship concept: 3D Nuos.",
         },
         {
-          label: "Release a single",
+          label: "Prototype and test",
           detail:
-            "Ship at least one original track on Spotify under the TTS banner by end of semester.",
+            "Build something users can touch: a capture rig, a software mockup, an AI coaching loop, or a creator workflow tool.",
         },
         {
-          label: "Sound-design for the club",
+          label: "Cross-vertical delivery",
           detail:
-            "Event intros, pitch reels, campaign stingers. The Music Team is the audio layer of everything TTS ships.",
+            "Partner with Building on software, Engineering on hardware, and Consulting on creator outreach.",
+        },
+      ],
+    },
+
+    {
+      kind: "section",
+      number: "08.1",
+      title: "Example project · 3D Nuos",
+      blurb:
+        "3 Dimensional Neural Unified Omni Sound. A native 3D sound creation platform. A compact modular recording pod plus an AI creator OS so any artist can capture at studio quality without studio friction.",
+    },
+    {
+      kind: "quote",
+      quote: "Capture sound as space, not just as a flat track.",
+      attribution: "3D Nuos · founding principle",
+    },
+    {
+      kind: "three-up",
+      eyebrow: "The 3D Nuos stack",
+      title: "Three layers, one system",
+      cards: [
+        {
+          label: "01",
+          heading: "Hardware · The Nuos Pod",
+          body: "An egg-shaped enclosure with hexagonal acoustic paneling, a central primary mic, and a distributed mic array. Captures the performer and the full sonic field around them.",
+          accent: COLOR.red,
+        },
+        {
+          label: "02",
+          heading: "Software · Nuos OS",
+          body: "Voice-first session control. Tell the system what you want, and it configures tracks, routing, and effects. Creator profiles remember your setup and style over time.",
+          accent: COLOR.gold,
+        },
+        {
+          label: "03",
+          heading: "AI · Coach and Engineer",
+          body: "An AI layer that handles setup, cleans takes, and coaches the performer. Does not replace the artist. Removes the technical friction around the artist.",
+          accent: COLOR.emerald,
         },
       ],
     },
