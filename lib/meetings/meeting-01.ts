@@ -559,7 +559,6 @@ export const meeting01: Meeting = {
       kind: "venn",
       eyebrow: "Consulting recap",
       title: "Where advisors, tools, and knowledge meet",
-      body: "Other clubs have one. We have all three.",
       circles: [
         {
           label: "Advisors",
