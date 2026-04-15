@@ -580,6 +580,7 @@ export const meeting01: Meeting = {
           accent: COLOR.emerald,
         },
       ],
+      center: { label: "TTS Impact", sub: "Where it all meets" },
     },
 
     {

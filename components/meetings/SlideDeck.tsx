@@ -1049,8 +1049,8 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
               </p>
             )}
           </div>
-          <div className="mt-6 sm:mt-10 flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr,minmax(0,0.9fr)] gap-6 sm:gap-10 items-center">
-            <div className="relative aspect-square w-full max-w-[32rem] mx-auto">
+          <div className="mt-6 sm:mt-10 flex-1 min-h-0 flex items-center justify-center">
+            <div className="relative aspect-square w-full max-w-[44rem] mx-auto">
               {/* Circle A — top left */}
               <VennCircleSvg
                 circle={a}
@@ -1113,42 +1113,6 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
                   )}
                 </div>
               )}
-            </div>
-            <div className="space-y-4 sm:space-y-5">
-              {slide.circles.map((circle, i) => (
-                <div
-                  key={i}
-                  className="relative bg-white/[0.04] border border-white/10 rounded-2xl p-5 sm:p-6"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ background: circle.accent }}
-                      aria-hidden
-                    />
-                    <span
-                      className="text-[11px] sm:text-xs uppercase tracking-[0.25em] font-semibold"
-                      style={{ color: circle.accent }}
-                    >
-                      {circle.label}
-                    </span>
-                  </div>
-                  <div
-                    className="font-semibold tracking-tight text-white leading-snug"
-                    style={{ fontSize: "clamp(1.0625rem, 1.7cqw, 1.25rem)" }}
-                  >
-                    {circle.heading}
-                  </div>
-                  {circle.body && (
-                    <p
-                      className="mt-2 text-white leading-relaxed"
-                      style={{ fontSize: "clamp(0.875rem, 1.3cqw, 1rem)" }}
-                    >
-                      {circle.body}
-                    </p>
-                  )}
-                </div>
-              ))}
             </div>
           </div>
         </div>
