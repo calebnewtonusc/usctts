@@ -13,7 +13,7 @@ export const meeting01: Meeting = {
   timeLabel: "7:00 PM PT",
   location: "USC Campus, location on Instagram",
   summary: "The mission, six verticals, advisors, tools, and how you plug in.",
-  status: "upcoming",
+  status: "past",
   accent: COLOR.red,
   slides: [
     {
