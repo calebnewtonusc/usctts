@@ -79,16 +79,15 @@ const TRACKS = [
     accent: "#CC0000",
     title: "Building",
     sub: "Engineering, Product & Community Impact",
-    tagline:
-      "Come in with an idea. Leave with something real: code, hardware, or a live link.",
+    tagline: "Come in with an idea. Leave with something real.",
     featured: false,
     items: [
-      "Software and hardware engineering projects, not just apps",
-      "Build tools and systems that solve real community problems",
-      "Deploy live products with real users and real stakes",
-      "Work on projects for nonprofits, hospitals, and research orgs",
+      "Software and hardware, not just apps",
+      "Tools that solve real problems",
+      "Deploy to real users",
+      "For nonprofits, hospitals, and research orgs",
     ],
-    for: "Engineers, builders, and makers of any kind. Any major, any year.",
+    for: "Engineers, builders, and makers. Any major, any year.",
   },
   {
     num: "02",
@@ -99,12 +98,12 @@ const TRACKS = [
     tagline: "Work on real problems for organizations doing real good.",
     featured: true,
     items: [
-      "Live engagements with nonprofits, research labs, and mission-driven orgs",
-      "AI-first strategy for cancer research, social services, and beyond",
-      "Actual deliverables that move the needle, not slide decks for class",
-      "Strategic reps that matter before you graduate",
+      "Live work with nonprofits and research labs",
+      "AI-first strategy for real clients",
+      "Real deliverables, not class slide decks",
+      "Strategic reps before you graduate",
     ],
-    for: "Business, econ, poli-sci, and anyone going into strategy or ops.",
+    for: "Business, econ, poli-sci, anyone going into strategy or ops.",
   },
   {
     num: "03",
@@ -112,13 +111,13 @@ const TRACKS = [
     accent: "#10b981",
     title: "Growing",
     sub: "Career & Network",
-    tagline: "Learn AI tools that apply to your field and your community.",
+    tagline: "Learn AI tools that apply to your field.",
     featured: false,
     items: [
-      "Apply AI directly to your major, career path, and the causes you care about",
-      "Access YC founders, operators, and mission-driven leaders",
-      "Speaker series with practitioners doing work that actually matters",
-      "Get ahead before everyone else catches up",
+      "Apply AI to your major and career",
+      "Access YC founders and operators",
+      "Speakers doing work that matters",
+      "Get ahead before everyone catches up",
     ],
     for: "Pre-med, law, finance, architecture, any major.",
   },
@@ -162,27 +161,27 @@ const FOUNDERS = [
 const FAQ_ITEMS = [
   {
     q: "When do we meet?",
-    a: "Weekly general meetings plus open workspace sessions throughout the week. Follow us on Instagram (@trojantechsolutions) for this semester's schedule and location.",
+    a: "Weekly meetings plus open workspace sessions. Follow @trojantechsolutions for schedule and location.",
   },
   {
     q: "Do I need coding experience?",
-    a: "No. We teach AI tools that let anyone build and ship, regardless of technical background. Consulting and Growing require zero coding.",
+    a: "No. We teach AI tools anyone can use. Consulting and Growing require zero coding.",
   },
   {
     q: "What's the time commitment?",
-    a: "Show up when you can. The weekly meeting is the core. Workspace sessions are optional but encouraged: that's where real momentum happens.",
+    a: "Show up when you can. The weekly meeting is the core. Workspace sessions are where real momentum happens.",
   },
   {
     q: "Can I join mid-semester?",
-    a: "Yes. Walk in any week. There is no application, no waitlist, and no cut-off date.",
+    a: "Yes. Walk in any week. No application, no waitlist, no cut-off.",
   },
   {
     q: "Is there a cost?",
-    a: "Never. TTS is completely free. No dues, no fees, no catch.",
+    a: "Never. Completely free. No dues, no fees, no catch.",
   },
   {
     q: "I'm pre-med, law, finance, or architecture. Is this for me?",
-    a: "Yes. AI is reshaping every field. TTS helps you learn the tools that actually matter for your career, not just for software engineers.",
+    a: "Yes. AI is reshaping every field. TTS teaches the tools that matter for your career, not just engineers.",
   },
 ];
 
@@ -1889,8 +1888,8 @@ export default function TTSSite() {
                     maxWidth: 480,
                   }}
                 >
-                  Build skills, ship real work, and help real organizations
-                  along the way. TTS is where AI meets community impact.
+                  Build skills, ship real work, help real organizations. Where
+                  AI meets community impact.
                 </p>
               </div>
               {/* Right column - intentionally empty; stats in real Panel A show through */}
@@ -3626,9 +3625,8 @@ export default function TTSSite() {
                           maxWidth: 480,
                         }}
                       >
-                        Build skills, ship real work, and help real
-                        organizations along the way. TTS is where AI meets
-                        community impact.
+                        Build skills, ship real work, help real organizations.
+                        Where AI meets community impact.
                       </p>
                     </div>
                     <div
@@ -3645,13 +3643,13 @@ export default function TTSSite() {
                         {
                           stat: "Week 1",
                           label: "You ship something",
-                          sub: "Building track members deploy a live product in the first session. Not the end of the semester.",
+                          sub: "Building track ships in session one. Not week fifteen.",
                           revealStart: 0.36,
                         },
                         {
                           stat: "Real",
                           label: "Client work every semester",
-                          sub: "Live engagements with actual organizations. Consulting track delivers real decks.",
+                          sub: "Real organizations. Real decks. Consulting track.",
                           revealStart: 0.39,
                         },
                         {
