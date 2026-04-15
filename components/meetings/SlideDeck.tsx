@@ -1084,11 +1084,11 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
                 }}
                 labelPos="bottom"
               />
-              {/* Center label */}
+              {/* Center label — sits at the three-circle centroid, not the geometric center */}
               {slide.center && (
                 <div
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none"
-                  style={{ zIndex: 4 }}
+                  className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none"
+                  style={{ top: "44%", zIndex: 4 }}
                 >
                   <div
                     className="font-black tracking-tight leading-none"
