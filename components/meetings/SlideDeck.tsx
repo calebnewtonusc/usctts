@@ -745,34 +745,35 @@ function SlideBody({ slide, accent }: { slide: Slide; accent: string }) {
               {slide.title}
             </h2>
           </div>
-          <div className="mt-6 sm:mt-10 flex flex-col gap-3 sm:gap-4">
+          <div className="mt-6 sm:mt-8 flex flex-col gap-3 sm:gap-4">
             {slide.cards.map((card, i) => (
               <div
                 key={i}
-                className="relative bg-white/[0.04] border border-white/10 rounded-2xl px-5 sm:px-7 py-4 sm:py-5 flex items-center gap-5 sm:gap-8"
+                className="relative bg-white/[0.04] border border-white/10 rounded-2xl px-5 sm:px-7 py-4 sm:py-5 flex flex-col gap-2"
               >
-                <div
-                  className="shrink-0 font-mono text-xs sm:text-sm w-8 sm:w-10"
-                  style={{ color: card.accent }}
-                >
-                  {card.label}
-                </div>
-                <div
-                  className="shrink-0 w-1 self-stretch rounded-full"
-                  style={{ background: card.accent }}
-                />
-                <div
-                  className="shrink-0 font-semibold tracking-tight"
-                  style={{
-                    fontSize: "clamp(1.25rem, 2.4cqw, 1.75rem)",
-                    minWidth: "clamp(8rem, 18cqw, 14rem)",
-                  }}
-                >
-                  {card.heading}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="font-mono text-xs sm:text-sm"
+                      style={{ color: card.accent }}
+                    >
+                      {card.label}
+                    </span>
+                    <span
+                      className="inline-block h-4 w-[3px] rounded-full"
+                      style={{ background: card.accent }}
+                    />
+                    <span
+                      className="font-semibold tracking-tight"
+                      style={{ fontSize: "clamp(1.125rem, 2.2cqw, 1.625rem)" }}
+                    >
+                      {card.heading}
+                    </span>
+                  </div>
                 </div>
                 <p
-                  className="text-white leading-snug flex-1 min-w-0"
-                  style={{ fontSize: "clamp(0.95rem, 1.45cqw, 1.125rem)" }}
+                  className="text-white leading-snug"
+                  style={{ fontSize: "clamp(0.9rem, 1.35cqw, 1.0625rem)" }}
                 >
                   {card.body}
                 </p>
