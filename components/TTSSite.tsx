@@ -206,6 +206,15 @@ const CABINET: {
     position: "center center",
   },
   {
+    name: "Kaitlyn Lee",
+    role: "Co-lead of Entrepreneurship",
+    initials: "KL",
+    accent: "#CC0000",
+    link: "https://www.linkedin.com/in/kaitlynleee/",
+    headshot: "/img/kaitlyn_shot.jpeg",
+    position: "center center",
+  },
+  {
     name: "Malakai Carey",
     role: "President, Music Team",
     initials: "MC",
