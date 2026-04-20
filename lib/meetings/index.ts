@@ -9,13 +9,14 @@
 
 import type { Meeting } from "./types";
 import { meeting01 } from "./meeting-01";
+import { meeting02 } from "./meeting-02";
 
 export type { Meeting, Slide, Person } from "./types";
 export { COLOR } from "./types";
 
 export const MEETINGS: Meeting[] = [
   meeting01,
-  // meeting02,
+  meeting02,
   // meeting03,
 ];
 
