@@ -12,12 +12,16 @@ export function PasswordGate({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(STORAGE_KEY);
-      setUnlocked(stored === "1");
-    } catch {
-      setUnlocked(false);
-    }
+    const timer = window.setTimeout(() => {
+      try {
+        const stored = sessionStorage.getItem(STORAGE_KEY);
+        setUnlocked(stored === "1");
+      } catch {
+        setUnlocked(false);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   const attempt = (e: React.FormEvent) => {

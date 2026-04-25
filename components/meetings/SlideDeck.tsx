@@ -199,7 +199,19 @@ function FloatingIcons() {
   );
 }
 
-export function SlideDeck({ meeting }: { meeting: Meeting }) {
+export function SlideDeck({
+  meeting,
+  backHref = "/meetings",
+  backLabel = "All meetings",
+  mobileBackLabel = "Back",
+  codePrefix = "M",
+}: {
+  meeting: Meeting;
+  backHref?: string;
+  backLabel?: string;
+  mobileBackLabel?: string;
+  codePrefix?: string;
+}) {
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [showIndex, setShowIndex] = useState(false);
@@ -263,12 +275,12 @@ export function SlideDeck({ meeting }: { meeting: Meeting }) {
 
       <header className="relative z-20 flex items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-white/5">
         <Link
-          href="/meetings"
+          href={backHref}
           className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-white hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" aria-hidden />
-          <span className="hidden sm:inline">All meetings</span>
-          <span className="sm:hidden">Back</span>
+          <span className="hidden sm:inline">{backLabel}</span>
+          <span className="sm:hidden">{mobileBackLabel}</span>
         </Link>
 
         <div className="flex items-center gap-2 text-xs sm:text-sm text-white font-mono">
@@ -276,7 +288,7 @@ export function SlideDeck({ meeting }: { meeting: Meeting }) {
             className="font-semibold tracking-wider uppercase"
             style={{ color: meeting.accent }}
           >
-            M{String(meeting.number).padStart(2, "0")}
+            {codePrefix}{String(meeting.number).padStart(2, "0")}
           </span>
           <span className="text-zinc-700">/</span>
           <span>
@@ -404,7 +416,7 @@ const CANVAS_W = 1600;
 const CANVAS_H = 900;
 
 function SlideStage({
-  depKey: _depKey,
+  depKey,
   children,
 }: {
   depKey: number | string;
@@ -429,7 +441,7 @@ function SlideStage({
     const ro = new ResizeObserver(apply);
     ro.observe(stage);
     return () => ro.disconnect();
-  }, []);
+  }, [depKey]);
 
   return (
     <div ref={stageRef} className="absolute inset-0 overflow-hidden">
