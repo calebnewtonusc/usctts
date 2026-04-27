@@ -263,6 +263,18 @@ export const buildMeeting02: BuildSession = {
       ],
     },
     {
+      kind: "cta",
+      eyebrow: "Pre-lab",
+      title: "Before tonight — the setup checklist",
+      body: "These were assigned before Meeting 2. If you haven't done them yet, get them done now before we start.",
+      actions: [
+        { label: "GitHub", detail: "Account created — able to make a repo and push code." },
+        { label: "Cursor or VS Code", detail: "Installed and opened at least once." },
+        { label: "Claude or Gemini", detail: "An AI coding tool you can access right now." },
+        { label: "Vercel", detail: "Account created for deployment." },
+      ],
+    },
+    {
       kind: "video",
       eyebrow: "Part 1 — 10 min",
       title: "How I got into building",
@@ -473,6 +485,17 @@ export const buildMeeting02: BuildSession = {
     },
     {
       kind: "cta",
+      eyebrow: "Before Meeting 3",
+      title: "What we expect before next time",
+      body: "Meeting 3 is hands-on. Show up with these done so we spend the time building, not installing.",
+      actions: [
+        { label: "GitHub repo", detail: "Create a repo and push at least one commit." },
+        { label: "Editor working", detail: "Cursor or VS Code — open a folder, see some files." },
+        { label: "AI tool ready", detail: "Claude or Gemini — know how to open it and paste a prompt." },
+      ],
+    },
+    {
+      kind: "cta",
       eyebrow: "Before you leave",
       title: "Fill out the form.",
       body: "Two minutes. Helps us make every future meeting worth your time.",
@@ -488,7 +511,194 @@ export const buildMeeting02: BuildSession = {
   ],
 };
 
-export const BUILD_SESSIONS: BuildSession[] = [buildMeeting01, buildMeeting02];
+export const buildMeeting03: BuildSession = {
+  slug: "meeting-03",
+  number: 3,
+  title: "Build Meeting 3: Build Your First Page",
+  shortTitle: "Meeting three",
+  focus:
+    "Follow along, build a working webpage with Claude, and leave with a personal portfolio plan.",
+  date: "2026-05-02",
+  dateLabel: "Build Meeting 3",
+  timeLabel: "Hands-on session",
+  location: "TTS Build Team",
+  summary:
+    "Demo-first and hands-on. Everyone follows along using Claude to build a simple webpage, then gets a framework for their personal portfolio.",
+  status: "upcoming",
+  accent: COLOR.emerald,
+  preBuild: [
+    {
+      title: "GitHub repo ready",
+      description: "Create a repo and push at least one commit before the meeting.",
+      status: "before",
+    },
+    {
+      title: "Cursor or VS Code working",
+      description: "Open your editor, open a folder, see some files. That's all.",
+      status: "before",
+    },
+    {
+      title: "Claude or Gemini ready",
+      description: "Know how to open it and paste a prompt.",
+      status: "before",
+    },
+  ],
+  deliverables: [
+    {
+      title: "A working webpage",
+      description: "Built with Claude. Running in your browser.",
+      status: "during",
+    },
+    {
+      title: "One personal change",
+      description: "Your name, your colors, something that makes it yours.",
+      status: "during",
+    },
+    {
+      title: "First commit pushed",
+      description: "Code saved to GitHub so you can keep building after the meeting.",
+      status: "after",
+    },
+    {
+      title: "A portfolio plan",
+      description:
+        "What your site should become — written using the problem → user → MVP framework.",
+      status: "after",
+    },
+  ],
+  resources: [
+    {
+      label: "Claude",
+      description: "Prompt it to build your first page.",
+      href: "https://claude.ai/",
+    },
+    {
+      label: "Cursor",
+      description: "AI-first editor for building with prompts.",
+      href: "https://cursor.com/",
+    },
+    {
+      label: "GitHub",
+      description: "Save and push your first commit.",
+      href: "https://github.com/",
+    },
+  ],
+  slides: [
+    {
+      kind: "title",
+      eyebrow: "Build Meeting 03",
+      title: "Build Your First Page",
+      subtitle: "Follow along. Leave with something real.",
+      footer: "TTS Build Team",
+    },
+    {
+      kind: "cta",
+      eyebrow: "Pre-lab",
+      title: "Tools check — do you have everything?",
+      body: "Raise your hand if you still need to set something up. We'll sort it before we start.",
+      actions: [
+        { label: "GitHub", detail: "Account ready, repo created, able to push." },
+        { label: "Editor", detail: "Cursor or VS Code installed and open." },
+        { label: "AI tool", detail: "Claude or Gemini — open and ready to use." },
+      ],
+    },
+    {
+      kind: "bullets",
+      eyebrow: "Quick recap",
+      title: "Meeting 2 in 60 seconds",
+      body: "The whole ecosystem in one slide before we build.",
+      items: [
+        { label: "IDE", detail: "Cursor or VS Code — just how you see and run your code on your computer." },
+        { label: "Claude / AI", detail: "Describe what you want. It writes the code." },
+        { label: "GitHub", detail: "Saves every version. Commit → push → your code is backed up." },
+        { label: "Vercel", detail: "One click to a live URL anyone can visit." },
+      ],
+    },
+    {
+      kind: "section",
+      number: "01",
+      title: "Everyone follow along",
+      blurb: "Open Claude. We're all starting from the same prompt.",
+    },
+    {
+      kind: "cta",
+      eyebrow: "The prompt",
+      title: "Paste this into Claude",
+      body: "Build me a simple personal webpage with a hero section, an about section, a projects section, and a contact section. Keep it clean and modern. Use only HTML and CSS — no frameworks. Explain how to open it in my browser.",
+      actions: [
+        { label: "Run it", detail: "Open the file in your browser and see the page." },
+        { label: "Break something", detail: "Change one line. See what happens." },
+        { label: "Fix it", detail: "Paste the error back into Claude. Watch it solve it." },
+      ],
+    },
+    {
+      kind: "bullets",
+      eyebrow: "Prompt like a builder",
+      title: "How to get what you actually want",
+      items: [
+        { label: "Name the outcome", detail: "Say what the page should do and what should be visible." },
+        {
+          label: "Bring references",
+          detail: "Find a site or effect you want. Paste the URL or describe it exactly.",
+        },
+        {
+          label: "One step at a time",
+          detail: "Generate → run → paste the error → improve one thing. Repeat.",
+        },
+        {
+          label: "Steal the mechanic",
+          detail: "Use references to understand the pattern, then make it yours.",
+        },
+      ],
+    },
+    {
+      kind: "quote",
+      quote:
+        "Good prompting is not magic. It is being specific, showing references, and staying resourceful when the first answer breaks.",
+      attribution: "Build Team",
+    },
+    {
+      kind: "section",
+      number: "02",
+      title: "Your personal portfolio",
+      blurb: "This is the project. Not a demo — your actual site.",
+    },
+    {
+      kind: "bullets",
+      eyebrow: "The framework",
+      title: "Problem → User → MVP",
+      body: "Use this to define what your portfolio should actually be before you build it.",
+      items: [
+        {
+          label: "Problem",
+          detail: "What does your portfolio need to do for you? Get a job? Show clients? Document your work?",
+        },
+        {
+          label: "User",
+          detail: "Who is actually going to look at it — recruiters, founders, collaborators?",
+        },
+        {
+          label: "MVP",
+          detail: "What is the minimum version that accomplishes the goal? One page? Three sections?",
+        },
+      ],
+    },
+    {
+      kind: "cta",
+      eyebrow: "Walkaway",
+      title: "Leave with proof you can build",
+      body: "By the end of tonight you should have something real you made yourself.",
+      actions: [
+        { label: "Working webpage", detail: "Built with Claude. Running in your browser." },
+        { label: "One personal change", detail: "Your name, colors, or layout — something that's yours." },
+        { label: "First commit pushed", detail: "Code on GitHub so you can keep building." },
+        { label: "Portfolio plan", detail: "What your site should become — written down." },
+      ],
+    },
+  ],
+};
+
+export const BUILD_SESSIONS: BuildSession[] = [buildMeeting01, buildMeeting02, buildMeeting03];
 
 export function getBuildSession(slug: string) {
   return BUILD_SESSIONS.find((session) => session.slug === slug);
