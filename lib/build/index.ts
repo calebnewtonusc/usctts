@@ -24,126 +24,12 @@ export type BuildSession = Meeting & {
 export const buildMeeting01: BuildSession = {
   slug: "meeting-01",
   number: 1,
-  title: "Build Meeting 1: Vibe Coding 101",
+  title: "Build Meeting 1: Vibe Code Your First Web Page",
   shortTitle: "Meeting one",
-  focus:
-    "Understand the ecosystem: AI coding tools, IDEs, GitHub, Vercel, and how they fit together.",
-  date: "2026-04-18",
-  dateLabel: "Build Meeting 1",
-  timeLabel: "Foundation session",
-  location: "TTS Build Team",
-  summary:
-    "A beginner-friendly walkthrough of the builder ecosystem and the mindset shift from syntax to resourcefulness.",
-  status: "past",
-  accent: COLOR.red,
-  deliverables: [
-    {
-      title: "Know the builder pipeline",
-      description:
-        "Explain the path from idea, to AI coding tool, to editor, to GitHub, to Vercel.",
-      status: "done",
-    },
-    {
-      title: "Pick an on-ramp",
-      description:
-        "Choose whether to start with Cursor, VS Code, Claude, Gemini, or another AI coding flow.",
-      status: "done",
-    },
-    {
-      title: "Leave with less fear around code",
-      description:
-        "Understand that your job is clear thinking, prompting, taste, and iteration, not memorizing syntax.",
-      status: "done",
-    },
-  ],
-  resources: [
-    {
-      label: "GitHub",
-      description: "Where code lives, versions, and gets shared.",
-      href: "https://github.com/",
-    },
-    {
-      label: "Vercel",
-      description: "Where a project becomes a live URL.",
-      href: "https://vercel.com/",
-    },
-    {
-      label: "Claude",
-      description: "AI assistant for planning, prompting, and code generation.",
-      href: "https://claude.ai/",
-    },
-  ],
-  slides: [
-    {
-      kind: "title",
-      eyebrow: "Build Meeting 01",
-      title: "Vibe Coding 101",
-      subtitle: "How ideas become live websites without memorizing syntax.",
-      footer: "TTS Build Team",
-    },
-    {
-      kind: "section",
-      number: "01",
-      title: "The builder ecosystem",
-      blurb: "You do not need every tool mastered. You need to know what each tool is for.",
-    },
-    {
-      kind: "bullets",
-      eyebrow: "The pipeline",
-      title: "Idea to live URL, in plain English",
-      items: [
-        { label: "You", detail: "Describe what you want to build." },
-        {
-          label: "AI coding tool",
-          detail:
-            "Claude, Gemini, Cursor, or another assistant helps generate and edit code.",
-        },
-        {
-          label: "IDE",
-          detail: "VS Code or Cursor is where you open folders and run the project.",
-        },
-        {
-          label: "GitHub",
-          detail: "Save changes, push commits, and recover from mistakes.",
-        },
-        {
-          label: "Vercel",
-          detail: "Deploy the project so it has a real URL anyone can visit.",
-        },
-      ],
-    },
-    {
-      kind: "cta",
-      eyebrow: "Before next time",
-      title: "Come ready to build",
-      body: "Meeting 2 is hands-on. Set up the tools first so the room can spend time making instead of installing.",
-      actions: [
-        {
-          label: "Create GitHub",
-          detail: "You need an account before you can save and publish code.",
-        },
-        {
-          label: "Pick an AI tool",
-          detail: "Use Claude, Gemini, Cursor, or another tool you can access.",
-        },
-        {
-          label: "Install an editor",
-          detail: "VS Code or Cursor. Either is fine.",
-        },
-      ],
-    },
-  ],
-};
-
-export const buildMeeting02: BuildSession = {
-  slug: "meeting-02",
-  number: 2,
-  title: "Build Meeting 2: Vibe Code Your First Web Page",
-  shortTitle: "Meeting two",
   focus:
     "Arrive set up, follow along, and leave with a first webpage started and saved to GitHub.",
   date: "2026-04-25",
-  dateLabel: "Build Meeting 2",
+  dateLabel: "Build Meeting 1",
   timeLabel: "Hands-on build session",
   location: "TTS Build Team",
   summary:
@@ -238,7 +124,7 @@ export const buildMeeting02: BuildSession = {
   slides: [
     {
       kind: "title",
-      eyebrow: "Build Meeting 02",
+      eyebrow: "Build Meeting 01",
       title: "Vibe Code Your First Web Page",
       subtitle: "How ideas become live websites. No syntax required.",
       footer: "TTS Build Team",
@@ -294,7 +180,7 @@ export const buildMeeting02: BuildSession = {
       kind: "cta",
       eyebrow: "Pre-lab",
       title: "Before tonight — the setup checklist",
-      body: "These were assigned before Meeting 2. If you haven't done them yet, get them done now before we start.",
+      body: "These were assigned before Meeting 1. If you haven't done them yet, get them done now before we start.",
       actions: [
         { label: "GitHub", detail: "Account created — able to make a repo and push code." },
         { label: "Cursor or VS Code", detail: "Installed and opened at least once." },
@@ -622,9 +508,9 @@ export const buildMeeting02: BuildSession = {
     },
     {
       kind: "cta",
-      eyebrow: "Before Meeting 3",
+      eyebrow: "Before Meeting 2",
       title: "What we expect before next time",
-      body: "Meeting 3 is hands-on. Show up with these done so we spend the time building, not installing.",
+      body: "Meeting 2 is hands-on. Show up with these done so we spend the time building, not installing.",
       actions: [
         { label: "GitHub repo", detail: "Create a repo and push at least one commit." },
         { label: "Editor working", detail: "Cursor or VS Code — open a folder, see some files." },
@@ -648,15 +534,15 @@ export const buildMeeting02: BuildSession = {
   ],
 };
 
-export const buildMeeting03: BuildSession = {
-  slug: "meeting-03",
-  number: 3,
-  title: "Build Meeting 3: Build Your First Page",
-  shortTitle: "Meeting three",
+export const buildMeeting02: BuildSession = {
+  slug: "meeting-02",
+  number: 2,
+  title: "Build Meeting 2: Build Your First Page",
+  shortTitle: "Meeting two",
   focus:
     "Follow along, build a working webpage with Claude, and leave with a personal portfolio plan.",
   date: "2026-05-02",
-  dateLabel: "Build Meeting 3",
+  dateLabel: "Build Meeting 2",
   timeLabel: "Hands-on session",
   location: "TTS Build Team",
   summary:
@@ -723,7 +609,7 @@ export const buildMeeting03: BuildSession = {
   slides: [
     {
       kind: "title",
-      eyebrow: "Build Meeting 03",
+      eyebrow: "Build Meeting 02",
       title: "Build Your First Page",
       subtitle: "Follow along. Leave with something real.",
       footer: "TTS Build Team",
@@ -742,7 +628,7 @@ export const buildMeeting03: BuildSession = {
     {
       kind: "bullets",
       eyebrow: "Quick recap",
-      title: "Meeting 2 in 60 seconds",
+      title: "Meeting 1 in 60 seconds",
       body: "The whole ecosystem in one slide before we build.",
       items: [
         { label: "IDE", detail: "Cursor or VS Code — just how you see and run your code on your computer." },
@@ -835,7 +721,7 @@ export const buildMeeting03: BuildSession = {
   ],
 };
 
-export const BUILD_SESSIONS: BuildSession[] = [buildMeeting01, buildMeeting02, buildMeeting03];
+export const BUILD_SESSIONS: BuildSession[] = [buildMeeting01, buildMeeting02];
 
 export function getBuildSession(slug: string) {
   return BUILD_SESSIONS.find((session) => session.slug === slug);
@@ -845,4 +731,4 @@ export function buildSessionSlugs() {
   return BUILD_SESSIONS.map((session) => session.slug);
 }
 
-export const currentBuildSession = buildMeeting02;
+export const currentBuildSession = buildMeeting01;
