@@ -872,11 +872,11 @@ export const buildMeeting02: BuildSession = {
       body: "Every cool site you've ever seen was inspired by ten others. Here's where I look when I build. Click through, read the source, then prompt Claude with what you found.",
       links: [
         {
-          source: "My personal site",
-          label: "calebnewton.me — iPad simulator portfolio",
+          source: "My vibe coding setup",
+          label: "D1-Vibe-Coding — my Claude Code infrastructure",
           url: "https://github.com/calebnewtonusc/D1-Vibe-Coding",
           description:
-            "The full repo behind my portfolio. Read the components, see how the spring physics work, copy what you like.",
+            "How I actually build fast: 36 slash commands, 18 rules files, a full design system, and auto-sync hooks. Steal the parts you want.",
         },
         {
           source: "This site",
